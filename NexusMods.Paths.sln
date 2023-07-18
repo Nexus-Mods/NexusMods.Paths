@@ -24,9 +24,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6ED01F9D
 		tests\SharedUsings.cs = tests\SharedUsings.cs
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusMods.Template", "src\NexusMods.Template\NexusMods.Template.csproj", "{A92DED3D-BC67-4E04-9A06-9A1B302B3070}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusMods.Paths", "src\NexusMods.Paths\NexusMods.Paths.csproj", "{A92DED3D-BC67-4E04-9A06-9A1B302B3070}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusMods.Template.Tests", "tests\NexusMods.Template.Tests\NexusMods.Template.Tests.csproj", "{30CBEB4A-E0C0-4B11-A0CF-F97BFACEEF89}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusMods.Paths.Tests", "tests\NexusMods.Paths.Tests\NexusMods.Paths.Tests.csproj", "{30CBEB4A-E0C0-4B11-A0CF-F97BFACEEF89}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NexusMods.Paths.TestingHelpers", "src\NexusMods.Paths.TestingHelpers\NexusMods.Paths.TestingHelpers.csproj", "{FABE9B73-49FF-472C-9013-F52876F25E1D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +38,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{A92DED3D-BC67-4E04-9A06-9A1B302B3070} = {0377EBE6-F147-4233-86AD-32C821B9567E}
 		{30CBEB4A-E0C0-4B11-A0CF-F97BFACEEF89} = {6ED01F9D-5E12-4EB2-9601-64A2ADC719DE}
+		{FABE9B73-49FF-472C-9013-F52876F25E1D} = {0377EBE6-F147-4233-86AD-32C821B9567E}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{A92DED3D-BC67-4E04-9A06-9A1B302B3070}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -46,5 +49,9 @@ Global
 		{30CBEB4A-E0C0-4B11-A0CF-F97BFACEEF89}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{30CBEB4A-E0C0-4B11-A0CF-F97BFACEEF89}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{30CBEB4A-E0C0-4B11-A0CF-F97BFACEEF89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FABE9B73-49FF-472C-9013-F52876F25E1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FABE9B73-49FF-472C-9013-F52876F25E1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FABE9B73-49FF-472C-9013-F52876F25E1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FABE9B73-49FF-472C-9013-F52876F25E1D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

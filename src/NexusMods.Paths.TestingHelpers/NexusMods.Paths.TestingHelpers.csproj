@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('NuGet.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+    <ItemGroup>
+        <PackageReference Include="AutoFixture.Xunit2" Version="4.18.*" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../NexusMods.Paths/NexusMods.Paths.csproj" />
+    </ItemGroup>
+</Project>
