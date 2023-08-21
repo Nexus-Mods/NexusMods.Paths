@@ -189,11 +189,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
         return Path.AsSpan().EndsWith(other, StringComparison.OrdinalIgnoreCase);
     }
 
-    /// <summary>
-    /// Returns true if this path is a child of this path.
-    /// </summary>
-    /// <param name="other">The path to verify.</param>
-    /// <returns>True if this is a child path of the parent path; else false.</returns>
+    /// <inheritdoc />
     public bool InFolder(RelativePath other)
     {
         return PathHelpers.InFolder(Path, other.Path, OS);

@@ -26,7 +26,7 @@ public interface IPath
 /// </summary>
 /// <typeparam name="TConcretePath">Concrete path type returned by method implementations</typeparam>
 [PublicAPI]
-public interface IPath<TConcretePath> : IPath where TConcretePath : struct, IPath<TConcretePath>
+public interface IPath<TConcretePath> : IPath where TConcretePath : struct, IPath<TConcretePath>, IEquatable<TConcretePath>
 {
     /// <summary>
     /// The file name of this path.
@@ -75,4 +75,11 @@ public interface IPath<TConcretePath> : IPath where TConcretePath : struct, IPat
     /// Returns whether this path is rooted.
     /// </summary>
     bool IsRooted { get; }
+
+    /// <summary>
+    /// Returns true if this path is a child of the specified path.
+    /// </summary>
+    /// <param name="parent">The potential parent path</param>
+    /// <returns>True if this is a child path of the parent path; else false.</returns>
+    bool InFolder(TConcretePath parent);
 }

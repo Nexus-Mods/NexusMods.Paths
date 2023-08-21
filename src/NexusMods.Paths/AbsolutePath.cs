@@ -272,11 +272,7 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
         return default;
     }
 
-    /// <summary>
-    /// Returns true if this path is a child of the specified path.
-    /// </summary>
-    /// <param name="parent">The path to verify.</param>
-    /// <returns>True if this is a child path of the parent path; else false.</returns>
+    /// <inheritdoc />
     public bool InFolder(AbsolutePath parent)
     {
         var parentLength = parent.GetFullPathLength();
