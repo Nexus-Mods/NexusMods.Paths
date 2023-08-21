@@ -55,8 +55,10 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
 
     /// <summary>
     /// Returns the FileName as a <see cref="RelativePath"/>.
-    /// If this is a root directory, returns <see cref="RelativePath.Empty"/>.
     /// </summary>
+    /// <remarks>
+    /// If this is a root directory, returns <see cref="RelativePath.Empty"/>.
+    /// </remarks>
     public RelativePath Name =>  string.IsNullOrEmpty(FileName) ? RelativePath.Empty : new RelativePath(FileName);
 
     /// <inheritdoc />

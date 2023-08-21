@@ -38,7 +38,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     public Extension Extension => Extension.FromPath(Path);
 
     /// <summary>
-    /// R
+    /// Returns the file name of this path.
     /// </summary>
     public RelativePath FileName => Name;
 
@@ -105,7 +105,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     /// Obtains the name of the first folder stored in this path.
     /// </summary>
     /// <remarks>
-    ///    This will return empty string if there are no child directories.
+    /// This will return empty string if there are no child directories.
     /// </remarks>
     public RelativePath TopParent
     {
@@ -130,7 +130,6 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     /// Creates a new <see cref="RelativePath"/> from a <see cref="ReadOnlySpan{T}"/>.
     /// </summary>
     /// <param name="path"></param>
-    /// <returns></returns>
     public static RelativePath FromUnsanitizedInput(ReadOnlySpan<char> path)
     {
         return new RelativePath(PathHelpers.Sanitize(path, OS));

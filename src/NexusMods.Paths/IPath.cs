@@ -60,15 +60,18 @@ public interface IPath<TConcretePath> : IPath where TConcretePath : struct, IPat
 
     /// <summary>
     /// Returns a collection of parts that make up this path, excluding root components.
-    /// NOTE: Root components like `C:/` are excluded and should be handled separately.
     /// </summary>
+    /// <remarks>
+    /// Root components like `C:/` are excluded and should be handled separately.
+    /// </remarks>
     IEnumerable<RelativePath> Parts { get; }
 
     /// <summary>
     /// Returns a collection of all parent paths, including this path.
-    /// Order is from this path to the root.
     /// </summary>
-    /// <returns></returns>
+    /// <remarks>
+    /// Order is from this path to the root.
+    /// </remarks>
     IEnumerable<TConcretePath> GetAllParents();
 
     /// <summary>

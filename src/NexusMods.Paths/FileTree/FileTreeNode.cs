@@ -21,8 +21,8 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
 
     /// <summary>
     /// Constructs a new <see cref="FileTreeNode{TPath,TValue}"/> with the given path, name, parent and value.
-    /// NOTE: If the value is null, this node is assumed to be a directory, a file otherwise.
     /// </summary>
+    /// <remarks>If the value is null, this node is assumed to be a directory, a file otherwise.</remarks>
     /// <param name="path">The complete path for the node with respect to the root of the tree</param>
     /// <param name="name">The file name for the node</param>
     /// <param name="value">The associated value to be stored along a file entry. Should be null for directories.</param>
@@ -54,8 +54,7 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
     public bool IsTreeRoot => !HasParent;
 
     /// <summary>
-    /// A value associated with a File entry.
-    /// Is null for directories.
+    /// A value associated with a File entry, null for directories.
     /// </summary>
     public TValue? Value { get; }
 
@@ -118,8 +117,10 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
 
     /// <summary>
     /// Adds a collection of nodes as children to this node.
-    /// Sets the parent of the children to this node.
     /// </summary>
+    /// <remarks>
+    /// Sets the parent of the children to this node.
+    /// </remarks>
     /// <param name="children">The collection of nodes to be added</param>
     public void AddChildren(IEnumerable<FileTreeNode<TPath, TValue>> children)
     {
@@ -132,8 +133,10 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
 
     /// <summary>
     /// Adds a node as a child to this node.
-    /// Sets the parent of the child to this node.
     /// </summary>
+    /// <remarks>
+    /// Sets the parent of the child to this node.
+    /// </remarks>
     /// <param name="child">The node to be added</param>
     public void AddChild(FileTreeNode<TPath, TValue> child)
     {
@@ -145,10 +148,11 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
 
     /// <summary>
     /// Creates a tree structure from a collection of file entries.
-    ///
-    /// NOTE: If the file paths are rooted, they all need to be sharing the same root component.
-    /// If the paths are not rooted, they are assumed to be relative to the same unknown root.
     /// </summary>
+    /// <remarks>
+    /// If the file paths are rooted, they all need to be sharing the same root component.
+    /// If the paths are not rooted, they are assumed to be relative to the same unknown root.
+    /// </remarks>
     /// <param name="files">A collection of unique file entries in the form of TPath,TValue pairs.</param>
     /// <returns>The root node of the generated tree.</returns>
     public static FileTreeNode<TPath, TValue>? CreateTree(IEnumerable<KeyValuePair<TPath, TValue>> files)
@@ -169,9 +173,11 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
 
     /// <summary>
     /// Populates the tree with the given collection of file entries.
+    /// </summary>
+    /// <remarks>
     /// The current node is assumed to be the root of the tree.
     /// All file paths are assumed to be relative to the root of the tree.
-    /// </summary>
+    /// </remarks>
     /// <param name="files">A collection of unique files in the form of TPath,TValue pairs.</param>
     /// <exception cref="InvalidOperationException">If there are duplicate file entries.</exception>
     protected void PopulateTree(IEnumerable<KeyValuePair<TPath, TValue>> files)

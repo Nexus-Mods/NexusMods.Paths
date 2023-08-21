@@ -45,8 +45,10 @@ public interface IFileTree<TFileTree, TPath> where TFileTree : IFileTree<TFileTr
 
     /// <summary>
     /// A Dictionary containing all the children of this node, both files and directories.
-    /// The key is the <see cref="Name"/> of the child.
     /// </summary>
+    /// <remarks>
+    /// The key is the <see cref="Name"/> of the child.
+    /// </remarks>
     public IDictionary<RelativePath, TFileTree> Children { get; }
 
     /// <summary>
@@ -61,13 +63,17 @@ public interface IFileTree<TFileTree, TPath> where TFileTree : IFileTree<TFileTr
 
     /// <summary>
     /// A collection of all sibling nodes, excluding this one.
-    /// Returns an empty collection if this node is the root.
     /// </summary>
+    /// <remarks>
+    /// Returns an empty collection if this node is the root.
+    /// </remarks>
     public IEnumerable<TFileTree> GetSiblings();
 
     /// <summary>
     /// A collection of all File nodes that descend from this one.
-    /// Returns an empty collection if this node is a file.
     /// </summary>
+    /// <remarks>
+    /// Returns an empty collection if this node is a file.
+    /// </remarks>
     public IEnumerable<TFileTree> GetAllDescendentFiles();
 }
