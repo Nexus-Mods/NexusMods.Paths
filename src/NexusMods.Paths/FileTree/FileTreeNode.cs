@@ -30,7 +30,7 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
     {
         Path = path;
         Name = name;
-        _isFile = value != default;
+        _isFile = value != null;
         Value = value;
         _children = new Dictionary<RelativePath, FileTreeNode<TPath, TValue>>();
     }
