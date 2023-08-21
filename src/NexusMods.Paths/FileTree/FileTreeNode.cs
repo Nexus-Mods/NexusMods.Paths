@@ -100,11 +100,20 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
     }
 
     /// <inheritdoc />
-    public IEnumerable<FileTreeNode<TPath, TValue>> GetAllFileDescendants()
+    public IEnumerable<FileTreeNode<TPath, TValue>> GetAllDescendentFiles()
     {
         if (IsFile) return Enumerable.Empty<FileTreeNode<TPath, TValue>>();
 
-        return Children.Values.SelectMany(x => x.GetAllFileDescendants());
+        return Children.Values.SelectMany(x => x.GetAllDescendentFiles());
+    }
+
+    /// <summary>
+    /// Returns a dictionary of all the file entries under the current node.
+    /// </summary>
+    /// <returns>A dictionary of with <see cref="Path"/> as keys and <see cref="Value"/> as values.</returns>
+    public Dictionary<TPath, TValue> GetAllDescendentFilesDictionary()
+    {
+        return GetAllDescendentFiles().ToDictionary(file => file.Path, file => file.Value!);
     }
 
     /// <summary>
@@ -131,6 +140,8 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
         child._parent = this;
         _children.Add(child.Name, child);
     }
+
+
 
     /// <summary>
     /// Creates a tree structure from a collection of file entries.

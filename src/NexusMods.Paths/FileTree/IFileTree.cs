@@ -69,5 +69,5 @@ public interface IFileTree<TFileTree, TPath> where TFileTree : IFileTree<TFileTr
     /// A collection of all File nodes that descend from this one.
     /// Returns an empty collection if this node is a file.
     /// </summary>
-    public IEnumerable<TFileTree> GetAllFileDescendants();
+    public IEnumerable<TFileTree> GetAllDescendentFiles();
 }
