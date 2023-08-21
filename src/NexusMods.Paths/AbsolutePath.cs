@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using NexusMods.Paths.Extensions;
@@ -11,7 +13,7 @@ namespace NexusMods.Paths;
 /// A path that represents a full path to a file or directory.
 /// </summary>
 [PublicAPI]
-public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath
+public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<AbsolutePath>
 {
     /// <summary>
     /// The directory component of the path.
@@ -33,6 +35,9 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath
     /// <example><c>README.md</c></example>
     public readonly string FileName;
 
+    /// <inheritdoc />
+    RelativePath IPath.FileName => Name;
+
     /// <summary>
     /// The <see cref="IFileSystem"/> implementation used by the IO methods.
     /// </summary>
@@ -48,11 +53,15 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath
         return new AbsolutePath(Directory, FileName, fileSystem);
     }
 
+    /// <summary>
+    /// Returns the FileName as a <see cref="RelativePath"/>.
+    /// If this is a root directory, returns <see cref="RelativePath.Empty"/>.
+    /// </summary>
+    public RelativePath Name =>  string.IsNullOrEmpty(FileName) ? RelativePath.Empty : new RelativePath(FileName);
+
     /// <inheritdoc />
     public Extension Extension => string.IsNullOrEmpty(FileName) ? Extension.None : Extension.FromPath(FileName);
 
-    /// <inheritdoc />
-    RelativePath IPath.FileName => FileName;
 
     /// <summary>
     /// Gets the parent directory, i.e. navigates one folder up.
@@ -66,6 +75,46 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath
             return new AbsolutePath(directory.ToString(), fileName.ToString(), FileSystem);
         }
     }
+
+    /// <summary>
+    /// Returns the root folder of this path.
+    /// </summary>
+    public AbsolutePath GetRootComponent => GetRootDirectory();
+
+    /// <inheritdoc/>
+    public IEnumerable<RelativePath> Parts =>
+        PathHelpers.GetParts(Directory, FileSystem.OS)
+            .Select(x => new RelativePath(x.ToString()))
+            .Append(FileName)
+            .ToArray();
+
+    /// <inheritdoc/>
+    public IEnumerable<AbsolutePath> GetAllParents()
+    {
+        var parentPath = this;
+        var root = GetRootDirectory();
+
+        // Always return the current path
+        yield return parentPath;
+        parentPath = parentPath.Parent;
+
+        while (parentPath != root)
+        {
+            yield return parentPath;
+            parentPath = parentPath.Parent;
+        }
+    }
+
+    /// <summary>
+    /// Returns the non-root part of this path.
+    /// </summary>
+    public RelativePath GetNonRootPart()
+    {
+        return RelativeTo(GetRootDirectory());
+    }
+
+    /// <inheritdoc/>
+    public bool IsRooted => true;
 
     private AbsolutePath(string directory, string fileName, IFileSystem fileSystem)
     {
@@ -90,10 +139,9 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath
     /// </summary>
     /// <seealso cref="FromSanitizedFullPath"/>
     /// <seealso cref="FromUnsanitizedDirectoryAndFileName"/>
-    internal static AbsolutePath FromUnsanitizedFullPath(ReadOnlySpan<char> fullPath, IFileSystem fileSystem)
+    internal static AbsolutePath FromUnsanitizedFullPath(string fullPath, IFileSystem fileSystem)
     {
-        var sanitizedPath = PathHelpers.Sanitize(fullPath, fileSystem.OS);
-        return FromSanitizedFullPath(sanitizedPath, fileSystem);
+        return fileSystem.FromUnsanitizedFullPath(fullPath);
     }
 
     /// <summary>
