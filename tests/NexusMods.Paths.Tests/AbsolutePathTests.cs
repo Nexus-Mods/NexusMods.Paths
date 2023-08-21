@@ -42,7 +42,21 @@ public class AbsolutePathTests
         actualPath.FileName.Should().Be(expectedFileName);
         actualPath.GetFullPath().Should().Be(expectedFullPath);
     }
-    
+
+    [Theory]
+    [InlineData(true, "/", "")]
+    [InlineData(true, "/foo", "foo")]
+    [InlineData(true, "/foo/bar", "bar")]
+    [InlineData(false, "C:/", "")]
+    [InlineData(false, "C:/foo", "foo")]
+    [InlineData(false, "C:/foo/bar", "bar")]
+    public void Test_Name(bool isUnix, string input, string expected)
+    {
+        var path = CreatePath(input, isUnix);
+        var actual = path.Name;
+        actual.Should().Be(expected);
+    }
+
     [Theory]
     [InlineData(true, "", "")]
     [InlineData(false, "", "")]
@@ -52,7 +66,7 @@ public class AbsolutePathTests
     {
         var os = CreateOSInformation(isUnix);
         var fs = new InMemoryFileSystem(os);
-        
+
         var absolutePath = AbsolutePath.FromUnsanitizedFullPath(input, fs);
         var actual = absolutePath.ToNativeSeparators(os);
         actual.Should().Be(expected);
@@ -67,6 +81,55 @@ public class AbsolutePathTests
         var path = CreatePath(input, isUnix: true);
         var actualExtension = path.Extension;
         actualExtension.ToString().Should().Be(expectedExtension);
+    }
+
+    [Theory]
+    [InlineData(true, "/", new string[] { })]
+    [InlineData(true, "/foo", new string[] { "foo" })]
+    [InlineData(true, "/foo/bar", new string[] { "foo", "bar" })]
+    [InlineData(false, "C:/", new string[] { })]
+    [InlineData(false, "C:/foo", new string[] { "foo" })]
+    [InlineData(false, "C:/foo/bar", new string[] { "foo", "bar" })]
+    public void Test_Parts(bool isUnix, string input, string[] expectedParts)
+    {
+        var path = CreatePath(input, isUnix);
+        var actualParts = path.Parts;
+        actualParts.Should().BeEquivalentTo(expectedParts.Select(p => new RelativePath(p)));
+    }
+
+    [Theory]
+    [InlineData(true, "/", new string[] { "/" })]
+    [InlineData(true, "/foo", new string[] { "/foo", "/" })]
+    [InlineData(true, "/foo/bar", new string[] { "/foo/bar", "/foo", "/" })]
+    [InlineData(false, "C:/", new string[] { "C:/" })]
+    [InlineData(false, "C:/foo", new string[] { "C:/foo", "C:/" })]
+    [InlineData(false, "C:/foo/bar", new string[] { "C:/foo/bar", "C:/foo", "C:/" })]
+    public void Test_GetAllParents(bool isUnix, string input, string[] expectedParts)
+    {
+        var path = CreatePath(input, isUnix);
+        var actualParents = path.GetAllParents();
+        actualParents.Should().BeEquivalentTo(expectedParts.Select(p => CreatePath(p, isUnix)));
+    }
+
+    [Theory]
+    [InlineData(true, "/", "")]
+    [InlineData(true, "/foo", "foo")]
+    [InlineData(true, "/foo/bar", "foo/bar")]
+    [InlineData(false, "C:/", "")]
+    [InlineData(false, "C:/foo", "foo")]
+    [InlineData(false, "C:/foo/bar", "foo/bar")]
+    public void TestGetNonRootPart(bool isUnix, string input, string expected)
+    {
+        var path = CreatePath(input, isUnix);
+        var actual = path.GetNonRootPart();
+        actual.Should().Be(expected);
+    }
+
+    [Fact]
+    public void Test_IsRooted()
+    {
+        var path = CreatePath("/");
+        path.IsRooted.Should().BeTrue();
     }
 
     [Theory]
@@ -127,6 +190,7 @@ public class AbsolutePathTests
     }
 
     [Theory]
+    [InlineData(true, "/foo", "/foo", "")]
     [InlineData(true, "/foo", "/", "foo")]
     [InlineData(true, "/foo/bar/baz", "/", "foo/bar/baz")]
     [InlineData(true, "/foo/bar/baz", "/foo", "bar/baz")]
