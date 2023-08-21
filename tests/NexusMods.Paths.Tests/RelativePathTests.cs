@@ -8,7 +8,7 @@ public class RelativePathTests
     {
         return isUnix ? OSInformation.FakeUnix : OSInformation.FakeWindows;
     }
-    
+
     [Theory]
     [InlineData("a", "a")]
     [InlineData("a/b", "a/b")]
@@ -32,8 +32,8 @@ public class RelativePathTests
         var path = basePath.Combine(input).RelativeTo(basePath);
         path.ToString().Should().Be(expected);
     }
-    
-    
+
+
     [Theory]
     [InlineData("a", "a")]
     [InlineData("a/", "a")]
@@ -45,11 +45,10 @@ public class RelativePathTests
         string inputPath,
         string expectedRelativePath)
     {
-        
         var sanitizedPath = RelativePath.FromUnsanitizedInput(inputPath);
         sanitizedPath.Should().Be(expectedRelativePath);
     }
-    
+
     [Theory]
     [InlineData(true, "", "")]
     [InlineData(false, "", "")]
@@ -58,9 +57,19 @@ public class RelativePathTests
     public void Test_ToNativeSeparators(bool isUnix, string input, string expected)
     {
         var os = CreateOSInformation(isUnix);
-        
+
         var path = new RelativePath(input);
         path.ToNativeSeparators(os).Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("", "")]
+    [InlineData("foo", "foo")]
+    [InlineData("foo/bar", "bar")]
+    public void Test_Name(string input, string expected)
+    {
+        var path = new RelativePath(input);
+        path.Name.Should().Be(expected);
     }
 
     [Theory]
@@ -117,6 +126,60 @@ public class RelativePathTests
     }
 
     [Theory]
+    [InlineData("", "")]
+    [InlineData("foo", "")]
+    [InlineData("foo/bar", "")]
+    [InlineData("foo/bar/baz", "")]
+    public void Test_GetRootComponent(string input, string expectedRootComponent)
+    {
+        var path = new RelativePath(input);
+        path.GetRootComponent.Should().Be(expectedRootComponent);
+    }
+
+    [Theory]
+    [InlineData("", new string[] { })]
+    [InlineData("foo", new string[] { "foo" })]
+    [InlineData("foo/bar", new string[] { "foo", "bar" })]
+    [InlineData("foo/bar/baz", new string[] { "foo", "bar", "baz" })]
+    public void Test_Parts(string input, string[] expectedParts)
+    {
+        var path = new RelativePath(input);
+        path.Parts.Should().BeEquivalentTo(expectedParts.Select(x => new RelativePath(x)));
+    }
+
+    [Theory]
+    [InlineData("", new string[] { })]
+    [InlineData("foo", new string[] { "foo" })]
+    [InlineData("foo/bar", new string[] { "foo/bar", "foo" })]
+    [InlineData("foo/bar/baz", new string[] { "foo/bar/baz", "foo/bar", "foo" })]
+    public void Test_GetAllParents(string input, string[] expectedParts)
+    {
+        var path = new RelativePath(input);
+        path.GetAllParents().Should().BeEquivalentTo(expectedParts.Select(x => new RelativePath(x)));
+    }
+
+    [Theory]
+    [InlineData("", "")]
+    [InlineData("foo", "foo")]
+    [InlineData("foo/bar", "foo/bar")]
+    [InlineData("foo/bar/baz", "foo/bar/baz")]
+    public void Test_GetNonRootPart(string input, string expected)
+    {
+        var path = new RelativePath(input);
+        path.GetNonRootPart().Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("", false)]
+    [InlineData("foo", false)]
+    [InlineData("foo/bar", false)]
+    public void Test_IsRooted(string input, bool expected)
+    {
+        var path = new RelativePath(input);
+        path.IsRooted.Should().Be(expected);
+    }
+
+    [Theory]
     [InlineData("foo", ".txt", "foo.txt")]
     [InlineData("foo.txt", ".md", "foo.md")]
     public void Test_ReplaceExtension(string input, string extension, string expectedOutput)
@@ -161,7 +224,7 @@ public class RelativePathTests
         var actual = path.StartsWith(right);
         actual.Should().Be(expected);
     }
-    
+
     [Theory]
     [InlineData("foo", "bar", false)]
     [InlineData("foo", "foo", true)]
@@ -203,6 +266,7 @@ public class RelativePathTests
     [Theory]
     [InlineData("foo/bar/baz", "foo", "bar/baz")]
     [InlineData("foo/bar/baz", "foo/bar", "baz")]
+    [InlineData("foo/bar/baz", "foo/bar/baz", "")]
     public void Test_RelativeTo(string left, string right, string expectedOutput)
     {
         var leftPath = new RelativePath(left);
