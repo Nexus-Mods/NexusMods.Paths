@@ -85,10 +85,7 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
 
     /// <inheritdoc/>
     public IEnumerable<RelativePath> Parts =>
-        PathHelpers.GetParts(Directory, FileSystem.OS)
-            .Select(x => new RelativePath(x.ToString()))
-            .Append(FileName)
-            .ToArray();
+        GetNonRootPart().Parts;
 
     /// <inheritdoc/>
     public IEnumerable<AbsolutePath> GetAllParents()
@@ -250,14 +247,21 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
     /// <summary>
     /// Gets a path relative to another absolute path.
     /// </summary>
+    /// <remarks>
+    /// Returns <see cref="RelativePath.Empty"/> if <see paramref="other"/> is the same as this path.
+    /// </remarks>
     /// <param name="other">The path from which the relative path should be made.</param>
+    /// <throws><see cref="PathException"/> if the paths are not in the same folder.</throws>
     public RelativePath RelativeTo(AbsolutePath other)
     {
         var childLength = GetFullPathLength();
+        var parentLength = other.GetFullPathLength();
+
+        if (childLength == parentLength && Equals(other)) return RelativePath.Empty;
+
         var child = childLength <= 512 ? stackalloc char[childLength] : GC.AllocateUninitializedArray<char>(childLength);
         GetFullPath(child);
 
-        var parentLength = other.GetFullPathLength();
         var parent = parentLength <= 512 ? stackalloc char[parentLength] : GC.AllocateUninitializedArray<char>(parentLength);
         other.GetFullPath(parent);
 

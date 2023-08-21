@@ -72,8 +72,12 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     {
         get
         {
-            return PathHelpers.GetParts(Path, OS)
-                .Select(x => new RelativePath(x.ToString()));
+            var currentPath = this;
+            while (currentPath.Path != Empty)
+            {
+                yield return currentPath.Name;
+                currentPath = currentPath.Parent;
+            }
         }
     }
 
