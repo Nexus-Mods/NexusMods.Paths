@@ -37,14 +37,6 @@ public interface IPath<TConcretePath> : IPath where TConcretePath : struct, IPat
     RelativePath Name { get; }
 
     /// <summary>
-    /// Gets the extension of this path.
-    /// </summary>
-    /// <remarks>
-    /// Returns an empty <see cref="Extension"/> if no extension is present.
-    /// </remarks>
-    Extension Extension { get; }
-
-    /// <summary>
     /// Traverses one directory up, returning the path of the parent.
     /// </summary>
     /// <remarks>
