@@ -12,7 +12,7 @@ namespace NexusMods.Paths.FileTree;
 /// <typeparam name="TValue"></typeparam>
 [PublicAPI]
 public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>>
-    where TPath : struct, IPath<TPath>
+    where TPath : struct, IPath<TPath>, IEquatable<TPath>
 {
     private readonly bool _isFile;
 
@@ -30,12 +30,14 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
     {
         Path = path;
         Name = name;
-        _isFile = value != null;
+        _isFile = value != default;
         Value = value;
         _children = new Dictionary<RelativePath, FileTreeNode<TPath, TValue>>();
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// The complete path of the node with respect to the root of the tree.
+    /// </summary>
     public TPath Path { get; }
 
     /// <inheritdoc />
@@ -116,6 +118,27 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
     }
 
     /// <summary>
+    /// Recursively searches the subtree for a node with the given path.
+    /// </summary>
+    /// <param name="searchedPath">A complete path with respect to the tree root</param>
+    /// <returns>null if not found</returns>
+    public FileTreeNode<TPath, TValue>? FindNode(TPath searchedPath)
+    {
+        var currentNode = this;
+
+        while (searchedPath.InFolder(currentNode.Path))
+        {
+            if (currentNode.Path.Equals(searchedPath)) return currentNode;
+
+            currentNode = currentNode.Children.Values.FirstOrDefault(x => searchedPath.InFolder(x.Path));
+
+            if (currentNode == null) return null;
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Adds a collection of nodes as children to this node.
     /// </summary>
     /// <remarks>
@@ -143,7 +166,6 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
         child._parent = this;
         _children.Add(child.Name, child);
     }
-
 
 
     /// <summary>
