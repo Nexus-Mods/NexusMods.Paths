@@ -212,11 +212,16 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     /// <summary>
     /// Returns a path relative to the sub-path specified.
     /// </summary>
+    /// <remarks>
+    /// Returns an empty path if <paramref name="basePath"/> matches this path.
+    /// </remarks>
     /// <param name="basePath">The sub-path specified.</param>
+    /// <throws><see cref="PathException"/> if <paramref name="basePath"/> is not a parent of this path.</throws>
     public RelativePath RelativeTo(RelativePath basePath)
     {
         var other = basePath.Path;
         if (other.Length == 0) return this;
+        if (basePath.Path == Path) return Empty;
 
         var res = PathHelpers.RelativeTo(Path, other, OS);
         if (!res.IsEmpty) return new RelativePath(res.ToString());
