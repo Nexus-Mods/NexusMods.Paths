@@ -192,6 +192,9 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
             // traverse the path from root to leaf and add missing nodes
             for (var i = 0; i < parentPaths.Length; i++)
             {
+                // if the path is rooted, skip the first path as it is the root component, which we already have
+                if (Path.IsRooted && i == 0) continue;
+
                 var subPath = parentPaths[i];
                 var subPathName = subPath.Name;
 
