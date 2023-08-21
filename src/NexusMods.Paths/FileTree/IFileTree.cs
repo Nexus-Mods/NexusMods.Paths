@@ -8,15 +8,9 @@ namespace NexusMods.Paths.FileTree;
 /// Represents a generic tree of files.
 /// </summary>
 /// <typeparam name="TFileTree">Allows implementations to return concrete types</typeparam>
-/// <typeparam name="TPath">The path type being used in the tree</typeparam>
 [PublicAPI]
-public interface IFileTree<TFileTree, TPath> where TFileTree : IFileTree<TFileTree, TPath>
-    where TPath : struct, IPath<TPath>
+public interface IFileTree<TFileTree> where TFileTree : IFileTree<TFileTree>
 {
-    /// <summary>
-    /// The complete path of the node with respect to the root of the tree.
-    /// </summary>
-    public TPath Path { get; }
 
     /// <summary>
     /// The file name for this node.

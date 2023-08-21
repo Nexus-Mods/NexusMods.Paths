@@ -11,7 +11,7 @@ namespace NexusMods.Paths.FileTree;
 /// <typeparam name="TPath">The path type used in the tree</typeparam>
 /// <typeparam name="TValue"></typeparam>
 [PublicAPI]
-public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>, TPath>
+public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>>
     where TPath : struct, IPath<TPath>
 {
     private readonly bool _isFile;
@@ -153,11 +153,12 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
     /// If the file paths are rooted, they all need to be sharing the same root component.
     /// If the paths are not rooted, they are assumed to be relative to the same unknown root.
     /// </remarks>
-    /// <param name="files">A collection of unique file entries in the form of TPath,TValue pairs.</param>
+    /// <param name="files">A non empty collection of unique file entries in the form of TPath,TValue pairs.</param>
     /// <returns>The root node of the generated tree.</returns>
-    public static FileTreeNode<TPath, TValue>? CreateTree(IEnumerable<KeyValuePair<TPath, TValue>> files)
+    /// <throws><see cref="ArgumentException"/> if the collection is empty.</throws>
+    public static FileTreeNode<TPath, TValue> CreateTree(IEnumerable<KeyValuePair<TPath, TValue>> files)
     {
-        if (!files.Any()) return null;
+        if (!files.Any()) throw new ArgumentException("Collection of files cannot be empty");
 
         var fileArray = files.ToArray();
         var rootComponent = fileArray.First().Key.GetRootComponent;
