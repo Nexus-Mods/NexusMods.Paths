@@ -93,18 +93,15 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
     /// <inheritdoc/>
     public IEnumerable<AbsolutePath> GetAllParents()
     {
-        var parentPath = this;
+        var currentPath = this;
         var root = GetRootDirectory();
 
-        // Always return the current path
-        yield return parentPath;
-        parentPath = parentPath.Parent;
-
-        while (parentPath != root)
+        while (currentPath != root)
         {
-            yield return parentPath;
-            parentPath = parentPath.Parent;
+            yield return currentPath;
+            currentPath = currentPath.Parent;
         }
+        yield return root;
     }
 
     /// <summary>
