@@ -12,7 +12,7 @@ namespace NexusMods.Paths.FileTree;
 /// <typeparam name="TValue"></typeparam>
 [PublicAPI]
 public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>, TPath>
-    where TPath : struct, IPath<TPath>, IEquatable<TPath>
+    where TPath : struct, IPath<TPath>
 {
     private readonly bool _isFile;
 

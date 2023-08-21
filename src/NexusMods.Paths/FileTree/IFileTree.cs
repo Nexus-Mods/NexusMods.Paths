@@ -11,7 +11,7 @@ namespace NexusMods.Paths.FileTree;
 /// <typeparam name="TPath">The path type being used in the tree</typeparam>
 [PublicAPI]
 public interface IFileTree<TFileTree, TPath> where TFileTree : IFileTree<TFileTree, TPath>
-    where TPath : struct, IPath<TPath>, IEquatable<TPath>
+    where TPath : struct, IPath<TPath>
 {
     /// <summary>
     /// The complete path of the node with respect to the root of the tree.

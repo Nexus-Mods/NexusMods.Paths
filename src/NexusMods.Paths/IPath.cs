@@ -26,7 +26,7 @@ public interface IPath
 /// </summary>
 /// <typeparam name="TConcretePath">Concrete path type returned by method implementations</typeparam>
 [PublicAPI]
-public interface IPath<TConcretePath> : IPath where TConcretePath : struct, IPath<TConcretePath>, IEquatable<TConcretePath>
+public interface IPath<TConcretePath> : IPath where TConcretePath : struct, IPath<TConcretePath>
 {
     /// <summary>
     /// The file name of this path.
