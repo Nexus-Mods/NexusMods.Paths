@@ -285,6 +285,31 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
         return PathHelpers.InFolder(Directory, parentSpan, FileSystem.OS);
     }
 
+    /// <inheritdoc />
+    public bool StartsWith(AbsolutePath other)
+    {
+        var fullPath = GetFullPath();
+        var prefix = other.GetFullPath();
+
+        if (fullPath.Length < prefix.Length) return false;
+        if (fullPath.Length == prefix.Length) return Equals(other);
+        if (!fullPath.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // If the other path is a parent of this path, then the next character must be a directory separator.
+        return fullPath[prefix.Length] == PathHelpers.DirectorySeparatorChar ||
+               // unless the prefix is a root directory
+               PathHelpers.IsRootDirectory(prefix, FileSystem.OS);
+    }
+
+    /// <inheritdoc />
+    public bool EndsWith(RelativePath other)
+    {
+        return GetNonRootPart().EndsWith(other);
+    }
+
     /// <summary/>
     public static bool operator ==(AbsolutePath lhs, AbsolutePath rhs) => lhs.Equals(rhs);
 

@@ -80,6 +80,20 @@ public interface IPath<TConcretePath> : IPath where TConcretePath : struct, IPat
     /// Returns true if this path is a child of the specified path.
     /// </summary>
     /// <param name="parent">The potential parent path</param>
+    /// <remarks>The child path needs to have greater depth than the parent.</remarks>
     /// <returns>True if this is a child path of the parent path; else false.</returns>
     bool InFolder(TConcretePath parent);
+
+    /// <summary>
+    /// Returns true if this path starts with the specified path.
+    /// </summary>
+    /// <param name="other">The prefix path</param>
+    bool StartsWith(TConcretePath other);
+
+    /// <summary>
+    /// Returns true if this path ends with the specified RelativePath.
+    /// </summary>
+    /// <remarks>Since RelativePaths can't contain Root components, this check won't consider root folders</remarks>
+    /// <param name="other">The relative path with which this path is supposed to end</param>
+    bool EndsWith(RelativePath other);
 }

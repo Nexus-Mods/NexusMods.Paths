@@ -181,12 +181,42 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
         return Path.AsSpan().StartsWith(other, StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <inheritdoc/>
+    public bool StartsWith(RelativePath other)
+    {
+        if (other.Path.Length == 0) return true;
+        if (other.Path.Length > Path.Length) return false;
+        if (other.Path.Length == Path.Length) return Equals(other);
+        if (!Path.AsSpan().StartsWith(other.Path, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // If the other path is a parent of this path, then the next character must be a directory separator.
+        return Path[other.Path.Length] == PathHelpers.DirectorySeparatorChar;
+    }
+
     /// <summary>
     /// Returns true if the relative path ends with a given string.
     /// </summary>
     public bool EndsWith(ReadOnlySpan<char> other)
     {
         return Path.AsSpan().EndsWith(other, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <inheritdoc/>
+    public bool EndsWith(RelativePath other)
+    {
+        if (other.Path.Length == 0) return true;
+        if (other.Path.Length > Path.Length) return false;
+        if (other.Path.Length == Path.Length) return Equals(other);
+        if (!Path.AsSpan().EndsWith(other.Path, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // If this path ends with other but is longer, then the character before the other path must be a directory separator.
+        return Path[Path.Length - other.Path.Length - 1] == PathHelpers.DirectorySeparatorChar;
     }
 
     /// <inheritdoc />
