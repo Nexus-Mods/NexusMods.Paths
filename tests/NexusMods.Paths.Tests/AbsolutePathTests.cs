@@ -139,7 +139,8 @@ public class AbsolutePathTests
     [InlineData(false, "C:/", "C:/", "", "C:/")]
     [InlineData(false, "C:/foo", "C:/", "", "C:/")]
     [InlineData(false, "C:/foo/bar", "C:/", "foo", "C:/foo")]
-    public void Test_Parent(bool isUnix, string input, string expectedDirectory, string expectedFileName, string expectedFullPath)
+    public void Test_Parent(bool isUnix, string input, string expectedDirectory, string expectedFileName,
+        string expectedFullPath)
     {
         var path = CreatePath(input, isUnix);
         var actualParent = path.Parent;
@@ -217,17 +218,13 @@ public class AbsolutePathTests
     }
 
     [Theory]
-    [InlineData(true, "", "", true)]
-    [InlineData(true, "foo", "", true)]
-    [InlineData(true, "", "foo", false)]
-    [InlineData(true, "foo/bar", "foo", true)]
-    [InlineData(true, "foo", "bar", false)]
     [InlineData(true, "/", "/", true)]
     [InlineData(true, "/foo", "/", true)]
     [InlineData(true, "/foo/bar/baz", "/", true)]
     [InlineData(true, "/foo/bar/baz", "/foo", true)]
     [InlineData(true, "/foo/bar/baz", "/foo/bar", true)]
     [InlineData(true, "/foobar", "/foo", false)]
+    [InlineData(true, "/foo/bar/baz", "/foo/baz", false)]
     [InlineData(false, "C:/", "C:/", true)]
     [InlineData(false, "C:/foo", "C:/", true)]
     [InlineData(false, "C:/foo/bar/baz", "C:/", true)]
@@ -239,6 +236,57 @@ public class AbsolutePathTests
         var childPath = CreatePath(child, isUnix);
         var parentPath = CreatePath(parent, isUnix);
         var actual = childPath.InFolder(parentPath);
+        actual.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(true, "/", "/", true)]
+    [InlineData(true, "/", "/foo", false)]
+    [InlineData(true, "/foo", "/bar", false)]
+    [InlineData(true, "/foo", "/", true)]
+    [InlineData(true, "/foo/bar/baz", "/", true)]
+    [InlineData(true, "/foo/bar/baz", "/foo", true)]
+    [InlineData(true, "/foo/bar/baz", "/foo/bar", true)]
+    [InlineData(true, "/foobar", "/foo", false)]
+    [InlineData(true, "/foo/bar/baz", "/foo/baz", false)]
+    [InlineData(false, "C:/", "C:/", true)]
+    [InlineData(false, "C:/foo", "C:/", true)]
+    [InlineData(false, "C:/foo/bar/baz", "C:/", true)]
+    [InlineData(false, "C:/foo/bar/baz", "C:/foo", true)]
+    [InlineData(false, "C:/foo/bar/baz", "C:/foo/bar", true)]
+    [InlineData(false, "C:/foobar", "C:/foo", false)]
+    public void Test_StartsWith(bool isUnix, string child, string parent, bool expected)
+    {
+        var childPath = CreatePath(child, isUnix);
+        var parentPath = CreatePath(parent, isUnix);
+        var actual = childPath.StartsWith(parentPath);
+        actual.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(true, "/", "", true)]
+    [InlineData(true, "/", "foo", false)]
+    [InlineData(true, "/foo", "bar", false)]
+    [InlineData(true, "/foo", "", true)]
+    [InlineData(true, "/foo/bar/baz", "", true)]
+    [InlineData(true, "/foo/bar/baz", "bar/baz", true)]
+    [InlineData(true, "/foo/bar/baz", "foo/bar/baz", true)]
+    [InlineData(true, "/foobar", "bar", false)]
+    [InlineData(true, "/foo/bar/baz", "foo/baz", false)]
+    [InlineData(false, "C:/", "", true)]
+    [InlineData(false, "C:/", "foo", false)]
+    [InlineData(false, "C:/foo", "bar", false)]
+    [InlineData(false, "C:/foo", "", true)]
+    [InlineData(false, "C:/foo/bar/baz", "", true)]
+    [InlineData(false, "C:/foo/bar/baz", "bar/baz", true)]
+    [InlineData(false, "C:/foo/bar/baz", "foo/bar/baz", true)]
+    [InlineData(false, "C:/foobar", "bar", false)]
+    [InlineData(false, "C:/foo/bar/baz", "foo/baz", false)]
+    public void Test_EndsWith(bool isUnix, string path, string end, bool expected)
+    {
+        var startingPath = CreatePath(path, isUnix);
+        var endPath = (RelativePath)end;
+        var actual = startingPath.EndsWith(endPath);
         actual.Should().Be(expected);
     }
 

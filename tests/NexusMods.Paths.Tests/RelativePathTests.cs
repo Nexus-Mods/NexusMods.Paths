@@ -252,6 +252,42 @@ public class RelativePathTests
     }
 
     [Theory]
+    [InlineData("", "", true)]
+    [InlineData("", "foo", false)]
+    [InlineData("foo", "bar", false)]
+    [InlineData("foo", "", true)]
+    [InlineData("foo/bar/baz", "", true)]
+    [InlineData("foo/bar/baz", "foo", true)]
+    [InlineData("foo/bar/baz", "foo/bar", true)]
+    [InlineData("foobar", "foo", false)]
+    [InlineData("foo/bar/baz", "foo/baz", false)]
+    public void Test_StartsWithRelative(string child, string parent, bool expected)
+    {
+        var childPath = (RelativePath)child;
+        var parentPath = (RelativePath)parent;
+        var actual = childPath.StartsWith(parentPath);
+        actual.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("", "", true)]
+    [InlineData("", "foo", false)]
+    [InlineData("foo", "bar", false)]
+    [InlineData("foo", "", true)]
+    [InlineData("foo/bar/baz", "", true)]
+    [InlineData("foo/bar/baz", "bar/baz", true)]
+    [InlineData("foo/bar/baz", "foo/bar/baz", true)]
+    [InlineData("foobar", "bar", false)]
+    [InlineData("foo/bar/baz", "foo/baz", false)]
+    public void Test_EndsWithRelative(string child, string parent, bool expected)
+    {
+        var childPath = (RelativePath)child;
+        var parentPath = (RelativePath)parent;
+        var actual = childPath.EndsWith(parentPath);
+        actual.Should().Be(expected);
+    }
+
+    [Theory]
     [InlineData("foo/bar/baz", 0, "foo/bar/baz")]
     [InlineData("foo/bar/baz", 1, "bar/baz")]
     [InlineData("foo/bar/baz", 2, "baz")]
