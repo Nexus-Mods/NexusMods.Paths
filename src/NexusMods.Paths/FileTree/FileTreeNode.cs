@@ -25,12 +25,13 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
     /// <remarks>If the value is null, this node is assumed to be a directory, a file otherwise.</remarks>
     /// <param name="path">The complete path for the node with respect to the root of the tree</param>
     /// <param name="name">The file name for the node</param>
-    /// <param name="value">The associated value to be stored along a file entry. Should be null for directories.</param>
-    public FileTreeNode(TPath path, RelativePath name, TValue? value)
+    /// <param name="isFile">Whether this is a file node.</param>
+    /// <param name="value">The associated value to be stored along a file entry. Should be null or default for directories.</param>
+    public FileTreeNode(TPath path, RelativePath name, bool isFile, TValue? value)
     {
         Path = path;
         Name = name;
-        _isFile = value != null;
+        _isFile = isFile;
         Value = value;
         _children = new Dictionary<RelativePath, FileTreeNode<TPath, TValue>>();
     }
@@ -104,8 +105,9 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
     public IEnumerable<FileTreeNode<TPath, TValue>> GetAllDescendentFiles()
     {
         if (IsFile) return Enumerable.Empty<FileTreeNode<TPath, TValue>>();
+        if (!Children.Any()) return Enumerable.Empty<FileTreeNode<TPath, TValue>>();
 
-        return Children.Values.SelectMany(x => x.GetAllDescendentFiles());
+        return Children.Values.SelectMany(x => { return x.IsFile ? new[] { x } : x.GetAllDescendentFiles(); });
     }
 
     /// <summary>
@@ -124,18 +126,11 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
     /// <returns>null if not found</returns>
     public FileTreeNode<TPath, TValue>? FindNode(TPath searchedPath)
     {
-        var currentNode = this;
+        if (Path.Equals(searchedPath)) return this;
 
-        while (searchedPath.InFolder(currentNode.Path))
-        {
-            if (currentNode.Path.Equals(searchedPath)) return currentNode;
-
-            currentNode = currentNode.Children.Values.FirstOrDefault(x => searchedPath.InFolder(x.Path));
-
-            if (currentNode == null) return null;
-        }
-
-        return null;
+        return searchedPath.StartsWith(Path)
+            ? Children.Values.Select(child => child.FindNode(searchedPath)).FirstOrDefault(node => node != null)
+            : null;
     }
 
     /// <summary>
@@ -187,7 +182,7 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
 
         // If paths are rooted, we assume all the passed paths share the same root
         // If paths are not rooted, we assume they are all relative to the same unknown root (RelativePath.Empty)
-        var rootNode = new FileTreeNode<TPath, TValue>(rootComponent, RelativePath.Empty, default);
+        var rootNode = new FileTreeNode<TPath, TValue>(rootComponent, RelativePath.Empty, false, default);
 
         rootNode.PopulateTree(fileArray);
 
@@ -234,9 +229,10 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
                 }
 
                 // if we are at the last path, this is the file
-                var value = i == parentPaths.Length - 1 ? fileEntry.Value : default;
+                var isFile = i == parentPaths.Length - 1;
+                var value = isFile ? fileEntry.Value : default;
 
-                var node = new FileTreeNode<TPath, TValue>(subPath, subPathName, value);
+                var node = new FileTreeNode<TPath, TValue>(subPath, subPathName, isFile, value);
 
                 parentNode.AddChild(node);
 
