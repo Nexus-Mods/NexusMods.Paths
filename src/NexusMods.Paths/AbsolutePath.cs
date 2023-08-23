@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using NexusMods.Paths.Extensions;
@@ -11,7 +13,7 @@ namespace NexusMods.Paths;
 /// A path that represents a full path to a file or directory.
 /// </summary>
 [PublicAPI]
-public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath
+public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<AbsolutePath>
 {
     /// <summary>
     /// The directory component of the path.
@@ -33,6 +35,9 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath
     /// <example><c>README.md</c></example>
     public readonly string FileName;
 
+    /// <inheritdoc />
+    RelativePath IPath.FileName => Name;
+
     /// <summary>
     /// The <see cref="IFileSystem"/> implementation used by the IO methods.
     /// </summary>
@@ -48,11 +53,17 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath
         return new AbsolutePath(Directory, FileName, fileSystem);
     }
 
+    /// <summary>
+    /// Returns the FileName as a <see cref="RelativePath"/>.
+    /// </summary>
+    /// <remarks>
+    /// If this is a root directory, returns <see cref="RelativePath.Empty"/>.
+    /// </remarks>
+    public RelativePath Name =>  string.IsNullOrEmpty(FileName) ? RelativePath.Empty : new RelativePath(FileName);
+
     /// <inheritdoc />
     public Extension Extension => string.IsNullOrEmpty(FileName) ? Extension.None : Extension.FromPath(FileName);
 
-    /// <inheritdoc />
-    RelativePath IPath.FileName => FileName;
 
     /// <summary>
     /// Gets the parent directory, i.e. navigates one folder up.
@@ -66,6 +77,40 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath
             return new AbsolutePath(directory.ToString(), fileName.ToString(), FileSystem);
         }
     }
+
+    /// <summary>
+    /// Returns the root folder of this path.
+    /// </summary>
+    public AbsolutePath GetRootComponent => GetRootDirectory();
+
+    /// <inheritdoc/>
+    public IEnumerable<RelativePath> Parts =>
+        GetNonRootPart().Parts;
+
+    /// <inheritdoc/>
+    public IEnumerable<AbsolutePath> GetAllParents()
+    {
+        var currentPath = this;
+        var root = GetRootDirectory();
+
+        while (currentPath != root)
+        {
+            yield return currentPath;
+            currentPath = currentPath.Parent;
+        }
+        yield return root;
+    }
+
+    /// <summary>
+    /// Returns the non-root part of this path.
+    /// </summary>
+    public RelativePath GetNonRootPart()
+    {
+        return RelativeTo(GetRootDirectory());
+    }
+
+    /// <inheritdoc/>
+    public bool IsRooted => true;
 
     private AbsolutePath(string directory, string fileName, IFileSystem fileSystem)
     {
@@ -90,10 +135,9 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath
     /// </summary>
     /// <seealso cref="FromSanitizedFullPath"/>
     /// <seealso cref="FromUnsanitizedDirectoryAndFileName"/>
-    internal static AbsolutePath FromUnsanitizedFullPath(ReadOnlySpan<char> fullPath, IFileSystem fileSystem)
+    internal static AbsolutePath FromUnsanitizedFullPath(string fullPath, IFileSystem fileSystem)
     {
-        var sanitizedPath = PathHelpers.Sanitize(fullPath, fileSystem.OS);
-        return FromSanitizedFullPath(sanitizedPath, fileSystem);
+        return fileSystem.FromUnsanitizedFullPath(fullPath);
     }
 
     /// <summary>
@@ -203,14 +247,21 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath
     /// <summary>
     /// Gets a path relative to another absolute path.
     /// </summary>
+    /// <remarks>
+    /// Returns <see cref="RelativePath.Empty"/> if <see paramref="other"/> is the same as this path.
+    /// </remarks>
     /// <param name="other">The path from which the relative path should be made.</param>
+    /// <throws><see cref="PathException"/> if the paths are not in the same folder.</throws>
     public RelativePath RelativeTo(AbsolutePath other)
     {
         var childLength = GetFullPathLength();
+        var parentLength = other.GetFullPathLength();
+
+        if (childLength == parentLength && Equals(other)) return RelativePath.Empty;
+
         var child = childLength <= 512 ? stackalloc char[childLength] : GC.AllocateUninitializedArray<char>(childLength);
         GetFullPath(child);
 
-        var parentLength = other.GetFullPathLength();
         var parent = parentLength <= 512 ? stackalloc char[parentLength] : GC.AllocateUninitializedArray<char>(parentLength);
         other.GetFullPath(parent);
 
@@ -221,11 +272,7 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath
         return default;
     }
 
-    /// <summary>
-    /// Returns true if this path is a child of the specified path.
-    /// </summary>
-    /// <param name="parent">The path to verify.</param>
-    /// <returns>True if this is a child path of the parent path; else false.</returns>
+    /// <inheritdoc />
     public bool InFolder(AbsolutePath parent)
     {
         var parentLength = parent.GetFullPathLength();
@@ -236,6 +283,31 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath
         // We need the full path of the "parent", but only the directory name
         // of the "child".
         return PathHelpers.InFolder(Directory, parentSpan, FileSystem.OS);
+    }
+
+    /// <inheritdoc />
+    public bool StartsWith(AbsolutePath other)
+    {
+        var fullPath = GetFullPath();
+        var prefix = other.GetFullPath();
+
+        if (fullPath.Length < prefix.Length) return false;
+        if (fullPath.Length == prefix.Length) return Equals(other);
+        if (!fullPath.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // If the other path is a parent of this path, then the next character must be a directory separator.
+        return fullPath[prefix.Length] == PathHelpers.DirectorySeparatorChar ||
+               // unless the prefix is a root directory
+               PathHelpers.IsRootDirectory(prefix, FileSystem.OS);
+    }
+
+    /// <inheritdoc />
+    public bool EndsWith(RelativePath other)
+    {
+        return GetNonRootPart().EndsWith(other);
     }
 
     /// <summary/>

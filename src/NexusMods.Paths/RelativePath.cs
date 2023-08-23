@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using NexusMods.Paths.Extensions;
@@ -11,7 +12,7 @@ namespace NexusMods.Paths;
 /// A path that represents a partial path to a file or directory.
 /// </summary>
 [PublicAPI]
-public readonly struct RelativePath : IEquatable<RelativePath>, IPath, IComparable<RelativePath>
+public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePath>, IComparable<RelativePath>
 {
     // NOTE(erri120): since relative paths are not rooted, the operating system
     // shouldn't matter. The OS is usually only relevant to determine the root part
@@ -36,8 +37,13 @@ public readonly struct RelativePath : IEquatable<RelativePath>, IPath, IComparab
     /// <inheritdoc />
     public Extension Extension => Extension.FromPath(Path);
 
+    /// <summary>
+    /// Returns the file name of this path.
+    /// </summary>
+    public RelativePath FileName => Name;
+
     /// <inheritdoc />
-    public RelativePath FileName => new(PathHelpers.GetFileName(Path, OS).ToString());
+    public RelativePath Name => new(PathHelpers.GetFileName(Path, OS).ToString());
 
     /// <summary>
     /// Amount of directories contained within this relative path.
@@ -57,10 +63,53 @@ public readonly struct RelativePath : IEquatable<RelativePath>, IPath, IComparab
     }
 
     /// <summary>
+    /// Always returns an empty path as relative paths are not rooted.
+    /// </summary>
+    public RelativePath GetRootComponent => RelativePath.Empty;
+
+    /// <inheritdoc/>
+    public IEnumerable<RelativePath> Parts
+    {
+        get
+        {
+            var currentPath = this;
+            while (currentPath.Path != Empty)
+            {
+                yield return currentPath.Name;
+                currentPath = currentPath.Parent;
+            }
+        }
+    }
+
+    /// <inheritdoc/>
+    public IEnumerable<RelativePath> GetAllParents()
+    {
+        var parentPath = this;
+        while (parentPath != Empty)
+        {
+            yield return parentPath;
+            parentPath = parentPath.Parent;
+        }
+    }
+
+    /// <summary>
+    /// Always returns itself as relative paths are not rooted.
+    /// </summary>
+    /// <returns></returns>
+    public RelativePath GetNonRootPart()
+    {
+        return this;
+    }
+
+    /// <inheritdoc />
+    public bool IsRooted => false;
+
+
+    /// <summary>
     /// Obtains the name of the first folder stored in this path.
     /// </summary>
     /// <remarks>
-    ///    This will return empty string if there are no child directories.
+    /// This will return empty string if there are no child directories.
     /// </remarks>
     public RelativePath TopParent
     {
@@ -80,17 +129,16 @@ public readonly struct RelativePath : IEquatable<RelativePath>, IPath, IComparab
         PathHelpers.DebugAssertIsSanitized(path, OS, isRelative: true);
         Path = path;
     }
-    
+
     /// <summary>
     /// Creates a new <see cref="RelativePath"/> from a <see cref="ReadOnlySpan{T}"/>.
     /// </summary>
     /// <param name="path"></param>
-    /// <returns></returns>
     public static RelativePath FromUnsanitizedInput(ReadOnlySpan<char> path)
     {
         return new RelativePath(PathHelpers.Sanitize(path, OS));
     }
-    
+
     /// <summary>
     /// Returns the path with the directory separators native to the passed operating system.
     /// </summary>
@@ -132,7 +180,22 @@ public readonly struct RelativePath : IEquatable<RelativePath>, IPath, IComparab
     {
         return Path.AsSpan().StartsWith(other, StringComparison.OrdinalIgnoreCase);
     }
-    
+
+    /// <inheritdoc/>
+    public bool StartsWith(RelativePath other)
+    {
+        if (other.Path.Length == 0) return true;
+        if (other.Path.Length > Path.Length) return false;
+        if (other.Path.Length == Path.Length) return Equals(other);
+        if (!Path.AsSpan().StartsWith(other.Path, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // If the other path is a parent of this path, then the next character must be a directory separator.
+        return Path[other.Path.Length] == PathHelpers.DirectorySeparatorChar;
+    }
+
     /// <summary>
     /// Returns true if the relative path ends with a given string.
     /// </summary>
@@ -141,11 +204,22 @@ public readonly struct RelativePath : IEquatable<RelativePath>, IPath, IComparab
         return Path.AsSpan().EndsWith(other, StringComparison.OrdinalIgnoreCase);
     }
 
-    /// <summary>
-    /// Returns true if this path is a child of this path.
-    /// </summary>
-    /// <param name="other">The path to verify.</param>
-    /// <returns>True if this is a child path of the parent path; else false.</returns>
+    /// <inheritdoc/>
+    public bool EndsWith(RelativePath other)
+    {
+        if (other.Path.Length == 0) return true;
+        if (other.Path.Length > Path.Length) return false;
+        if (other.Path.Length == Path.Length) return Equals(other);
+        if (!Path.AsSpan().EndsWith(other.Path, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // If this path ends with other but is longer, then the character before the other path must be a directory separator.
+        return Path[Path.Length - other.Path.Length - 1] == PathHelpers.DirectorySeparatorChar;
+    }
+
+    /// <inheritdoc />
     public bool InFolder(RelativePath other)
     {
         return PathHelpers.InFolder(Path, other.Path, OS);
@@ -164,11 +238,16 @@ public readonly struct RelativePath : IEquatable<RelativePath>, IPath, IComparab
     /// <summary>
     /// Returns a path relative to the sub-path specified.
     /// </summary>
+    /// <remarks>
+    /// Returns an empty path if <paramref name="basePath"/> matches this path.
+    /// </remarks>
     /// <param name="basePath">The sub-path specified.</param>
+    /// <throws><see cref="PathException"/> if <paramref name="basePath"/> is not a parent of this path.</throws>
     public RelativePath RelativeTo(RelativePath basePath)
     {
         var other = basePath.Path;
         if (other.Length == 0) return this;
+        if (basePath.Path == Path) return Empty;
 
         var res = PathHelpers.RelativeTo(Path, other, OS);
         if (!res.IsEmpty) return new RelativePath(res.ToString());
@@ -197,6 +276,7 @@ public readonly struct RelativePath : IEquatable<RelativePath>, IPath, IComparab
     {
         return Path.AsSpan().GetNonRandomizedHashCode32();
     }
+
     #endregion
 
     /// <summary/>
