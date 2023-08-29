@@ -246,7 +246,6 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
         }
     }
 
-
     /// <summary>
     /// Gets all nodes in the tree.
     /// </summary>
@@ -262,26 +261,6 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
             }
         }
 
-    }
-
-    private static IEnumerable<FileTreeNode<TPath, TValue>> FindSubPath(FileTreeNode<TPath, TValue> node, RelativePath subpath, RelativePath[] parts, int index)
-    {
-        var part = parts[index];
-        if (!node.Children.TryGetValue(part, out var found)) yield break;
-
-        if (index == parts.Length - 1)
-        {
-            yield return found;
-            yield break;
-        }
-
-        foreach (var (_, childNode) in found.Children)
-        {
-            foreach (var itm in FindSubPath(childNode, subpath, parts, index + 1))
-            {
-                yield return itm;
-            }
-        }
     }
 
     /// <summary>
