@@ -159,6 +159,29 @@ public class RelativeFileTreeTests
             .BeEquivalentTo(expectedDescendentPaths.Select(x => (RelativePath)x));
     }
 
+    [Theory]
+    [InlineData("bar", new [] {"foo/bar"}, new[] {2})]
+    [InlineData("foo", new [] {"foo"}, new[] {1})]
+    [InlineData("bazer", new [] {"baz/bazer"}, new[] {2})]
+
+    public void Test_FindSubPath(string prefix, string[] paths, int[] depths)
+    {
+        var tree = MakeTestTree();
+
+        var nodes = tree.FindSubPath((RelativePath)prefix).ToArray();
+        nodes.Should().HaveCount(paths.Length);
+        nodes.Should().HaveCount(depths.Length);
+
+        nodes.Select(f => (string)f.Path).Should().Contain(paths);
+
+        foreach (var (path, depth) in paths.Zip(depths))
+        {
+            var node = nodes.First(n => n.Path.StartsWith(path));
+            node.Depth.Should().Be((ushort)depth);
+        }
+
+    }
+
     private static FileTreeNode<RelativePath, int> MakeTestTree()
     {
         Dictionary<RelativePath, int> fileEntries;
