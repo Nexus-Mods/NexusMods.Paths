@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
 namespace NexusMods.Paths.FileTree;
@@ -18,6 +19,7 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
 
     private readonly Dictionary<RelativePath, FileTreeNode<TPath, TValue>> _children;
     private FileTreeNode<TPath, TValue>? _parent;
+    private ushort _depth;
 
     /// <summary>
     /// Constructs a new <see cref="FileTreeNode{TPath,TValue}"/> with the given path, name, parent and value.
@@ -34,6 +36,7 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
         _isFile = isFile;
         Value = value;
         _children = new Dictionary<RelativePath, FileTreeNode<TPath, TValue>>();
+        _depth = 0;
     }
 
     /// <summary>
@@ -77,6 +80,12 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
             return _parent;
         }
     }
+
+    /// <summary>
+    /// Returns the depth of the node in the tree, the top node in the tree will have
+    /// a depth of 0. So `bar` in `/foo/bar/baz` will have a depth of 2 due to the `/` having a depth of 0.
+    /// </summary>
+    public ushort Depth => _depth;
 
     /// <inheritdoc />
     public FileTreeNode<TPath, TValue> Root
@@ -145,6 +154,7 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
         foreach (var child in children)
         {
             child._parent = this;
+            child._depth = (ushort)(child._parent._depth + 1);
             AddChild(child);
         }
     }
@@ -159,6 +169,7 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
     public void AddChild(FileTreeNode<TPath, TValue> child)
     {
         child._parent = this;
+        child._depth = (ushort)(child._parent._depth + 1);
         _children.Add(child.Name, child);
     }
 
@@ -199,6 +210,57 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
     {
         path = Path;
         value = Value;
+    }
+
+
+    /// <summary>
+    /// For a given subpath, find all nodes that match the subpath. The returned nodes will be the top of the subpath.
+    /// This allows for searching `/foo/bar/baz/qux` by passing `bar/baz` to this function and this function will then
+    /// return the `bar` node.
+    /// </summary>
+    /// <param name="subpath"></param>
+    /// <returns></returns>
+    public IEnumerable<FileTreeNode<TPath, TValue>> FindSubPath(RelativePath subpath)
+    {
+        var parts = subpath.Parts.ToArray();
+
+        var children = GetAllNodes().Where(n => n.RelativePath.StartsWith(parts[0]));
+
+        foreach (var (_, childNode) in children)
+        {
+            var notFound = false;
+            var node = childNode;
+            foreach (var part in parts[1..])
+            {
+                if (!node.Children.TryGetValue(part, out var found))
+                {
+                    notFound = true;
+                    break;
+                }
+
+                node = found;
+            }
+
+            if (notFound) continue;
+            yield return childNode;
+        }
+    }
+
+    /// <summary>
+    /// Gets all nodes in the tree.
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerable<(RelativePath RelativePath, FileTreeNode<TPath, TValue> Node)> GetAllNodes()
+    {
+        foreach (var (path, node) in Children)
+        {
+            yield return (path, node);
+            foreach (var tuple in node.GetAllNodes())
+            {
+                yield return tuple;
+            }
+        }
+
     }
 
     /// <summary>
