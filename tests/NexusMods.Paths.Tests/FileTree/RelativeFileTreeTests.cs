@@ -19,8 +19,9 @@ public class RelativeFileTreeTests
         if (found)
         {
             node.Should().NotBeNull();
-            node!.Path.Should().Be((RelativePath)path);
-            node!.Value.Should().Be(value);
+            var (testPath, testValue) = node!;
+            testPath.Should().Be((RelativePath)path);
+            testValue.Should().Be(value);
         }
         else
         {

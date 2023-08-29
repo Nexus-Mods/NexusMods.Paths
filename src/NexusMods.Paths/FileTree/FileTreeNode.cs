@@ -189,6 +189,18 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
         return rootNode;
     }
 
+
+    /// <summary>
+    /// Deconstructs the node into its path and value.
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="value"></param>
+    public void Deconstruct(out TPath path, out TValue? value)
+    {
+        path = Path;
+        value = Value;
+    }
+
     /// <summary>
     /// Populates the tree with the given collection of file entries.
     /// </summary>

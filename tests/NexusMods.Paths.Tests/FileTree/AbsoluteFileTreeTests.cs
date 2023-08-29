@@ -28,8 +28,9 @@ public class AbsoluteFileTreeTests
         if (found)
         {
             node.Should().NotBeNull();
-            node!.Path.Should().Be(CreateAbsPath(path, isUnix));
-            node!.Value.Should().Be(value);
+            var (testPath, testValue) = node!;
+            testPath.Should().Be(CreateAbsPath(path, isUnix));
+            testValue.Should().Be(value);
         }
         else
         {
