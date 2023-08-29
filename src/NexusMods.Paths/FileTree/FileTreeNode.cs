@@ -224,7 +224,7 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
     {
         var parts = subpath.Parts.ToArray();
 
-        var children = GetAllNodes().Where(n => n.Path.StartsWith(parts[0]));
+        var children = GetAllNodes().Where(n => n.RelativePath.StartsWith(parts[0]));
 
         foreach (var (_, childNode) in children)
         {
@@ -250,7 +250,7 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
     /// Gets all nodes in the tree.
     /// </summary>
     /// <returns></returns>
-    public IEnumerable<(RelativePath Path, FileTreeNode<TPath, TValue> Node)> GetAllNodes()
+    public IEnumerable<(RelativePath RelativePath, FileTreeNode<TPath, TValue> Node)> GetAllNodes()
     {
         foreach (var (path, node) in Children)
         {
