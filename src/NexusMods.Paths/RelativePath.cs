@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using NexusMods.Paths.Extensions;
+using NexusMods.Paths.HighPerformance.CommunityToolkit;
 using NexusMods.Paths.Utilities;
 
 namespace NexusMods.Paths;
@@ -72,12 +73,36 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     {
         get
         {
-            var currentPath = this;
-            while (currentPath.Path != Empty)
+            // Double iteration because we can't have iterators and spans in the same method.
+            ReadOnlySpan<char> path = Path;
+
+            if (path.Length == 0)
+                return Array.Empty<RelativePath>();
+
+            // Find the number of parts.
+            var partCount = 0;
+            for (var idx = 0; idx < path.Length; idx++)
+                if (path.DangerousGetReferenceAt(idx) == PathHelpers.DirectorySeparatorChar)
+                    partCount++;
+
+            // Allocate the array and fill it.
+            var parts = new RelativePath[partCount + 1];
+
+            var prev = 0;
+            var partIdx = 0;
+            for (var idx = 0; idx < path.Length; idx++)
             {
-                yield return currentPath.Name;
-                currentPath = currentPath.Parent;
+                var ch = path.DangerousGetReferenceAt(idx);
+                if (ch != PathHelpers.DirectorySeparatorChar) continue;
+
+                parts[partIdx] = new RelativePath(new string(path.SliceFast(prev, idx - prev)));
+                partIdx += 1;
+                idx += 1;
+                prev = idx;
             }
+
+            parts[partIdx] = new RelativePath(new string(path.SliceFast(prev)));
+            return parts;
         }
     }
 
