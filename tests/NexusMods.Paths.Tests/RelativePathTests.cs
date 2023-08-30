@@ -144,7 +144,8 @@ public class RelativePathTests
     public void Test_Parts(string input, string[] expectedParts)
     {
         var path = new RelativePath(input);
-        path.Parts.Should().BeEquivalentTo(expectedParts.Select(x => new RelativePath(x)));
+        path.Parts.Should().BeEquivalentTo(expectedParts.Select(x => new RelativePath(x)),
+            opts => opts.WithStrictOrdering());
     }
 
     [Theory]

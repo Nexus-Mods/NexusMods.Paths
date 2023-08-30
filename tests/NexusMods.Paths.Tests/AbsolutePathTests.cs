@@ -94,7 +94,8 @@ public class AbsolutePathTests
     {
         var path = CreatePath(input, isUnix);
         var actualParts = path.Parts;
-        actualParts.Should().BeEquivalentTo(expectedParts.Select(p => new RelativePath(p)));
+        actualParts.Should().BeEquivalentTo(expectedParts.Select(p => new RelativePath(p)),
+            opts => opts.WithStrictOrdering());
     }
 
     [Theory]
