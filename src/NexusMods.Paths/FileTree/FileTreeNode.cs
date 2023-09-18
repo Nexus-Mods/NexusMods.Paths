@@ -15,11 +15,10 @@ namespace NexusMods.Paths.FileTree;
 public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>>
     where TPath : struct, IPath<TPath>, IEquatable<TPath>
 {
-    private readonly bool _isFile;
-
     private readonly Dictionary<RelativePath, FileTreeNode<TPath, TValue>> _children;
     private FileTreeNode<TPath, TValue>? _parent;
     private ushort _depth;
+    private readonly bool _isFile;
 
     /// <summary>
     /// Constructs a new <see cref="FileTreeNode{TPath,TValue}"/> with the given path, name, parent and value.
