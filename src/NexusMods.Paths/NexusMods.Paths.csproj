@@ -9,4 +9,8 @@
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
         <PackageReference Include="Vogen" Version="3.0.20" />
     </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="NexusMods.Paths.Benchmarks" />
+    </ItemGroup>
 </Project>
