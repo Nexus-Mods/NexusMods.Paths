@@ -15,6 +15,8 @@ namespace NexusMods.Paths.FileTree;
 public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>>
     where TPath : struct, IPath<TPath>, IEquatable<TPath>
 {
+    private static List<FileTreeNode<TPath, TValue>> _empty = new();
+
     private readonly Dictionary<RelativePath, FileTreeNode<TPath, TValue>> _children;
     private FileTreeNode<TPath, TValue>? _parent;
     private ushort _depth;
@@ -110,12 +112,36 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
     }
 
     /// <inheritdoc />
-    public IEnumerable<FileTreeNode<TPath, TValue>> GetAllDescendentFiles()
+    public List<FileTreeNode<TPath, TValue>> GetAllDescendentFiles()
     {
-        if (IsFile) return Enumerable.Empty<FileTreeNode<TPath, TValue>>();
-        if (!Children.Any()) return Enumerable.Empty<FileTreeNode<TPath, TValue>>();
+        if (IsFile) return _empty;
+        if (_children.Count == 0) return _empty;
+        var results = new List<FileTreeNode<TPath, TValue>>();
+        GetAllDescendentFilesRecursive(this, results);
+        return results;
+    }
 
-        return Children.Values.SelectMany(x => { return x.IsFile ? new[] { x } : x.GetAllDescendentFiles(); });
+    private void GetAllDescendentFilesRecursive(FileTreeNode<TPath, TValue> node, List<FileTreeNode<TPath, TValue>> results)
+    {
+        foreach (var child in node.Children)
+        {
+            var value = child.Value;
+            if (value.IsFile)
+                results.Add(value);
+            else
+                GetAllDescendentFilesRecursive(value, results);
+        }
+    }
+
+    /// <summary>
+    /// Returns the number of descendant files of this node.
+    /// </summary>
+    /// <returns>The number of direct node descendants.</returns>
+    public int CountDescendantFiles()
+    {
+        var result = 0;
+        CountDescendantsRecursive(this, ref result);
+        return result;
     }
 
     /// <summary>
@@ -171,7 +197,6 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
         child._depth = (ushort)(child._parent._depth + 1);
         _children.Add(child.Name, child);
     }
-
 
     /// <summary>
     /// Creates a tree structure from a collection of file entries.
@@ -312,5 +337,19 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
                 parentNode = node;
             }
         }
+    }
+
+    private int CountDescendantsRecursive(FileTreeNode<TPath, TValue> node, ref int accumulator)
+    {
+        foreach (var child in node.Children)
+        {
+            var value = child.Value;
+            if (value.IsFile)
+                accumulator += 1;
+            else
+                CountDescendantsRecursive(value, ref accumulator);
+        }
+
+        return accumulator;
     }
 }

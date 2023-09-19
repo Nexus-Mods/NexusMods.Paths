@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using BenchmarkDotNet.Running;
 using NexusMods.Paths.Benchmarks;
+using NexusMods.Paths.Benchmarks.Benchmarks;
 using NexusMods.Paths.Benchmarks.Interfaces;
 
 var benchmarks = Assembly.GetExecutingAssembly()
