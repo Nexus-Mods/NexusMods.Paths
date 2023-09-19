@@ -34,11 +34,6 @@ public interface IOSInformation
     bool IsOSX => Platform == OSPlatform.OSX;
 
     /// <summary>
-    /// Whether the current <see cref="Platform"/> is Osx or Linux
-    /// </summary>
-    bool IsUnixLike => Platform == OSPlatform.OSX || Platform == OSPlatform.Linux;
-
-    /// <summary>
     /// Matches and returns a value based on the current platform.
     /// </summary>
     /// <param name="onWindows"></param>
