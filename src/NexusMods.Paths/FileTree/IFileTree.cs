@@ -69,5 +69,5 @@ public interface IFileTree<TFileTree> where TFileTree : IFileTree<TFileTree>
     /// <remarks>
     /// Returns an empty collection if this node is a file.
     /// </remarks>
-    public IEnumerable<TFileTree> GetAllDescendentFiles();
+    public List<TFileTree> GetAllDescendentFiles();
 }
