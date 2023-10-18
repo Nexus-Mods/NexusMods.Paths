@@ -86,7 +86,7 @@ public readonly partial struct AbsolutePath
         => FileSystem.EnumerateFiles(this, pattern, recursive);
 
     /// <inheritdoc cref="IFileSystem.EnumerateDirectories"/>
-    IEnumerable<AbsolutePath> EnumerateDirectories(string pattern = "*", bool recursive = true) =>
+    public IEnumerable<AbsolutePath> EnumerateDirectories(string pattern = "*", bool recursive = true) =>
         FileSystem.EnumerateDirectories(this, pattern, recursive);
 
     /// <inheritdoc cref="IFileSystem.EnumerateFileEntries"/>
