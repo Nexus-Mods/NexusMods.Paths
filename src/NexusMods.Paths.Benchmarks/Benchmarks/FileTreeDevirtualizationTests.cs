@@ -11,26 +11,27 @@ namespace NexusMods.Paths.Benchmarks.Benchmarks;
 [DisassemblyDiagnoser]
 public class FileTreeDevirtualizationTests : IBenchmark
 {
-    private TestTree item = new TestTree().GenerateChildren(3);
+    private TestTree _item = new TestTree().GenerateChildren(3);
 
     [Benchmark]
-    public int CountChildren_ViaInterface()
-    {
-        return item.CountChildren<TestTree, RelativePath>();
-    }
+    public int CountChildren_ViaInterface() => _item.CountChildren<TestTree, RelativePath>();
 
     [Benchmark]
-    public int CountChildren_This()
-    {
-        return item.CountChildren();
-    }
+    public int CountChildren_This() => _item.CountChildren();
+
+    [Benchmark]
+    public int CountChildrenDepth_ViaInterface() => _item.SumChildrenDepth<TestTree, RelativePath>();
+
+    [Benchmark]
+    public int CountChildrenDepth_This() => _item.SumChildrenDepth();
 }
 
-public struct TestTree : IHaveChildrenWithKey<RelativePath, TestTree>
+public struct TestTree : IHaveChildrenWithKey<RelativePath, TestTree>, IHaveDepthInformation
 {
     public TestTree() { }
 
     public Dictionary<RelativePath, ChildrenWithKeyBox<RelativePath, TestTree>> Children { get; } = new();
+    public ushort Depth { get; private set;  }
 
     /// <summary>
     ///     Counts the number of direct child nodes of the current node.
@@ -58,6 +59,29 @@ public struct TestTree : IHaveChildrenWithKey<RelativePath, TestTree>
             CountChildrenRecursive(child.Value.Item, ref accumulator);
     }
 
+    /// <summary>
+    ///     Test method for combining interfaces.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int SumChildrenDepth()
+    {
+        var result = 0;
+        SumChildrenDepthRecursive(ref result);
+        return result;
+    }
+
+    /// <summary>
+    ///     Sums the 'depth' field of all child nodes.
+    ///     This is a test for when we combine interfaces with children.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void SumChildrenDepthRecursive(ref int accumulator)
+    {
+        accumulator += Depth;
+        foreach (var child in Children)
+            child.Value.Item.SumChildrenDepthRecursive(ref accumulator);
+    }
+
     public TestTree GenerateChildren(int depth, int itemsPerNode = 100)
     {
         if (depth <= 0)
@@ -67,8 +91,38 @@ public struct TestTree : IHaveChildrenWithKey<RelativePath, TestTree>
         {
             var path = new RelativePath($"Child_{x}");
             Children[path] = new TestTree().GenerateChildren(depth - 1);
+            Depth = (ushort)x;
         }
 
         return this;
+    }
+}
+
+/// <summary>
+///     Test for combining traits.
+/// </summary>
+// ReSharper disable once InconsistentNaming
+internal static class IHaveChildrenWithKeyPrivateExtensions
+{
+    /// <summary>
+    ///     Sums the 'depth' field of all child nodes.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int SumChildrenDepth<TSelf, TKey>(this TSelf item)
+        where TSelf : struct, IHaveChildrenWithKey<TKey, TSelf>, IHaveDepthInformation
+        where TKey : notnull
+    {
+        var result = 0;
+        item.SumChildrenDepthRecursive<TSelf, TKey>(ref result);
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void SumChildrenDepthRecursive<TSelf, TKey>(this TSelf item, ref int accumulator)
+        where TSelf : struct, IHaveChildrenWithKey<TKey, TSelf>, IHaveDepthInformation where TKey : notnull
+    {
+        accumulator += item.Depth;
+        foreach (var child in item.Children)
+            child.Value.Item.SumChildrenDepthRecursive<TSelf, TKey>(ref accumulator);
     }
 }
