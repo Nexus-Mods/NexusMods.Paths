@@ -13,6 +13,7 @@ namespace NexusMods.Paths.Trees.Traits;
 
    TDictionary recurses on itself.
 */
+
 /// <summary>
 ///     An interface used by Tree implementations to indicate that they have a keyed child.
 /// </summary>

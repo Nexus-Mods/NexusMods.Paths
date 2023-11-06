@@ -48,3 +48,13 @@ plugins:
 
 nav:
   - Home: index.md
+  - Dynamic Trees:
+      - "Introduction": Trees/Introduction.md
+      - "Contributing": Trees/Contributing.md
+      - "Interfaces":
+          - "IHaveAFileOrDirectory": Trees/Interfaces/IHaveAFileOrDirectory.md
+          - "IHaveChildren": Trees/Interfaces/IHaveChildren.md
+          - "IHaveChildrenWithKey": Trees/Interfaces/IHaveChildrenWithKey.md
+          - "IHaveDepthInformation": Trees/Interfaces/IHaveDepthInformation.md
+          - "IHaveParent": Trees/Interfaces/IHaveParent.md
+          - "IHavePathSegment": Trees/Interfaces/IHavePathSegment.md
