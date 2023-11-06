@@ -129,7 +129,6 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     /// <inheritdoc />
     public bool IsRooted => false;
 
-
     /// <summary>
     /// Obtains the name of the first folder stored in this path.
     /// </summary>
