@@ -19,8 +19,8 @@ namespace NexusMods.Paths.Trees.Traits;
 /// </summary>
 /// <typeparam name="TKey">The name of the key used in the File Tree.</typeparam>
 /// <typeparam name="TSelf">The type of the child stored in this FileTree.</typeparam>
-public interface IHaveChildrenWithKey<TKey, TSelf>
-    where TSelf : struct, IHaveChildrenWithKey<TKey, TSelf>
+public interface IHaveBoxedChildrenWithKey<TKey, TSelf>
+    where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
     where TKey : notnull
 {
     /// <summary>
@@ -29,11 +29,11 @@ public interface IHaveChildrenWithKey<TKey, TSelf>
     /// <remarks>
     ///     This should point to an empty dictionary if there are no items.
     /// </remarks>
-    public Dictionary<TKey, ChildrenWithKeyBox<TKey, TSelf>> Children { get; }
+    public Dictionary<TKey, ChildWithKeyBox<TKey, TSelf>> Children { get; }
 }
 
 /// <summary>
-///     A boxed element that implements <see cref="IHaveChildrenWithKey{TKey,TSelf}" />
+///     A boxed element that implements <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" />
 /// </summary>
 /// <remarks>
 ///     This is a helper class that boxes a constrained generic structure type.
@@ -41,24 +41,24 @@ public interface IHaveChildrenWithKey<TKey, TSelf>
 ///     Generic structures can participate in devirtualization, and thus create
 ///     zero overhead abstractions.
 /// </remarks>
-public class ChildrenWithKeyBox<TKey, TSelf>
-    where TSelf : struct, IHaveChildrenWithKey<TKey, TSelf>
+public class ChildWithKeyBox<TKey, TSelf>
+    where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
     where TKey : notnull
 {
     /// <summary>
-    ///     Contains item deriving from <see cref="IHaveChildrenWithKey{TKey,TSelf}" />
+    ///     Contains item deriving from <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" />
     /// </summary>
     public TSelf Item;
 
     /// <summary />
-    public static implicit operator TSelf(ChildrenWithKeyBox<TKey, TSelf> box) => box.Item;
+    public static implicit operator TSelf(ChildWithKeyBox<TKey, TSelf> box) => box.Item;
 
     /// <summary />
-    public static implicit operator ChildrenWithKeyBox<TKey, TSelf>(TSelf item) => new() { Item = item };
+    public static implicit operator ChildWithKeyBox<TKey, TSelf>(TSelf item) => new() { Item = item };
 }
 
 /// <summary>
-///     Trait methods for <see cref="IHaveChildrenWithKey{TKey,TSelf}" />.
+///     Trait methods for <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" />.
 /// </summary>
 // ReSharper disable once InconsistentNaming
 public static class IHaveChildrenWithKeyExtensions
@@ -70,9 +70,9 @@ public static class IHaveChildrenWithKeyExtensions
     /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>An IEnumerable of all child nodes of the current node.</returns>
-    public static IEnumerable<KeyValuePair<TKey, ChildrenWithKeyBox<TKey, TSelf>>> EnumerateChildren<TSelf, TKey>(
+    public static IEnumerable<KeyValuePair<TKey, ChildWithKeyBox<TKey, TSelf>>> EnumerateChildren<TSelf, TKey>(
         this TSelf item)
-        where TSelf : struct, IHaveChildrenWithKey<TKey, TSelf>
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
         where TKey : notnull
     {
         foreach (var child in item.Children)
@@ -92,7 +92,7 @@ public static class IHaveChildrenWithKeyExtensions
     /// <returns>The count of direct child nodes.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountChildren<TSelf, TKey>(this TSelf item)
-        where TSelf : struct, IHaveChildrenWithKey<TKey, TSelf>
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
         where TKey : notnull
     {
         var result = 0;
@@ -100,12 +100,9 @@ public static class IHaveChildrenWithKeyExtensions
         return result;
     }
 
-    /// <summary>
-    ///     Enumerates all child nodes of this current node.
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void CountChildrenRecursive<TSelf, TKey>(this TSelf item, ref int accumulator)
-        where TSelf : struct, IHaveChildrenWithKey<TKey, TSelf> where TKey : notnull
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf> where TKey : notnull
     {
         accumulator += item.Children.Count;
         foreach (var child in item.Children)

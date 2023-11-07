@@ -7,7 +7,7 @@ namespace NexusMods.Paths.Trees.Traits;
 ///     An interface used by Tree implementations to indicate that they have a child.
 /// </summary>
 /// <typeparam name="TSelf">The type of the child stored in this FileTree.</typeparam>
-public interface IHaveChildren<out TSelf>
+public interface IHaveBoxedChildren<out TSelf> where TSelf : struct, IHaveBoxedChildren<TSelf>
 {
     /// <summary>
     ///     A Dictionary containing all the children of this node, both files and directories.
@@ -16,24 +16,42 @@ public interface IHaveChildren<out TSelf>
 }
 
 /// <summary>
-///     Trait methods for <see cref="IHaveChildren{T}" />.
+///     A boxed element that implements <see cref="IHaveBoxedChildren{TSelf}" />
 /// </summary>
-// ReSharper disable once InconsistentNaming
-public static class IHaveChildrenExtensions
+/// <remarks>
+///     This is a helper class that boxes a constrained generic structure type.
+///     While generic reference types share code (and are thus slower),
+///     Generic structures can participate in devirtualization, and thus create
+///     zero overhead abstractions.
+/// </remarks>
+public class ChildBox<TSelf>
+    where TSelf : struct, IHaveBoxedChildren<TSelf>
 {
     /// <summary>
-    ///     [DO NOT USE DIRECTLY, COPY THIS CODE INTO RELEVANT FILE TREE IMPLEMENTATION, DUE TO .NET DEVIRTUALIZATION ISSUES]
+    ///     Contains item deriving from <see cref="IHaveBoxedChildren{TSelf}" />
+    /// </summary>
+    public TSelf Item;
+
+    /// <summary />
+    public static implicit operator TSelf(ChildBox<TSelf> box) => box.Item;
+
+    /// <summary />
+    public static implicit operator ChildBox<TSelf>(TSelf item) => new() { Item = item };
+}
+
+/// <summary>
+///     Trait methods for <see cref="IHaveBoxedChildren{TSelf}" />.
+/// </summary>
+// ReSharper disable once InconsistentNaming
+public static class IHaveBoxedChildrenExtensions
+{
+    /// <summary>
     ///     Enumerates all child nodes of the current node in a depth-first manner.
     /// </summary>
     /// <param name="item">The node whose children are to be enumerated.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>An IEnumerable of all child nodes of the current node.</returns>
-    /// <remarks>
-    ///     Due to .NET devirtualization limitations, this method should not be used directly.
-    ///     It's recommended to copy its implementation into the relevant FileTree implementations.
-    ///     This code should be source generated in the future.
-    /// </remarks>
-    public static IEnumerable<TSelf> EnumerateChildren<TSelf>(this TSelf item) where TSelf : IHaveChildren<TSelf>
+    public static IEnumerable<TSelf> EnumerateChildren<TSelf>(this TSelf item) where TSelf : struct, IHaveBoxedChildren<TSelf>
     {
         foreach (var child in item.Children)
         {
@@ -44,19 +62,13 @@ public static class IHaveChildrenExtensions
     }
 
     /// <summary>
-    ///     [DO NOT USE DIRECTLY, COPY THIS CODE INTO RELEVANT FILE TREE IMPLEMENTATION, DUE TO .NET DEVIRTUALIZATION ISSUES]
     ///     Counts the number of direct child nodes of the current node.
     /// </summary>
     /// <param name="item">The node whose children are to be counted.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>The count of direct child nodes.</returns>
-    /// <remarks>
-    ///     Due to .NET devirtualization limitations, this method should not be used directly.
-    ///     It's recommended to copy its implementation into the relevant FileTree implementations.
-    ///     This code should be source generated in the future.
-    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CountChildren<TSelf>(this TSelf item) where TSelf : IHaveChildren<TSelf>
+    public static int CountChildren<TSelf>(this TSelf item) where TSelf : struct, IHaveBoxedChildren<TSelf>
     {
         var result = 0;
         item.CountChildrenRecursive(ref result);
@@ -64,24 +76,18 @@ public static class IHaveChildrenExtensions
     }
 
     /// <summary>
-    ///     [DO NOT USE DIRECTLY, COPY THIS CODE INTO RELEVANT FILE TREE IMPLEMENTATION, DUE TO .NET DEVIRTUALIZATION ISSUES]
     ///     Counts the number of direct child nodes of the current node.
     /// </summary>
     /// <param name="item">The node whose children are to be counted.</param>
     /// <param name="accumulator">Parameter that counts the running total.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>The count of direct child nodes.</returns>
-    /// <remarks>
-    ///     Due to .NET devirtualization limitations, this method should not be used directly.
-    ///     It's recommended to copy its implementation into the relevant FileTree implementations.
-    ///     This code should be source generated in the future.
-    /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void CountChildrenRecursive<TSelf>(this TSelf item, ref int accumulator)
-        where TSelf : IHaveChildren<TSelf>
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
     {
         accumulator += item.Children.Length;
-        foreach (var child in item.Children)
+        foreach (var child in item.Children) // <= lowered to 'for loop' because array.
             child.CountChildrenRecursive(ref accumulator);
     }
 }

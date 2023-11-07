@@ -26,11 +26,11 @@ public class FileTreeDevirtualizationTests : IBenchmark
     public int CountChildrenDepth_This() => _item.SumChildrenDepth();
 }
 
-public struct TestTree : IHaveChildrenWithKey<RelativePath, TestTree>, IHaveDepthInformation
+public struct TestTree : IHaveBoxedChildrenWithKey<RelativePath, TestTree>, IHaveDepthInformation
 {
     public TestTree() { }
 
-    public Dictionary<RelativePath, ChildrenWithKeyBox<RelativePath, TestTree>> Children { get; } = new();
+    public Dictionary<RelativePath, ChildWithKeyBox<RelativePath, TestTree>> Children { get; } = new();
     public ushort Depth { get; private set;  }
 
     /// <summary>
@@ -109,7 +109,7 @@ internal static class IHaveChildrenWithKeyPrivateExtensions
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int SumChildrenDepth<TSelf, TKey>(this TSelf item)
-        where TSelf : struct, IHaveChildrenWithKey<TKey, TSelf>, IHaveDepthInformation
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveDepthInformation
         where TKey : notnull
     {
         var result = 0;
@@ -119,7 +119,7 @@ internal static class IHaveChildrenWithKeyPrivateExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void SumChildrenDepthRecursive<TSelf, TKey>(this TSelf item, ref int accumulator)
-        where TSelf : struct, IHaveChildrenWithKey<TKey, TSelf>, IHaveDepthInformation where TKey : notnull
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveDepthInformation where TKey : notnull
     {
         accumulator += item.Depth;
         foreach (var child in item.Children)

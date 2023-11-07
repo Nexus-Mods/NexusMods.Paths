@@ -12,24 +12,24 @@ public struct TreeNode { }
 
 Then implement the following interfaces (as needed):
 
-| Interface               | Description                                                               |
-|-------------------------|---------------------------------------------------------------------------|
-| `IHaveChildren`         | Provides access to `Children` array.                                      |
-| `IHaveChildrenWithKey`  | Provides access to `Children` dictionary.                                 |
-| `IHaveParent`           | Provides access to the parent of the current node.                        |
-| `IHaveAFileOrDirectory` | Provides access to file specific info for a given files.                  |
-| `IHaveDepthInformation` | Provides access to depth of a given node, with depth 0 representing root. |
+| Interface                   | Description                                                               |
+|-----------------------------|---------------------------------------------------------------------------|
+| `IHaveBoxedChildren`        | Provides access to `Children` array.                                      |
+| `IHaveBoxedChildrenWithKey` | Provides access to `Children` dictionary.                                 |
+| `IHaveParent`               | Provides access to the parent of the current node.                        |
+| `IHaveAFileOrDirectory`     | Provides access to file specific info for a given files.                  |
+| `IHaveDepthInformation`     | Provides access to depth of a given node, with depth 0 representing root. |
 
 Example:
 
 ```csharp
-public struct TreeNode : IHaveChildrenWithKey<RelativePath, TreeNode>
+public struct TreeNode : IHaveBoxedChildrenWithKey<RelativePath, TreeNode>
 {
     public Dictionary<RelativePath, ChildrenWithKeyBox<RelativePath, TreeNode>> Children { get; }
 }
 ```
 
-This provides you access to methods which are implemented via interface `IHaveChildrenWithKey<TPath, TSelf>`.
+This provides you access to methods which are implemented via interface `IHaveBoxedChildrenWithKey<TPath, TSelf>`.
 
 ```csharp
 // _item is TreeNode
@@ -51,14 +51,14 @@ Invoking these methods may be inconvenient, because you have to manually specify
 For convenience, you may wish to re-export them in the base type for convenience.
 
 ```csharp
-public struct TreeNode : IHaveChildrenWithKey<RelativePath, TreeNode>
+public struct TreeNode : IHaveBoxedChildrenWithKey<RelativePath, TreeNode>
 {
     public Dictionary<RelativePath, ChildrenWithKeyBox<RelativePath, TreeNode>> Children { get; }
 
-    /// <inheritdoc cref="IHaveChildrenWithKeyExtensions.CountChildren{TSelf,TKey}"/>
+    /// <inheritdoc cref="IHaveBoxedChildrenWithKeyExtensions.CountChildren{TSelf,TKey}"/>
     public int CountChildren() => this.CountChildren<TreeNode, RelativePath>();
 
-    /// <inheritdoc cref="IHaveChildrenWithKeyExtensions.EnumerateChildren{TSelf,TKey}"/>
+    /// <inheritdoc cref="IHaveBoxedChildrenWithKeyExtensions.EnumerateChildren{TSelf,TKey}"/>
     public int EnumerateChildren() => this.CountChildren<TreeNode, RelativePath>();
 }
 ```

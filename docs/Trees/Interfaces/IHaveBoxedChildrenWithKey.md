@@ -1,6 +1,6 @@
-# IHaveChildrenWithKey<TKey, TSelf>
+# IHaveBoxedChildrenWithKey<TKey, TSelf>
 
-!!! info "`IHaveChildrenWithKey<TKey, TSelf>` is an interface for Nodes which have children accessed by key."
+!!! info "`IHaveBoxedChildrenWithKey<TKey, TSelf>` is an interface for Nodes which have children accessed by key."
 
 The interface enforces a structure where every implementor must contain a `Dictionary` holding its children, identified by keys.
 
@@ -11,7 +11,7 @@ The interface enforces a structure where every implementor must contain a `Dicti
 ## Type Parameters
 
 - `TKey`: The type of the key used in the dictionary. Must be a non-nullable type.
-- `TSelf`: The type of the children stored within the dictionary. Must be a struct implementing `IHaveChildrenWithKey<TKey, TSelf>`.
+- `TSelf`: The type of the children stored within the dictionary. Must be a struct implementing `IHaveBoxedChildrenWithKey<TKey, TSelf>`.
 
 ## ChildrenWithKeyBox<TKey, TSelf>
 
@@ -21,7 +21,7 @@ This boxing allows for the `TSelf` value to be used in places where a reference 
 
 ### Fields
 
-- `Item`: Contains the item deriving from `IHaveChildrenWithKey<TKey, TSelf>`.
+- `Item`: Contains the item deriving from `IHaveBoxedChildrenWithKey<TKey, TSelf>`.
 
 ### Implicit Operators
 
@@ -29,7 +29,7 @@ Allows for the implicit conversion between `TSelf` and `ChildrenWithKeyBox<TKey,
 
 ## IHaveChildrenWithKeyExtensions
 
-!!! summary "The `IHaveChildrenWithKeyExtensions` class provides extension methods for structures implementing the `IHaveChildrenWithKey<TKey, TSelf>` interface."
+!!! summary "The `IHaveChildrenWithKeyExtensions` class provides extension methods for structures implementing the `IHaveBoxedChildrenWithKey<TKey, TSelf>` interface."
 
 ### Methods
 
@@ -51,10 +51,10 @@ public static int CountChildren<TSelf, TKey>(this TSelf item)
 
 ### Usage
 
-!!! note "These methods extend functionality for types implementing `IHaveChildrenWithKey<TKey, TSelf>`, providing ways to traverse and interact with the tree-like structures."
+!!! note "These methods extend functionality for types implementing `IHaveBoxedChildrenWithKey<TKey, TSelf>`, providing ways to traverse and interact with the tree-like structures."
 
 ```csharp
-// Assuming `someNode` is an instance of a structure implementing `IHaveChildrenWithKey<TKey, TSelf>`
+// Assuming `someNode` is an instance of a structure implementing `IHaveBoxedChildrenWithKey<TKey, TSelf>`
 // To enumerate children:
 foreach (var child in someNode.EnumerateChildren())
 {
