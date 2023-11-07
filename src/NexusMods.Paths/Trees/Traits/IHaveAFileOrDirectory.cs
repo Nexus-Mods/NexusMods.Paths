@@ -45,11 +45,12 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
     private static void CountFilesRecursive<TSelf, TKey>(this TSelf item, ref int accumulator)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory where TKey : notnull
     {
-        // Branchless increment.
-        bool isFileBool = item.IsFile;
-        accumulator += Unsafe.As<bool, byte>(ref isFileBool);
         foreach (var child in item.Children)
+        {
+            var isDir = child.Value.Item.IsFile; // <= branchless increment.
+            accumulator += Unsafe.As<bool, byte>(ref isDir);
             child.Value.Item.CountFilesRecursive<TSelf, TKey>(ref accumulator);
+        }
     }
 
     /// <summary>
@@ -73,11 +74,12 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
     private static void CountDirectoriesRecursive<TSelf, TKey>(this TSelf item, ref int accumulator)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory where TKey : notnull
     {
-        // Branchless increment.
-        bool isFileBool = item.IsDirectory;
-        accumulator += Unsafe.As<bool, byte>(ref isFileBool);
         foreach (var child in item.Children)
-            child.Value.Item.CountFilesRecursive<TSelf, TKey>(ref accumulator);
+        {
+            var isDir = child.Value.Item.IsDirectory; // <= branchless increment.
+            accumulator += Unsafe.As<bool, byte>(ref isDir);
+            child.Value.Item.CountDirectoriesRecursive<TSelf, TKey>(ref accumulator);
+        }
     }
 }
 
@@ -106,11 +108,12 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
     private static void CountFilesRecursive<TSelf>(this TSelf item, ref int accumulator)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
     {
-        // Branchless increment.
-        bool isFileBool = item.IsFile;
-        accumulator += Unsafe.As<bool, byte>(ref isFileBool);
         foreach (var child in item.Children) // <= lowered to 'for loop' because array.
-            child.CountFilesRecursive(ref accumulator);
+        {
+            var isFile = child.Item.IsFile; // <= branchless increment.
+            accumulator += Unsafe.As<bool, byte>(ref isFile);
+            child.Item.CountFilesRecursive(ref accumulator);
+        }
     }
 
     /// <summary>
@@ -133,9 +136,11 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
     {
         // Branchless increment.
-        bool isFileBool = item.IsDirectory;
-        accumulator += Unsafe.As<bool, byte>(ref isFileBool);
         foreach (var child in item.Children) // <= lowered to 'for loop' because array.
-            child.CountFilesRecursive(ref accumulator);
+        {
+            var isDir = child.Item.IsDirectory; // <= branchless increment.
+            accumulator += Unsafe.As<bool, byte>(ref isDir);
+            child.Item.CountDirectoriesRecursive(ref accumulator);
+        }
     }
 }

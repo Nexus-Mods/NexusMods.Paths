@@ -6,5 +6,8 @@ namespace NexusMods.Paths.Trees.Traits;
 /// </summary>
 public interface IHavePathSegment
 {
-
+    /// <summary>
+    ///     The path segment of the current node.
+    /// </summary>
+    public RelativePath Segment { get; }
 }

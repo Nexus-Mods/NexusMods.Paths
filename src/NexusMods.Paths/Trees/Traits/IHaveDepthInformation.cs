@@ -6,8 +6,8 @@ namespace NexusMods.Paths.Trees.Traits;
 public interface IHaveDepthInformation
 {
     /// <summary>
-    /// Returns the depth of the node in the tree, with the root node having a depth of 0.
-    /// So, in a FileTree `bar` in `/foo/bar/baz` will have a depth of 2 due to the `/` having a depth of 0.
+    ///     Returns the depth of the node in the tree, with the root node having a depth of 0.
+    ///     So, in a FileTree `bar` in `/foo/bar/baz` will have a depth of 2 due to the `/` having a depth of 0.
     /// </summary>
     public ushort Depth { get; }
 }

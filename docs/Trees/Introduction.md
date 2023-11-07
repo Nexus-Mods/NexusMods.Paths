@@ -46,7 +46,7 @@ public void EnumerateChildren()
 
 !!! note "These methods have 0 overhead compared to a manual human implementation."
 
-Invoking these methods may be inconvenient, because you have to manually specify the generic types (unfortunately).
+Invoking these methods may be inconvenient when there are multiple generic types involved, because you have to manually specify the generic types (unfortunately).
 
 For convenience, you may wish to re-export them in the base type for convenience.
 
