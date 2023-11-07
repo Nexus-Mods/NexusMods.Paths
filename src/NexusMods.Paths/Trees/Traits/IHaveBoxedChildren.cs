@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace NexusMods.Paths.Trees.Traits;
@@ -25,6 +26,7 @@ public interface IHaveBoxedChildren<TSelf> where TSelf : struct, IHaveBoxedChild
 ///     Generic structures can participate in devirtualization, and thus create
 ///     zero overhead abstractions.
 /// </remarks>
+[ExcludeFromCodeCoverage]
 public class ChildBox<TSelf> : IEquatable<ChildBox<TSelf>> where TSelf : struct, IHaveBoxedChildren<TSelf>
 {
     /// <summary>

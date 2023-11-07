@@ -65,7 +65,7 @@ public class IHaveBoxedChildrenTests
         count.Should().Be(2);
     }
 
-    internal struct TestTree : IHaveBoxedChildren<TestTree>
+    private struct TestTree : IHaveBoxedChildren<TestTree>
     {
         public ChildBox<TestTree>[] Children { get; }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace NexusMods.Paths.Trees.Traits;
@@ -31,6 +32,7 @@ public interface IHaveBoxedChildrenWithKey<TKey, TSelf>
 ///     Generic structures can participate in devirtualization, and thus create
 ///     zero overhead abstractions.
 /// </remarks>
+[ExcludeFromCodeCoverage]
 public class ChildWithKeyBox<TKey, TSelf> : IEquatable<ChildWithKeyBox<TKey, TSelf>> where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
     where TKey : notnull
 {

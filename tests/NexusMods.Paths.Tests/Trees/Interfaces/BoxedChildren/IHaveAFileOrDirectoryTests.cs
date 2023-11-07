@@ -36,7 +36,7 @@ public class IHaveAFileOrDirectoryTests
         directoryCount.Should().Be(1); // Only the root's child is a directory
     }
 
-    public struct TestTree : IHaveBoxedChildren<TestTree>, IHaveAFileOrDirectory
+    private struct TestTree : IHaveBoxedChildren<TestTree>, IHaveAFileOrDirectory
     {
         public ChildBox<TestTree>[] Children { get; }
         public bool IsFile { get; }

@@ -75,7 +75,7 @@ public class IHaveBoxedChildrenWithKeyTests
         count.Should().Be(2); // Child + Grandchild
     }
 
-    internal struct TestTree : IHaveBoxedChildrenWithKey<int, TestTree>
+    private struct TestTree : IHaveBoxedChildrenWithKey<int, TestTree>
     {
         public Dictionary<int, ChildWithKeyBox<int, TestTree>> Children { get; }
         public TestTree(Dictionary<int, ChildWithKeyBox<int, TestTree>> children) => Children = children;
