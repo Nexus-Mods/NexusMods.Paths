@@ -51,16 +51,10 @@ public class ChildrenWithKeyBox<TKey, TSelf>
     public TSelf Item;
 
     /// <summary />
-    public static implicit operator TSelf(ChildrenWithKeyBox<TKey, TSelf> box)
-    {
-        return box.Item;
-    }
+    public static implicit operator TSelf(ChildrenWithKeyBox<TKey, TSelf> box) => box.Item;
 
     /// <summary />
-    public static implicit operator ChildrenWithKeyBox<TKey, TSelf>(TSelf item)
-    {
-        return new ChildrenWithKeyBox<TKey, TSelf> { Item = item };
-    }
+    public static implicit operator ChildrenWithKeyBox<TKey, TSelf>(TSelf item) => new() { Item = item };
 }
 
 /// <summary>

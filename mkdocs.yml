@@ -50,7 +50,7 @@ nav:
   - Home: index.md
   - Dynamic Trees:
       - "Introduction": Trees/Introduction.md
-      - "Contributing": Trees/Contributing.md
+      - "How it Works": Trees/HowItWorks.md
       - "Interfaces":
           - "IHaveAFileOrDirectory": Trees/Interfaces/IHaveAFileOrDirectory.md
           - "IHaveChildren": Trees/Interfaces/IHaveChildren.md
