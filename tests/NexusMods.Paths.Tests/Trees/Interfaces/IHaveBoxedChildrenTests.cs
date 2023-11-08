@@ -48,6 +48,7 @@ public class IHaveBoxedChildrenTests
 
         // Assert
         count.Should().Be(0);
+        leaf.IsLeaf().Should().BeTrue();
     }
 
     [Fact]

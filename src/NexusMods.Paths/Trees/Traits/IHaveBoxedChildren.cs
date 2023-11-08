@@ -71,6 +71,22 @@ public class ChildBox<TSelf> : IEquatable<ChildBox<TSelf>> where TSelf : struct,
 public static class IHaveBoxedChildrenExtensions
 {
     /// <summary>
+    ///     True if the current node is a leaf (it has no children).
+    /// </summary>
+    /// <param name="item">The node to check.</param>
+    public static bool IsLeaf<TSelf>(this ChildBox<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+        => item.Item.IsLeaf();
+
+    /// <summary>
+    ///     True if the current node is a leaf (it has no children).
+    /// </summary>
+    /// <param name="item">The node to check.</param>
+    public static bool IsLeaf<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+        => item.Children.Length == 0;
+
+    /// <summary>
     ///     Enumerates all child nodes of the current node in a depth-first manner.
     /// </summary>
     /// <param name="item">The node whose children are to be enumerated.</param>

@@ -103,6 +103,7 @@ Available Methods:
 
 | Method                 | Description                                             | Required Traits         |
 |------------------------|---------------------------------------------------------|-------------------------|
+| `IsLeaf`               | Returns true if the node has no children.               |                         |
 | `EnumerateChildren`    | Enumerates (`IEnumerator`) over children of this node.  |                         |
 | `CountChildren`        | Counts the total number of child nodes under this node. |                         |
 | `CountFiles`           | Counts files under this node (directory).               | `IHaveAFileOrDirectory` |

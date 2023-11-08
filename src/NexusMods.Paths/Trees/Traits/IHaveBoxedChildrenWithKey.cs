@@ -78,6 +78,24 @@ public class ChildWithKeyBox<TKey, TSelf> : IEquatable<ChildWithKeyBox<TKey, TSe
 public static class IHaveChildrenWithKeyExtensions
 {
     /// <summary>
+    ///     True if the current node is a leaf (it has no children).
+    /// </summary>
+    /// <param name="item">The node to check.</param>
+    public static bool IsLeaf<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        => item.Item.IsLeaf<TSelf, TKey>();
+
+    /// <summary>
+    ///     True if the current node is a leaf (it has no children).
+    /// </summary>
+    /// <param name="item">The node to check.</param>
+    public static bool IsLeaf<TSelf, TKey>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        => item.Children.Count == 0;
+
+    /// <summary>
     ///     Enumerates all child nodes of the current node in a depth-first manner.
     /// </summary>
     /// <param name="item">The node whose children are to be enumerated.</param>
