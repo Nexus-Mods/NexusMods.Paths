@@ -101,16 +101,17 @@ public struct TreeNode : IHaveBoxedChildrenWithKey<RelativePath, TreeNode>
 
 Available Methods:
 
-| Method                 | Description                                             | Required Traits         |
-|------------------------|---------------------------------------------------------|-------------------------|
-| `IsLeaf`               | Returns true if the node has no children.               |                         |
-| `EnumerateChildren`    | Enumerates (`IEnumerator`) over children of this node.  |                         |
-| `CountChildren`        | Counts the total number of child nodes under this node. |                         |
-| `CountFiles`           | Counts files under this node (directory).               | `IHaveAFileOrDirectory` |
-| `CountDirectories`     | Counts directories under this node (directory).         | `IHaveAFileOrDirectory` | 
-| `EnumerateSiblings`[1] | Enumerates (`IEnumerator`) over siblings of this node.  | `IHaveParent`           |
-| `GetSiblingCount`      | Returns the number of siblings this node has.           | `IHaveParent`           |
-| `GetSiblings`[1]       | Returns all siblings of this node.                      | `IHaveParent`           |
+| Method                 | Description                                             | Required Traits                  |
+|------------------------|---------------------------------------------------------|----------------------------------|
+| `IsLeaf`               | Returns true if the node has no children.               |                                  |
+| `EnumerateChildren`    | Enumerates (`IEnumerator`) over children of this node.  |                                  |
+| `CountChildren`        | Counts the total number of child nodes under this node. |                                  |
+| `CountFiles`           | Counts files under this node (directory).               | `IHaveAFileOrDirectory`          |
+| `CountDirectories`     | Counts directories under this node (directory).         | `IHaveAFileOrDirectory`          | 
+| `EnumerateSiblings`[1] | Enumerates (`IEnumerator`) over siblings of this node.  | `IHaveParent`                    |
+| `GetSiblingCount`      | Returns the number of siblings this node has.           | `IHaveParent`                    |
+| `GetSiblings`[1]       | Returns all siblings of this node.                      | `IHaveParent`                    |
+| `ReconstructPath`      | Reconstructs full path by walking to tree root.         | `IHaveParent` `IHavePathSegment` |
 
 [1] Siblings are determined on Value equality *when called from internal boxed struct*. This means, when called from struct, if all fields are the same on two nodes, they may be (incorrectly) assumed as same node.
 
