@@ -76,6 +76,16 @@ public static class IHaveBoxedChildrenExtensions
     /// <param name="item">The node whose children are to be enumerated.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>An IEnumerable of all child nodes of the current node.</returns>
+    public static IEnumerable<TSelf> EnumerateChildren<TSelf>(this ChildBox<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+        => item.Item.EnumerateChildren();
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a depth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node.</returns>
     public static IEnumerable<TSelf> EnumerateChildren<TSelf>(this TSelf item) where TSelf : struct, IHaveBoxedChildren<TSelf>
     {
         foreach (var child in item.Children)
@@ -93,6 +103,16 @@ public static class IHaveBoxedChildrenExtensions
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>The count of direct child nodes.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CountChildren<TSelf>(this ChildBox<TSelf> item) where TSelf : struct, IHaveBoxedChildren<TSelf>
+        => item.Item.CountChildren();
+
+    /// <summary>
+    ///     Counts the number of direct child nodes of the current node.
+    /// </summary>
+    /// <param name="item">The node whose children are to be counted.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>The count of direct child nodes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountChildren<TSelf>(this TSelf item) where TSelf : struct, IHaveBoxedChildren<TSelf>
     {
         var result = 0;
@@ -100,13 +120,6 @@ public static class IHaveBoxedChildrenExtensions
         return result;
     }
 
-    /// <summary>
-    ///     Counts the number of direct child nodes of the current node.
-    /// </summary>
-    /// <param name="item">The node whose children are to be counted.</param>
-    /// <param name="accumulator">Parameter that counts the running total.</param>
-    /// <typeparam name="TSelf">The type of child node.</typeparam>
-    /// <returns>The count of direct child nodes.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void CountChildrenRecursive<TSelf>(this TSelf item, ref int accumulator)
         where TSelf : struct, IHaveBoxedChildren<TSelf>

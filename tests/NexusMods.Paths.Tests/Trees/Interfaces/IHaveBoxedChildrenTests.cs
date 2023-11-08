@@ -12,7 +12,7 @@ public class IHaveBoxedChildrenTests
         var leaf1 = new TestTree(Array.Empty<ChildBox<TestTree>>());
         var leaf2 = new TestTree(Array.Empty<ChildBox<TestTree>>());
         var node = new TestTree(new ChildBox<TestTree>[] { leaf1, leaf2 });
-        var root = new TestTree(new ChildBox<TestTree>[] { node });
+        ChildBox<TestTree> root = new TestTree(new ChildBox<TestTree>[] { node });
 
         // Act
         var allChildren = root.EnumerateChildren().ToArray();
@@ -28,7 +28,7 @@ public class IHaveBoxedChildrenTests
         // Arrange
         var child1 = new TestTree(Array.Empty<ChildBox<TestTree>>());
         var child2 = new TestTree(Array.Empty<ChildBox<TestTree>>());
-        var root = new TestTree(new ChildBox<TestTree>[] { child1, child2 });
+        ChildBox<TestTree> root = new TestTree(new ChildBox<TestTree>[] { child1, child2 });
 
         // Act
         var count = root.CountChildren();
@@ -41,7 +41,7 @@ public class IHaveBoxedChildrenTests
     public void CountChildren_ShouldReturnZeroForLeafNode()
     {
         // Arrange
-        var leaf = new TestTree(Array.Empty<ChildBox<TestTree>>());
+        ChildBox<TestTree> leaf = new TestTree(Array.Empty<ChildBox<TestTree>>());
 
         // Act
         var count = leaf.CountChildren();
@@ -56,7 +56,7 @@ public class IHaveBoxedChildrenTests
         // Arrange
         var grandChild = new TestTree(Array.Empty<ChildBox<TestTree>>());
         var child = new TestTree(new ChildBox<TestTree>[] { grandChild });
-        var root = new TestTree(new ChildBox<TestTree>[] { child });
+        ChildBox<TestTree> root = new TestTree(new ChildBox<TestTree>[] { child });
 
         // Act
         var count = root.CountChildren();

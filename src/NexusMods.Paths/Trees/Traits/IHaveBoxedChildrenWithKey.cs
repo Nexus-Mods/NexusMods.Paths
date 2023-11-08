@@ -85,6 +85,19 @@ public static class IHaveChildrenWithKeyExtensions
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>An IEnumerable of all child nodes of the current node.</returns>
     public static IEnumerable<KeyValuePair<TKey, ChildWithKeyBox<TKey, TSelf>>> EnumerateChildren<TSelf, TKey>(
+        this ChildWithKeyBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        => item.Item.EnumerateChildren<TSelf, TKey>();
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a depth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose children are to be enumerated.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node.</returns>
+    public static IEnumerable<KeyValuePair<TKey, ChildWithKeyBox<TKey, TSelf>>> EnumerateChildren<TSelf, TKey>(
         this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
         where TKey : notnull
@@ -96,6 +109,19 @@ public static class IHaveChildrenWithKeyExtensions
                 yield return tuple;
         }
     }
+
+    /// <summary>
+    ///     Counts the number of direct child nodes of the current node.
+    /// </summary>
+    /// <param name="item">The node whose children are to be counted.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>The count of direct child nodes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CountChildren<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        => item.Item.CountChildren<TSelf, TKey>();
 
     /// <summary>
     ///     Counts the number of direct child nodes of the current node.

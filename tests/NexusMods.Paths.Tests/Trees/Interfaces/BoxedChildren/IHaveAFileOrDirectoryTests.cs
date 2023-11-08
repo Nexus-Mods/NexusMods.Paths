@@ -12,7 +12,7 @@ public class IHaveAFileOrDirectoryTests
         var leaf1 = new TestTree(Array.Empty<ChildBox<TestTree>>(), true);
         var leaf2 = new TestTree(Array.Empty<ChildBox<TestTree>>(), true);
         var directory = new TestTree(new ChildBox<TestTree>[] { leaf1, leaf2 }, false);
-        var root = new TestTree(new ChildBox<TestTree>[] { directory }, false);
+        ChildBox<TestTree> root = new TestTree(new ChildBox<TestTree>[] { directory }, false);
 
         // Act
         var fileCount = root.CountFiles();
@@ -27,7 +27,7 @@ public class IHaveAFileOrDirectoryTests
         // Arrange
         var leaf1 = new TestTree(Array.Empty<ChildBox<TestTree>>(), true);
         var directory = new TestTree(new ChildBox<TestTree>[] { leaf1 }, false);
-        var root = new TestTree(new ChildBox<TestTree>[] { directory }, false);
+        ChildBox<TestTree> root = new TestTree(new ChildBox<TestTree>[] { directory }, false);
 
         // Act
         var directoryCount = root.CountDirectories();

@@ -16,7 +16,7 @@ public class IHaveBoxedChildrenWithKeyTests
             [1] = leaf1,
             [2] = leaf2
         });
-        var root = new TestTree(new() { [0] = node });
+        ChildWithKeyBox<int, TestTree> root = new TestTree(new() { [0] = node });
 
         // Act
         var allChildren = root.EnumerateChildren<TestTree, int>().ToArray();
@@ -34,14 +34,14 @@ public class IHaveBoxedChildrenWithKeyTests
         // Arrange
         var child1 = new TestTree(new());
         var child2 = new TestTree(new());
-        var root = new TestTree(new()
+        ChildWithKeyBox<int, TestTree> root = new TestTree(new()
         {
             [1] = child1,
             [2] = child2
         });
 
         // Act
-        var count = root.CountChildren<TestTree, int>();
+        var count = root.CountChildren();
 
         // Assert
         count.Should().Be(2);
@@ -51,10 +51,10 @@ public class IHaveBoxedChildrenWithKeyTests
     public void CountChildren_ShouldReturnZeroForLeafNode()
     {
         // Arrange
-        var leaf = new TestTree(new());
+        ChildWithKeyBox<int, TestTree> leaf = new TestTree(new());
 
         // Act
-        var count = leaf.CountChildren<TestTree, int>();
+        var count = leaf.CountChildren();
 
         // Assert
         count.Should().Be(0);
@@ -66,10 +66,10 @@ public class IHaveBoxedChildrenWithKeyTests
         // Arrange
         var grandChild = new TestTree(new());
         var child = new TestTree(new() { [1] = grandChild });
-        var root = new TestTree(new() { [0] = child });
+        ChildWithKeyBox<int, TestTree> root = new TestTree(new() { [0] = child });
 
         // Act
-        var count = root.CountChildren<TestTree, int>();
+        var count = root.CountChildren();
 
         // Assert
         count.Should().Be(2); // Child + Grandchild

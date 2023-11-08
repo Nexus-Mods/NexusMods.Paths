@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace NexusMods.Paths.Trees.Traits;
@@ -32,6 +33,19 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>The total file count under this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CountFiles<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        where TKey : notnull =>
+        item.Item.CountFiles<TSelf, TKey>();
+
+    /// <summary>
+    ///     Counts the number of files present under this node (directory).
+    /// </summary>
+    /// <param name="item">The node (directory) whose interior file count is to be counted.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>The total file count under this node.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountFiles<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
         where TKey : notnull
@@ -52,6 +66,18 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
             child.Value.Item.CountFilesRecursive<TSelf, TKey>(ref accumulator);
         }
     }
+
+    /// <summary>
+    ///     Counts the number of directories present under this node (directory).
+    /// </summary>
+    /// <param name="item">The node (directory) whose interior directory count is to be counted.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>The total directory count under this node.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CountDirectories<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        where TKey : notnull  => item.Item.CountDirectories<TSelf, TKey>();
 
     /// <summary>
     ///     Counts the number of directories present under this node (directory).
@@ -96,6 +122,17 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>The total file count under this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CountFiles<TSelf>(this ChildBox<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory =>
+        item.Item.CountFiles();
+
+    /// <summary>
+    ///      Counts the number of files present under this node.
+    /// </summary>
+    /// <param name="item">The node (directory) whose interior file count is to be counted.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>The total file count under this node.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountFiles<TSelf>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
     {
@@ -115,6 +152,17 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
             child.Item.CountFilesRecursive(ref accumulator);
         }
     }
+
+    /// <summary>
+    ///      Counts the number of directories present under this node (directory).
+    /// </summary>
+    /// <param name="item">The node (directory) whose interior file count is to be counted.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>The total directory count under this node.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CountDirectories<TSelf>(this ChildBox<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory =>
+        item.Item.CountDirectories();
 
     /// <summary>
     ///      Counts the number of directories present under this node (directory).
@@ -143,4 +191,20 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
             child.Item.CountDirectoriesRecursive(ref accumulator);
         }
     }
+}
+
+/// <summary>
+///     Trait methods for <see cref="IHaveAFileOrDirectory"/>.
+/// </summary>
+// ReSharper disable once InconsistentNaming
+public static class IHaveAFileOrDirectoryExtensions
+{
+    /// <summary>
+    ///      Returns true if this item represents a directory.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ExcludeFromCodeCoverage]
+    public static bool IsDirectory<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveAFileOrDirectory =>
+        item.IsDirectory;
 }
