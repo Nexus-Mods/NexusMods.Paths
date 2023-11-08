@@ -194,6 +194,90 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
 }
 
 /// <summary>
+///     Trait methods for <see cref="IHaveObservableChildren{TSelf}" />.
+/// </summary>
+// ReSharper disable once InconsistentNaming
+public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
+{
+    /// <summary>
+    ///      Counts the number of files present under this node.
+    /// </summary>
+    /// <param name="item">The node (directory) whose interior file count is to be counted.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>The total file count under this node.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CountFiles<TSelf>(this ChildBox<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory =>
+        item.Item.CountFiles();
+
+    /// <summary>
+    ///      Counts the number of files present under this node.
+    /// </summary>
+    /// <param name="item">The node (directory) whose interior file count is to be counted.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>The total file count under this node.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CountFiles<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+    {
+        var result = 0;
+        item.CountFilesRecursive(ref result);
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void CountFilesRecursive<TSelf>(this TSelf item, ref int accumulator)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+    {
+        foreach (var child in item.Children) // <= lowered to 'for loop' because array.
+        {
+            var isFile = child.Item.IsFile; // <= branchless increment.
+            accumulator += Unsafe.As<bool, byte>(ref isFile);
+            child.Item.CountFilesRecursive(ref accumulator);
+        }
+    }
+
+    /// <summary>
+    ///      Counts the number of directories present under this node (directory).
+    /// </summary>
+    /// <param name="item">The node (directory) whose interior file count is to be counted.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>The total directory count under this node.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CountDirectories<TSelf>(this ChildBox<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory =>
+        item.Item.CountDirectories();
+
+    /// <summary>
+    ///      Counts the number of directories present under this node (directory).
+    /// </summary>
+    /// <param name="item">The node (directory) whose interior file count is to be counted.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>The total directory count under this node.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CountDirectories<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+    {
+        var result = 0;
+        item.CountDirectoriesRecursive(ref result);
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void CountDirectoriesRecursive<TSelf>(this TSelf item, ref int accumulator)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+    {
+        // Branchless increment.
+        foreach (var child in item.Children) // <= lowered to 'for loop' because array.
+        {
+            var isDir = child.Item.IsDirectory; // <= branchless increment.
+            accumulator += Unsafe.As<bool, byte>(ref isDir);
+            child.Item.CountDirectoriesRecursive(ref accumulator);
+        }
+    }
+}
+
+/// <summary>
 ///     Trait methods for <see cref="IHaveAFileOrDirectory"/>.
 /// </summary>
 // ReSharper disable once InconsistentNaming

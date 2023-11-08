@@ -214,7 +214,8 @@ will be zero-overhead, i.e. it will be just as fast as if you implemented it man
     `IHaveBoxedChildren`, you will need to implement said functionality it for all 'child' providing interfaces.
 
     To do this, it's recommended to implement for `IHaveBoxedChildren` first, then just copy the implementation for
-    `IHaveBoxedChildrenWithKey`, while changing the types involved. 99% of code should be identical.
+    `IHaveObservableChildren` and `IHaveObservableChildrenWithKey`, while changing the types involved. 99% of code 
+    should be identical.
 
 ### Implementing Functionality with Multiple Interfaces
 

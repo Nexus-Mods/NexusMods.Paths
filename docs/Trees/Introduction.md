@@ -16,10 +16,11 @@ public struct TreeNode { }
 
 Then implement one of the following interfaces:
 
-| Interface                   | Description                      |
-|-----------------------------|----------------------------------|
-| `IHaveBoxedChildren`        | Stores `Children` as array.      |
-| `IHaveBoxedChildrenWithKey` | Stores `Children` as dictionary. |
+| Interface                   | Description                                  |
+|-----------------------------|----------------------------------------------|
+| `IHaveBoxedChildren`        | Stores `Children` as array.                  |
+| `IHaveObservableChildren`   | Stores `Children` as `ObservableCollection`. |
+| `IHaveBoxedChildrenWithKey` | Stores `Children` as dictionary.             |
 
 Example:
 

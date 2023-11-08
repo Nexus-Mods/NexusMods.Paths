@@ -31,9 +31,12 @@ public interface IHaveBoxedChildrenWithKey<TKey, TSelf>
 ///     While generic reference types share code (and are thus slower),
 ///     Generic structures can participate in devirtualization, and thus create
 ///     zero overhead abstractions.
+///
+///     Technically it is not necessary for this type to exist, however it helps the user avoid
+///     having to type the generic arguments over and over again throughout code.
 /// </remarks>
 [ExcludeFromCodeCoverage]
-public class ChildWithKeyBox<TKey, TSelf> : IEquatable<ChildWithKeyBox<TKey, TSelf>> where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+public class ChildWithKeyBox<TKey, TSelf> : IEquatable<ChildWithKeyBox<TKey, TSelf>> where TSelf : struct
     where TKey : notnull
 {
     /// <summary>

@@ -246,7 +246,178 @@ public static class IHaveParentExtensionsForIHaveBoxedChildren
 }
 
 /// <summary>
-///     Trait methods for <see cref="IHaveBoxedChildren{TSelf}" />.
+///     Trait methods for <see cref="IHaveObservableChildren{TSelf}" />.
+/// </summary>
+// ReSharper disable once InconsistentNaming
+public static class IHaveParentExtensionsForIHaveObservableChildren
+{
+    /// <summary>
+    ///      Returns the total number of siblings in this node.
+    /// </summary>
+    /// <param name="item">The 'this' item.</param>
+    /// <returns>The total amount of siblings.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetSiblingCount<TSelf>(this ChildBox<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveParent<TSelf>
+        => item.Item.GetSiblingCount();
+
+    /// <summary>
+    ///      Returns the total number of siblings in this node.
+    /// </summary>
+    /// <param name="item">The 'this' item.</param>
+    /// <returns>The total amount of siblings.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetSiblingCount<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveParent<TSelf>
+    {
+        var parent = item.Parent;
+        if (parent != null) // <= do not invert branch, hot path
+            return parent.Item.Children.Count - 1; // -1 to exclude self.
+
+        return 0;
+    }
+
+    /// <summary>
+    ///      Returns all of the siblings of this node (excluding itself).
+    /// </summary>
+    /// <param name="item">The item whose siblings to obtain.</param>
+    /// <returns>All of the siblings of this node.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ChildBox<TSelf>[] GetSiblings<TSelf>(this ChildBox<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveParent<TSelf>, IEquatable<TSelf>
+    {
+        var result = GC.AllocateUninitializedArray<ChildBox<TSelf>>(item.GetSiblingCount());
+        GetSiblings(item, result);
+        return result;
+    }
+
+    /// <summary>
+    ///      Returns all of the siblings of this node (excluding itself).
+    /// </summary>
+    /// <param name="item">The item whose siblings to obtain.</param>
+    /// <returns>All of the siblings of this node.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ChildBox<TSelf>[] GetSiblings<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveParent<TSelf>, IEquatable<TSelf>
+    {
+        var result = GC.AllocateUninitializedArray<ChildBox<TSelf>>(item.GetSiblingCount());
+        GetSiblings(item, result);
+        return result;
+    }
+
+    /// <summary>
+    ///      Returns all of the siblings of this node (excluding itself).
+    /// </summary>
+    /// <param name="item">The item whose siblings to obtain.</param>
+    /// <param name="resultsBuf">
+    ///     The buffer which holds the results.
+    ///     Please use <see cref="GetSiblingCount{TSelf}(NexusMods.Paths.Trees.Traits.ChildBox{TSelf})"/> to obtain the required size.
+    /// </param>
+    /// <returns>The amount of siblings inserted into the buffer.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetSiblings<TSelf>(this ChildBox<TSelf> item, Span<ChildBox<TSelf>> resultsBuf)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveParent<TSelf>, IEquatable<TSelf>
+    {
+        // Note: While this code is mostly duplicated from other overload, it is not the same.
+        //       This compares reference equality, other compares value equality.
+        var parent = item.Item.Parent;
+        // ReSharper disable once InvertIf
+        if (parent != null) // <= do not invert, hot path.
+        {
+            var parentChildren = parent.Item.Children;
+            var writeIndex = 0;
+            foreach (var child in parentChildren) // <= lowered to 'for'
+            {
+                if (!child.Equals(item))
+                    resultsBuf[writeIndex++] = child;
+            }
+
+            return item.GetSiblingCount();
+        }
+
+        return 0;
+    }
+
+    /// <summary>
+    ///      Returns all of the siblings of this node (excluding itself).
+    /// </summary>
+    /// <param name="item">The item whose siblings to obtain.</param>
+    /// <param name="resultsBuf">
+    ///     The buffer which holds the results.
+    ///     Please use <see cref="GetSiblingCount{TSelf}(NexusMods.Paths.Trees.Traits.ChildBox{TSelf})"/> to obtain the required size.
+    /// </param>
+    /// <returns>The amount of siblings inserted into the buffer.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetSiblings<TSelf>(this TSelf item, Span<ChildBox<TSelf>> resultsBuf)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveParent<TSelf>, IEquatable<TSelf>
+    {
+        var parent = item.Parent;
+        // ReSharper disable once InvertIf
+        if (parent != null) // <= do not invert, hot path.
+        {
+            var parentChildren = parent.Item.Children;
+            var writeIndex = 0;
+            foreach (var child in parentChildren) // <= lowered to 'for'
+            {
+                if (!child.Item.Equals(item))
+                    resultsBuf[writeIndex++] = child;
+            }
+
+            return item.GetSiblingCount();
+        }
+
+        return 0;
+    }
+
+    /// <summary>
+    ///      Enumerates all of the siblings of this node.
+    /// </summary>
+    /// <param name="item">The item whose siblings to obtain.</param>
+    /// <returns>All of the siblings of this node.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IEnumerable<ChildBox<TSelf>> EnumerateSiblings<TSelf>(this ChildBox<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveParent<TSelf>, IEquatable<TSelf>
+    {
+        // Note: While this code is mostly duplicated from other overload, it is not the same.
+        //       This compares reference equality, other compares value equality.
+        var parent = item.Item.Parent;
+        // ReSharper disable once InvertIf
+        if (parent != null) // <= do not invert, hot path.
+        {
+            var parentChildren = parent.Item.Children;
+            foreach (var child in parentChildren) // <= lowered to 'for'
+            {
+                if (!child.Equals(item))
+                    yield return child;
+            }
+        }
+    }
+
+    /// <summary>
+    ///      Enumerates all of the siblings of this node.
+    /// </summary>
+    /// <param name="item">The item whose siblings to obtain.</param>
+    /// <returns>All of the siblings of this node.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IEnumerable<ChildBox<TSelf>> EnumerateSiblings<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveParent<TSelf>, IEquatable<TSelf>
+    {
+        var parent = item.Parent;
+        // ReSharper disable once InvertIf
+        if (parent != null) // <= do not invert, hot path.
+        {
+            var parentChildren = parent.Item.Children;
+            foreach (var child in parentChildren) // <= lowered to 'for'
+            {
+                if (!child.Item.Equals(item))
+                    yield return child;
+            }
+        }
+    }
+}
+
+/// <summary>
+///     Trait methods for <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" />.
 /// </summary>
 // ReSharper disable once InconsistentNaming
 public static class IHaveParentExtensionsForIHaveBoxedChildrenWithKey
