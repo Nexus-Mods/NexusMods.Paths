@@ -79,7 +79,7 @@ public class ChildWithKeyBox<TKey, TSelf> : IEquatable<ChildWithKeyBox<TKey, TSe
 ///     Trait methods for <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" />.
 /// </summary>
 // ReSharper disable once InconsistentNaming
-public static class IHaveChildrenWithKeyExtensions
+public static class IHaveBoxedChildrenWithKeyExtensions
 {
     /// <summary>
     ///     True if the current node is a leaf (it has no children).

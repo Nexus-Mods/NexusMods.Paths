@@ -32,8 +32,8 @@ public class IHaveValueTests
     public void EnumerateValuesDfs_ShouldReturnAllValuesInDepthFirstOrder()
     {
         // Arrange
-        var grandChild1 = new TestTree(new ObservableCollection<ChildBox<TestTree>>(), 3);
-        var grandChild2 = new TestTree(new ObservableCollection<ChildBox<TestTree>>(), 4);
+        var grandChild1 = new TestTree(null, 3);
+        var grandChild2 = new TestTree(null, 4);
         var child1 = new TestTree(grandChild1, 1);
         var child2 = new TestTree(grandChild2, 2);
         var rootChildren = new ObservableCollection<ChildBox<TestTree>>
@@ -48,6 +48,23 @@ public class IHaveValueTests
 
         // Assert
         values.Should().Equal(1, 3, 2, 4); // Depth-first order
+    }
+
+    [Fact]
+    public void GetValues_ShouldReturnAllValuesRecursively()
+    {
+        // Arrange
+        var grandChild1 = new TestTree(null, 3);
+        var grandChild2 = new TestTree(null, 4);
+        var child1 = new TestTree(grandChild1, 1);
+        var child2 = new TestTree(grandChild2, 2);
+        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { child1, child2 }, 0);
+
+        // Act
+        var values = root.GetValues<TestTree, int>();
+
+        // Assert
+        values.Should().Equal(1, 2, 3, 4);
     }
 
     private struct TestTree : IHaveObservableChildren<TestTree>, IHaveValue<int>

@@ -39,10 +39,27 @@ public class IHaveKeyTests
         keys.Should().Equal(1, 3, 2, 4); // Depth-first order
     }
 
+    [Fact]
+    public void GetKeys_ShouldReturnAllKeysRecursively()
+    {
+        // Arrange
+        var grandChild1 = new TestTree(null, 3);
+        var grandChild2 = new TestTree(null, 4);
+        var child1 = new TestTree(grandChild1, 1);
+        var child2 = new TestTree(grandChild2, 2);
+        ChildWithKeyBox<int, TestTree> root = new TestTree(new Dictionary<int, ChildWithKeyBox<int, TestTree>> { {1, child1}, {2, child2} }) { Key = 0 };
+
+        // Act
+        var keys = root.GetKeys();
+
+        // Assert
+        keys.Should().Equal(1, 3, 2, 4);
+    }
+
     private struct TestTree : IHaveBoxedChildrenWithKey<int, TestTree>, IHaveKey<int>
     {
         public Dictionary<int, ChildWithKeyBox<int, TestTree>> Children { get; }
-        public int Key { get; }
+        public int Key { get; set; }
 
         public TestTree(int key)
         {
@@ -50,9 +67,19 @@ public class IHaveKeyTests
             Key = key;
         }
 
-        public TestTree(Dictionary<int, ChildWithKeyBox<int, TestTree>> children, int key = default)
+        public TestTree(TestTree child, int key)
         {
-            Children = children;
+            Children = new Dictionary<int, ChildWithKeyBox<int, TestTree>>()
+            {
+                {child.Key, child}
+            };
+            Key = key;
+        }
+
+
+        public TestTree(Dictionary<int, ChildWithKeyBox<int, TestTree>>? children, int key = default)
+        {
+            Children = children ?? new Dictionary<int, ChildWithKeyBox<int, TestTree>>();
             Key = key;
         }
     }
