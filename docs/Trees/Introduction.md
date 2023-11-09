@@ -104,27 +104,28 @@ public struct TreeNode : IHaveBoxedChildrenWithKey<RelativePath, TreeNode>
 
 Available Methods:
 
-| Method                 | Description                                                          | Required Traits                   |
-|------------------------|----------------------------------------------------------------------|-----------------------------------|
-| `CountChildren`        | Counts the total number of child nodes under this node.              |                                   |
-| `CountDirectories`     | Counts directories under this node (directory).                      | `IHaveAFileOrDirectory`           |
-| `CountFiles`           | Counts files under this node (directory).                            | `IHaveAFileOrDirectory`           |
-| `EnumerateChildrenBfs` | Enumerates children of this node Breadth First.                      |                                   |
-| `EnumerateChildrenDfs` | Enumerates children of this node using Depth First.                  |                                   |
-| `EnumerateKeysBfs`     | Enumerates child keys of this node Breadth First.                    | `IHaveKey`                        |
-| `EnumerateKeysDfs`     | Enumerates child keys of this node using Depth First.                | `IHaveKey`                        |
-| `EnumerateSiblings`[1] | Enumerates (`IEnumerator`) over siblings of this node.               | `IHaveParent`                     |
-| `EnumerateValuesBfs`   | Enumerates child values of this node Breadth First.                  | `IHaveValue`                      |
-| `EnumerateValuesDfs`   | Enumerates child values of this node using Depth First.              | `IHaveValue`                      |
-| `GetChildrenRecursive` | Retrieves all children of this node (flattened).                     |                                   |
-| `GetKeys`              | Retrieves all keys of the children of this node.                     | `IHaveKey`                        |
-| `GetKeysUnsafe`        | Retrieves all keys of the children of this node (no bound checks).   | `IHaveKey`                        |
-| `GetSiblingCount`      | Returns the number of siblings this node has.                        | `IHaveParent`                     |
-| `GetSiblings`[1]       | Returns all siblings of this node.                                   | `IHaveParent`                     |
-| `GetValues`            | Retrieves all values of the children of this node.                   | `IHaveValue`                      |
-| `GetValuesUnsafe`      | Retrieves all values of the children of this node (no bound checks). | `IHaveValue`                      |
-| `IsLeaf`               | Returns true if the node has no children.                            |                                   |
-| `ReconstructPath`      | Reconstructs full path by walking to tree root.                      | `IHaveParent`, `IHavePathSegment` |
+| Method                       | Description                                                          | Required Traits                   |
+|------------------------------|----------------------------------------------------------------------|-----------------------------------|
+| `CountChildren`              | Counts the total number of child nodes under this node.              |                                   |
+| `CountDirectories`           | Counts directories under this node (directory).                      | `IHaveAFileOrDirectory`           |
+| `CountFiles`                 | Counts files under this node (directory).                            | `IHaveAFileOrDirectory`           |
+| `EnumerateChildrenBfs`       | Enumerates children of this node Breadth First.                      |                                   |
+| `EnumerateChildrenDfs`       | Enumerates children of this node using Depth First.                  |                                   |
+| `EnumerateKeysBfs`           | Enumerates child keys of this node Breadth First.                    | `IHaveKey`                        |
+| `EnumerateKeysDfs`           | Enumerates child keys of this node using Depth First.                | `IHaveKey`                        |
+| `EnumerateSiblings`[1]       | Enumerates (`IEnumerator`) over siblings of this node.               | `IHaveParent`                     |
+| `EnumerateValuesBfs`         | Enumerates child values of this node Breadth First.                  | `IHaveValue`                      |
+| `EnumerateValuesDfs`         | Enumerates child values of this node using Depth First.              | `IHaveValue`                      |
+| `GetChildrenRecursive`       | Retrieves all children of this node (flattened).                     |                                   |
+| `GetChildrenRecursiveUnsafe` | Retrieves all children of this node (no bound checks).               |                                   |
+| `GetKeys`                    | Retrieves all keys of the children of this node.                     | `IHaveKey`                        |
+| `GetKeysUnsafe`              | Retrieves all keys of the children of this node (no bound checks).   | `IHaveKey`                        |
+| `GetSiblingCount`            | Returns the number of siblings this node has.                        | `IHaveParent`                     |
+| `GetSiblings`[1]             | Returns all siblings of this node.                                   | `IHaveParent`                     |
+| `GetValues`                  | Retrieves all values of the children of this node.                   | `IHaveValue`                      |
+| `GetValuesUnsafe`            | Retrieves all values of the children of this node (no bound checks). | `IHaveValue`                      |
+| `IsLeaf`                     | Returns true if the node has no children.                            |                                   |
+| `ReconstructPath`            | Reconstructs full path by walking to tree root.                      | `IHaveParent`, `IHavePathSegment` |
 
 [1] Siblings are determined on Value equality *when called from internal boxed struct*. This means, when called from struct, if all fields are the same on two nodes, they may be (incorrectly) assumed as same node.
 

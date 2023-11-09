@@ -148,18 +148,21 @@ public static class IHaveObservableChildrenExtensions
         int totalChildren = item.CountChildren();
         var children = GC.AllocateUninitializedArray<ChildBox<TSelf>>(totalChildren);
         int index = 0;
-        GetChildrenRecursive(item, children, ref index);
+        GetChildrenRecursiveUnsafe(item, children, ref index);
         return children;
     }
 
     /// <summary>
-    ///     Recursively returns all the children of this node.
+    ///     Recursively returns all the children of this node (unsafe / no bounds checks).
     /// </summary>
     /// <param name="item">The current node.</param>
-    /// <param name="childrenSpan">The span representing the array to fill with children.</param>
+    /// <param name="childrenSpan">
+    ///     The span representing the array to fill with children.
+    ///     Should be at least as long as value returned by <see cref="CountChildren{TSelf}(NexusMods.Paths.Trees.Traits.ChildBox{TSelf})"/>
+    /// </param>
     /// <param name="index">The current index in the span.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void GetChildrenRecursive<TSelf>(TSelf item, Span<ChildBox<TSelf>> childrenSpan, ref int index)
+    public static void GetChildrenRecursiveUnsafe<TSelf>(TSelf item, Span<ChildBox<TSelf>> childrenSpan, ref int index)
         where TSelf : struct, IHaveObservableChildren<TSelf>
     {
         // Populate breadth first. Improved cache locality helps here.
@@ -167,6 +170,6 @@ public static class IHaveObservableChildrenExtensions
             childrenSpan.DangerousGetReferenceAt(index++) = child;
 
         foreach (var child in item.Children)
-            GetChildrenRecursive(child.Item, childrenSpan, ref index);
+            GetChildrenRecursiveUnsafe(child.Item, childrenSpan, ref index);
     }
 }

@@ -233,25 +233,28 @@ public static class IHaveBoxedChildrenWithKeyExtensions
         int totalChildren = item.CountChildren<TSelf, TKey>();
         var children = GC.AllocateUninitializedArray<ChildWithKeyBox<TKey, TSelf>>(totalChildren);
         int index = 0;
-        GetChildrenRecursive<TSelf, TKey>(item, children, ref index);
+        GetChildrenRecursiveUnsafe<TSelf, TKey>(item, children, ref index);
         return children;
     }
 
     /// <summary>
-    ///     Recursively returns all the children of this node.
+    ///     Recursively returns all the children of this node (unsafe / no bounds checks).
     /// </summary>
     /// <param name="item">The current node.</param>
-    /// <param name="childrenSpan">The span representing the array to fill with children.</param>
+    /// <param name="childrenSpan">
+    ///     The span representing the array to fill with children.
+    ///     Should be at least as long as value returned by <see cref="CountChildren{TSelf,TKey}(TSelf)"/>
+    /// </param>
     /// <param name="index">The current index in the span.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void GetChildrenRecursive<TSelf, TKey>(TSelf item, Span<ChildWithKeyBox<TKey, TSelf>> childrenSpan, ref int index)
+    public static void GetChildrenRecursiveUnsafe<TSelf, TKey>(TSelf item, Span<ChildWithKeyBox<TKey, TSelf>> childrenSpan, ref int index)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
         where TKey : notnull
     {
         foreach (var child in item.Children)
         {
             childrenSpan.DangerousGetReferenceAt(index++) = child.Value;
-            GetChildrenRecursive(child.Value.Item, childrenSpan, ref index);
+            GetChildrenRecursiveUnsafe(child.Value.Item, childrenSpan, ref index);
         }
     }
 }
