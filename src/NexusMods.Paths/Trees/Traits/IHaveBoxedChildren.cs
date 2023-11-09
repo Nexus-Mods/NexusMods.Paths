@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using NexusMods.Paths.HighPerformance.CommunityToolkit;
 
 namespace NexusMods.Paths.Trees.Traits;
 
@@ -171,5 +172,48 @@ public static class IHaveBoxedChildrenExtensions
         accumulator += item.Children.Length;
         foreach (var child in item.Children) // <= lowered to 'for loop' because array.
             child.Item.CountChildrenRecursive(ref accumulator);
+    }
+
+    /// <summary>
+    ///     Recursively returns all the children of this node.
+    /// </summary>
+    /// <param name="item">The node whose children to obtain.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An array of all the children of this node.</returns>
+    public static ChildBox<TSelf>[] GetChildrenRecursive<TSelf>(this ChildBox<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf> => item.Item.GetChildrenRecursive();
+
+    /// <summary>
+    ///     Recursively returns all the children of this node.
+    /// </summary>
+    /// <param name="item">The node whose children to obtain.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An array of all the children of this node.</returns>
+    public static ChildBox<TSelf>[] GetChildrenRecursive<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+    {
+        int totalChildren = item.CountChildren();
+        var children = GC.AllocateUninitializedArray<ChildBox<TSelf>>(totalChildren);
+        int index = 0;
+        GetChildrenRecursive(item, children, ref index);
+        return children;
+    }
+
+    /// <summary>
+    ///     Recursively returns all the children of this node.
+    /// </summary>
+    /// <param name="item">The current node.</param>
+    /// <param name="childrenSpan">The span representing the array to fill with children.</param>
+    /// <param name="index">The current index in the span.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void GetChildrenRecursive<TSelf>(TSelf item, Span<ChildBox<TSelf>> childrenSpan, ref int index)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+    {
+        // Populate breadth first. Improved cache locality helps here.
+        foreach (var child in item.Children)
+            childrenSpan.DangerousGetReferenceAt(index++) = child;
+
+        foreach (var child in item.Children)
+            GetChildrenRecursive(child.Item, childrenSpan, ref index);
     }
 }

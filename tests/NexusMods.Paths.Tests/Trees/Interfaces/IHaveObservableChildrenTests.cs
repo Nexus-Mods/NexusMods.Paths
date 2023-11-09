@@ -102,6 +102,25 @@ public class IHaveObservableChildrenTests
         count.Should().Be(2);
     }
 
+    [Fact]
+    public void GetChildrenRecursive_ShouldReturnAllChildrenIncludingDescendants()
+    {
+        // Arrange
+        var grandChild1 = new TestTree(new());
+        var grandChild2 = new TestTree(new());
+        var child1 = new TestTree(new ObservableCollection<ChildBox<TestTree>> { grandChild1 });
+        var child2 = new TestTree(new ObservableCollection<ChildBox<TestTree>> { grandChild2 });
+        var children = new ObservableCollection<ChildBox<TestTree>> { child1, child2 };
+        ChildBox<TestTree> root = new TestTree(children);
+
+        // Act
+        var allChildren = root.GetChildrenRecursive().ToArray();
+
+        // Assert
+        allChildren.Length.Should().Be(4); // Including child1, child2, grandChild1, grandChild2
+        allChildren.Should().Contain(new ChildBox<TestTree>[] { child1, child2, grandChild1, grandChild2 });
+    }
+
     private struct TestTree : IHaveObservableChildren<TestTree>
     {
         public ObservableCollection<ChildBox<TestTree>> Children { get; }

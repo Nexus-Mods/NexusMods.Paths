@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using NexusMods.Paths.HighPerformance.CommunityToolkit;
 
 namespace NexusMods.Paths.Trees.Traits;
 
@@ -205,5 +206,52 @@ public static class IHaveChildrenWithKeyExtensions
         accumulator += item.Children.Count;
         foreach (var child in item.Children)
             child.Value.Item.CountChildrenRecursive<TSelf, TKey>(ref accumulator);
+    }
+
+    /// <summary>
+    ///     Recursively returns all the children of this node.
+    /// </summary>
+    /// <param name="item">The node whose children to obtain.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An array of all the children of this node.</returns>
+    public static ChildWithKeyBox<TKey, TSelf>[] GetChildrenRecursive<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull => item.Item.GetChildrenRecursive<TSelf, TKey>();
+
+    /// <summary>
+    ///     Recursively returns all the children of this node.
+    /// </summary>
+    /// <param name="item">The node whose children to obtain.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An array of all the children of this node.</returns>
+    public static ChildWithKeyBox<TKey, TSelf>[] GetChildrenRecursive<TSelf, TKey>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+    {
+        int totalChildren = item.CountChildren<TSelf, TKey>();
+        var children = GC.AllocateUninitializedArray<ChildWithKeyBox<TKey, TSelf>>(totalChildren);
+        int index = 0;
+        GetChildrenRecursive<TSelf, TKey>(item, children, ref index);
+        return children;
+    }
+
+    /// <summary>
+    ///     Recursively returns all the children of this node.
+    /// </summary>
+    /// <param name="item">The current node.</param>
+    /// <param name="childrenSpan">The span representing the array to fill with children.</param>
+    /// <param name="index">The current index in the span.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void GetChildrenRecursive<TSelf, TKey>(TSelf item, Span<ChildWithKeyBox<TKey, TSelf>> childrenSpan, ref int index)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+    {
+        foreach (var child in item.Children)
+        {
+            childrenSpan.DangerousGetReferenceAt(index++) = child.Value;
+            GetChildrenRecursive(child.Value.Item, childrenSpan, ref index);
+        }
     }
 }

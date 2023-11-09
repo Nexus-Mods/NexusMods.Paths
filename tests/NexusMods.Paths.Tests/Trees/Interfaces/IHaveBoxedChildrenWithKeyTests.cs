@@ -115,6 +115,25 @@ public class IHaveBoxedChildrenWithKeyTests
         count.Should().Be(2); // Child + Grandchild
     }
 
+    [Fact]
+    public void GetChildrenRecursive_ShouldReturnAllChildrenIncludingDescendants()
+    {
+        // Arrange
+        var grandChild1 = new TestTree(new ());
+        var grandChild2 = new TestTree(new ());
+        var child1 = new TestTree(new (){ {0, grandChild1} });
+        var child2 = new TestTree(new (){ {0, grandChild2} });
+        var children = new Dictionary<int, ChildWithKeyBox<int, TestTree>> { {0, child1}, {1, child2} };
+        ChildWithKeyBox<int, TestTree> root = new TestTree(children);
+
+        // Act
+        var allChildren = root.GetChildrenRecursive().ToArray();
+
+        // Assert
+        allChildren.Length.Should().Be(4); // Including child1, child2, grandChild1, grandChild2
+        allChildren.Should().Contain(new ChildWithKeyBox<int, TestTree>[]{ child1, child2, grandChild1, grandChild2 });
+    }
+
     private struct TestTree : IHaveBoxedChildrenWithKey<int, TestTree>
     {
         public Dictionary<int, ChildWithKeyBox<int, TestTree>> Children { get; }
