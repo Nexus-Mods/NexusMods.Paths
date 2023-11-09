@@ -87,14 +87,32 @@ public static class IHaveBoxedChildrenExtensions
         => item.Children.Length == 0;
 
     /// <summary>
-    ///     Enumerates all child nodes of the current node in a depth-first manner.
+    ///     Enumerates all child nodes of the current node in a breadth-first manner.
     /// </summary>
     /// <param name="item">The node whose children are to be enumerated.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>An IEnumerable of all child nodes of the current node.</returns>
-    public static IEnumerable<TSelf> EnumerateChildren<TSelf>(this ChildBox<TSelf> item)
+    public static IEnumerable<TSelf> EnumerateChildrenBfs<TSelf>(this ChildBox<TSelf> item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>
-        => item.Item.EnumerateChildren();
+        => item.Item.EnumerateChildrenBfs();
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a breadth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node.</returns>
+    public static IEnumerable<TSelf> EnumerateChildrenBfs<TSelf>(this TSelf item) where TSelf : struct, IHaveBoxedChildren<TSelf>
+    {
+        // Return the current item's immediate children first.
+        foreach (var child in item.Children)
+            yield return child.Item;
+
+        // Then return the children of those children.
+        foreach (var child in item.Children)
+        foreach (var grandChild in child.Item.EnumerateChildrenBfs())
+            yield return grandChild;
+    }
 
     /// <summary>
     ///     Enumerates all child nodes of the current node in a depth-first manner.
@@ -102,12 +120,22 @@ public static class IHaveBoxedChildrenExtensions
     /// <param name="item">The node whose children are to be enumerated.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>An IEnumerable of all child nodes of the current node.</returns>
-    public static IEnumerable<TSelf> EnumerateChildren<TSelf>(this TSelf item) where TSelf : struct, IHaveBoxedChildren<TSelf>
+    public static IEnumerable<TSelf> EnumerateChildrenDfs<TSelf>(this ChildBox<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+        => item.Item.EnumerateChildrenDfs();
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a depth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node.</returns>
+    public static IEnumerable<TSelf> EnumerateChildrenDfs<TSelf>(this TSelf item) where TSelf : struct, IHaveBoxedChildren<TSelf>
     {
         foreach (var child in item.Children)
         {
             yield return child;
-            foreach (var grandChild in child.Item.EnumerateChildren())
+            foreach (var grandChild in child.Item.EnumerateChildrenDfs())
                 yield return grandChild;
         }
     }

@@ -16,11 +16,46 @@ public class IHaveObservableChildrenTests
         ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { node });
 
         // Act
-        var allChildren = root.EnumerateChildren().ToArray();
+        var allChildrenBfs = root.EnumerateChildrenBfs().ToArray();
+        var allChildrenDfs = root.EnumerateChildrenDfs().ToArray();
 
         // Assert
-        allChildren.Should().HaveCount(3)
-            .And.Contain(new[] { node, leaf1, leaf2 });
+        allChildrenBfs.Should().HaveCount(3).And.Contain(new[] { node, leaf1, leaf2 });
+        allChildrenDfs.Should().HaveCount(3).And.Contain(new[] { node, leaf1, leaf2 });
+    }
+
+    [Fact]
+    public void EnumerateChildrenDfs_ShouldReturnAllChildrenInDepthFirstOrder()
+    {
+        // Arrange
+        var grandChild = new ChildBox<TestTree> { Item = new TestTree(new ObservableCollection<ChildBox<TestTree>>()) };
+        var child = new ChildBox<TestTree> { Item = new TestTree(new ObservableCollection<ChildBox<TestTree>> { grandChild }) };
+        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { child });
+
+        // Act
+        var allChildren = root.Item.EnumerateChildrenDfs().ToArray();
+
+        // Assert
+        allChildren.Should().HaveCount(2);
+        allChildren[0].Should().BeEquivalentTo(child.Item);
+        allChildren[1].Should().BeEquivalentTo(grandChild.Item);
+    }
+
+    [Fact]
+    public void EnumerateChildrenBfs_ShouldReturnAllChildrenInBreadthFirstOrder()
+    {
+        // Arrange
+        var grandChild = new ChildBox<TestTree> { Item = new TestTree(new ObservableCollection<ChildBox<TestTree>>()) };
+        var child = new ChildBox<TestTree> { Item = new TestTree(new ObservableCollection<ChildBox<TestTree>> { grandChild }) };
+        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { child });
+
+        // Act
+        var allChildren = root.Item.EnumerateChildrenBfs().ToArray();
+
+        // Assert
+        allChildren.Should().HaveCount(2);
+        allChildren[0].Should().BeEquivalentTo(child.Item);
+        allChildren[1].Should().BeEquivalentTo(grandChild.Item);
     }
 
     [Fact]

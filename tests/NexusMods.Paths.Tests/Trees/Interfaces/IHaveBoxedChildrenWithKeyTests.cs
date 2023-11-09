@@ -6,26 +6,65 @@ namespace NexusMods.Paths.Tests.Trees.Interfaces;
 public class IHaveBoxedChildrenWithKeyTests
 {
     [Fact]
-    public void EnumerateChildren_ShouldReturnAllChildrenRecursively()
+    public void EnumerateChildrenBfsAndDfs_ShouldReturnAllChildrenRecursively()
     {
         // Arrange
         var leaf1 = new TestTree(new());
         var leaf2 = new TestTree(new());
         var node = new TestTree(new()
         {
-            [1] = leaf1,
+            [1] = leaf1 ,
             [2] = leaf2
         });
         ChildWithKeyBox<int, TestTree> root = new TestTree(new() { [0] = node });
 
         // Act
-        var allChildren = root.EnumerateChildren<TestTree, int>().ToArray();
+        var allChildrenBfs = root.EnumerateChildrenBfs().ToArray();
+        var allChildrenDfs = root.EnumerateChildrenDfs().ToArray();
 
         // Assert
-        allChildren.Should().HaveCount(3)
+        allChildrenBfs.Should().HaveCount(3)
             .And.Contain(new KeyValuePair<int, ChildWithKeyBox<int, TestTree>>(0, node))
             .And.Contain(new KeyValuePair<int, ChildWithKeyBox<int, TestTree>>(1, leaf1))
             .And.Contain(new KeyValuePair<int, ChildWithKeyBox<int, TestTree>>(2, leaf2));
+        allChildrenDfs.Should().HaveCount(3)
+            .And.Contain(new KeyValuePair<int, ChildWithKeyBox<int, TestTree>>(0, node))
+            .And.Contain(new KeyValuePair<int, ChildWithKeyBox<int, TestTree>>(1, leaf1))
+            .And.Contain(new KeyValuePair<int, ChildWithKeyBox<int, TestTree>>(2, leaf2));
+    }
+
+    [Fact]
+    public void EnumerateChildrenDfs_ShouldReturnAllChildrenInDepthFirstOrder()
+    {
+        // Arrange
+        var grandChild = new TestTree(new());
+        var child = new TestTree(new() { [1] = grandChild });
+        ChildWithKeyBox<int, TestTree> root = new TestTree(new() { [0] = child });
+
+        // Act
+        var allChildren = root.EnumerateChildrenDfs().ToArray();
+
+        // Assert
+        allChildren.Should().HaveCount(2);
+        allChildren[0].Should().BeEquivalentTo(new KeyValuePair<int, ChildWithKeyBox<int, TestTree>>(0, child));
+        allChildren[1].Should().BeEquivalentTo(new KeyValuePair<int, ChildWithKeyBox<int, TestTree>>(1, grandChild));
+    }
+
+    [Fact]
+    public void EnumerateChildrenBfs_ShouldReturnAllChildrenInBreadthFirstOrder()
+    {
+        // Arrange
+        var grandChild = new TestTree(new());
+        var child = new TestTree(new() { [1] = grandChild });
+        ChildWithKeyBox<int, TestTree> root = new TestTree(new() { [0] = child });
+
+        // Act
+        var allChildren = root.EnumerateChildrenBfs().ToArray();
+
+        // Assert
+        allChildren.Should().HaveCount(2);
+        allChildren[0].Should().BeEquivalentTo(new KeyValuePair<int, ChildWithKeyBox<int, TestTree>>(0, child));
+        allChildren[1].Should().BeEquivalentTo(new KeyValuePair<int, ChildWithKeyBox<int, TestTree>>(1, grandChild));
     }
 
     [Fact]

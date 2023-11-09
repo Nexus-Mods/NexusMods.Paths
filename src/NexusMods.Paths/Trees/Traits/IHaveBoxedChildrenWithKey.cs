@@ -99,26 +99,26 @@ public static class IHaveChildrenWithKeyExtensions
         => item.Children.Count == 0;
 
     /// <summary>
-    ///     Enumerates all child nodes of the current node in a depth-first manner.
+    /// Enumerates all child nodes of the current node in a depth-first manner.
     /// </summary>
     /// <param name="item">The node whose children are to be enumerated.</param>
     /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>An IEnumerable of all child nodes of the current node.</returns>
-    public static IEnumerable<KeyValuePair<TKey, ChildWithKeyBox<TKey, TSelf>>> EnumerateChildren<TSelf, TKey>(
+    public static IEnumerable<KeyValuePair<TKey, ChildWithKeyBox<TKey, TSelf>>> EnumerateChildrenDfs<TSelf, TKey>(
         this ChildWithKeyBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
         where TKey : notnull
-        => item.Item.EnumerateChildren<TSelf, TKey>();
+        => item.Item.EnumerateChildrenDfs<TSelf, TKey>();
 
     /// <summary>
-    ///     Enumerates all child nodes of the current node in a depth-first manner.
+    /// Enumerates all child nodes of the current node in a depth-first manner.
     /// </summary>
     /// <param name="item">The node whose children are to be enumerated.</param>
     /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>An IEnumerable of all child nodes of the current node.</returns>
-    public static IEnumerable<KeyValuePair<TKey, ChildWithKeyBox<TKey, TSelf>>> EnumerateChildren<TSelf, TKey>(
+    public static IEnumerable<KeyValuePair<TKey, ChildWithKeyBox<TKey, TSelf>>> EnumerateChildrenDfs<TSelf, TKey>(
         this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
         where TKey : notnull
@@ -126,9 +126,46 @@ public static class IHaveChildrenWithKeyExtensions
         foreach (var child in item.Children)
         {
             yield return child;
-            foreach (var tuple in child.Value.Item.EnumerateChildren<TSelf, TKey>())
-                yield return tuple;
+            foreach (var grandChild in child.Value.Item.EnumerateChildrenDfs<TSelf, TKey>())
+            {
+                yield return grandChild;
+            }
         }
+    }
+
+    /// <summary>
+    /// Enumerates all child nodes of the current node in a breadth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose children are to be enumerated.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node.</returns>
+    public static IEnumerable<KeyValuePair<TKey, ChildWithKeyBox<TKey, TSelf>>> EnumerateChildrenBfs<TSelf, TKey>(
+        this ChildWithKeyBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        => item.Item.EnumerateChildrenBfs<TSelf, TKey>();
+
+    /// <summary>
+    /// Enumerates all child nodes of the current node in a breadth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose children are to be enumerated.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node.</returns>
+    public static IEnumerable<KeyValuePair<TKey, ChildWithKeyBox<TKey, TSelf>>> EnumerateChildrenBfs<TSelf, TKey>(
+        this TSelf item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+    {
+        // Return the current item's immediate children first.
+        foreach (var child in item.Children)
+            yield return child;
+
+        // Then return the children of those children.
+        foreach (var child in item.Children)
+        foreach (var grandChild in child.Value.Item.EnumerateChildrenBfs<TSelf, TKey>())
+            yield return grandChild;
     }
 
     /// <summary>

@@ -93,26 +93,33 @@ public struct TreeNode : IHaveBoxedChildrenWithKey<RelativePath, TreeNode>
 
 !!! info "In order to add functionality to your tree, simply implement a combination of the interfaces below."
 
-| Interface                   | Description                                                                          |
-|-----------------------------|--------------------------------------------------------------------------------------|
-| `IHaveParent`               | Provides access to the parent of the current node.                                   |
-| `IHaveAFileOrDirectory`     | Provides access to file specific info for a given files.                             |
-| `IHaveDepthInformation`     | Provides access to depth of a given node, with depth 0 representing root.            |
-| `IHavePathSegment`          | Contains a string which represents an individual segment (e.g. directory) of a path. |
+| Interface               | Description                                                                          |
+|-------------------------|--------------------------------------------------------------------------------------|
+| `IHaveParent`           | Provides access to the parent of the current node.                                   |
+| `IHaveAFileOrDirectory` | Provides access to file specific info for a given files.                             |
+| `IHaveDepthInformation` | Provides access to depth of a given node, with depth 0 representing root.            |
+| `IHavePathSegment`      | Contains a string which represents an individual segment (e.g. directory) of a path. |
+| `IHaveKey`              | Contains a getter for a 'key'. Can be used for building dictionaries.                |
+| `IHaveValue`            | Contains an internal 'value'. Useful for dictionaries & further extensions.          |
 
 Available Methods:
 
-| Method                 | Description                                             | Required Traits                  |
-|------------------------|---------------------------------------------------------|----------------------------------|
-| `IsLeaf`               | Returns true if the node has no children.               |                                  |
-| `EnumerateChildren`    | Enumerates (`IEnumerator`) over children of this node.  |                                  |
-| `CountChildren`        | Counts the total number of child nodes under this node. |                                  |
-| `CountFiles`           | Counts files under this node (directory).               | `IHaveAFileOrDirectory`          |
-| `CountDirectories`     | Counts directories under this node (directory).         | `IHaveAFileOrDirectory`          | 
-| `EnumerateSiblings`[1] | Enumerates (`IEnumerator`) over siblings of this node.  | `IHaveParent`                    |
-| `GetSiblingCount`      | Returns the number of siblings this node has.           | `IHaveParent`                    |
-| `GetSiblings`[1]       | Returns all siblings of this node.                      | `IHaveParent`                    |
-| `ReconstructPath`      | Reconstructs full path by walking to tree root.         | `IHaveParent` `IHavePathSegment` |
+| Method                 | Description                                             | Required Traits                   |
+|------------------------|---------------------------------------------------------|-----------------------------------|
+| `CountChildren`        | Counts the total number of child nodes under this node. |                                   |
+| `CountDirectories`     | Counts directories under this node (directory).         | `IHaveAFileOrDirectory`           |
+| `CountFiles`           | Counts files under this node (directory).               | `IHaveAFileOrDirectory`           |
+| `EnumerateChildrenBfs` | Enumerates children of this node Breadth First.         |                                   |
+| `EnumerateChildrenDfs` | Enumerates children of this node using Depth First.     |                                   |
+| `EnumerateKeysBfs`     | Enumerates children of this node Breadth First.         | `IHaveKey`                        |
+| `EnumerateKeysDfs`     | Enumerates children of this node using Depth First.     | `IHaveKey`                        |
+| `EnumerateSiblings`[1] | Enumerates (`IEnumerator`) over siblings of this node.  | `IHaveParent`                     |
+| `EnumerateValuesBfs`   | Enumerates children of this node Breadth First.         | `IHaveValue`                      |
+| `EnumerateValuesDfs`   | Enumerates children of this node using Depth First.     | `IHaveValue`                      |
+| `GetSiblingCount`      | Returns the number of siblings this node has.           | `IHaveParent`                     |
+| `GetSiblings`[1]       | Returns all siblings of this node.                      | `IHaveParent`                     |
+| `IsLeaf`               | Returns true if the node has no children.               |                                   |
+| `ReconstructPath`      | Reconstructs full path by walking to tree root.         | `IHaveParent`, `IHavePathSegment` |
 
 [1] Siblings are determined on Value equality *when called from internal boxed struct*. This means, when called from struct, if all fields are the same on two nodes, they may be (incorrectly) assumed as same node.
 
