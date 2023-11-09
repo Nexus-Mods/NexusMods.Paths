@@ -230,9 +230,9 @@ public static class IHaveBoxedChildrenWithKeyExtensions
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
         where TKey : notnull
     {
-        int totalChildren = item.CountChildren<TSelf, TKey>();
+        var totalChildren = item.CountChildren<TSelf, TKey>();
         var children = GC.AllocateUninitializedArray<ChildWithKeyBox<TKey, TSelf>>(totalChildren);
-        int index = 0;
+        var index = 0;
         GetChildrenRecursiveUnsafe<TSelf, TKey>(item, children, ref index);
         return children;
     }
@@ -255,6 +255,101 @@ public static class IHaveBoxedChildrenWithKeyExtensions
         {
             childrenSpan.DangerousGetReferenceAt(index++) = child.Value;
             GetChildrenRecursiveUnsafe(child.Value.Item, childrenSpan, ref index);
+        }
+    }
+
+    /// <summary>
+    ///     Counts the number of leaf nodes (nodes with no children) of the current node.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <param name="item">The boxed node whose leaf nodes are to be counted.</param>
+    /// <returns>The count of leaf nodes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CountLeaves<TKey, TSelf>(this ChildWithKeyBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        => item.Item.CountLeaves<TKey, TSelf>();
+
+    /// <summary>
+    ///     Counts the number of leaf nodes (nodes with no children) under the current node.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <param name="item">The node whose leaf nodes are to be counted.</param>
+    /// <returns>The total count of leaf nodes under the current node.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CountLeaves<TKey, TSelf>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+    {
+        var leafCount = 0;
+        CountLeavesRecursive<TKey, TSelf>(item, ref leafCount);
+        return leafCount;
+    }
+
+    private static void CountLeavesRecursive<TKey, TSelf>(TSelf item, ref int leafCount)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+    {
+        foreach (var pair in item.Children)
+        {
+            if (pair.Value.IsLeaf())
+                leafCount++;
+            else
+                CountLeavesRecursive<TKey, TSelf>(pair.Value.Item, ref leafCount);
+        }
+    }
+
+    /// <summary>
+    ///     Recursively finds and returns all leaf nodes under the current node.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <param name="item">The boxed node whose leaf nodes are to be found.</param>
+    /// <returns>An array of all leaf nodes under the current node.</returns>
+    public static ChildWithKeyBox<TKey, TSelf>[] GetLeaves<TKey, TSelf>(this ChildWithKeyBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        => item.Item.GetLeaves<TKey, TSelf>();
+
+    /// <summary>
+    ///     Recursively finds and returns all leaf nodes under the current node.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <param name="item">The node whose leaf nodes are to be found.</param>
+    /// <returns>An array of all leaf nodes under the current node.</returns>
+    public static ChildWithKeyBox<TKey, TSelf>[] GetLeaves<TKey, TSelf>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+    {
+        var totalLeaves = item.CountLeaves<TKey, TSelf>();
+        var leaves = GC.AllocateUninitializedArray<ChildWithKeyBox<TKey, TSelf>>(totalLeaves);
+        var index = 0;
+        GetLeavesUnsafe<TKey, TSelf>(item, leaves, ref index);
+        return leaves;
+    }
+
+    /// <summary>
+    ///     Helper method to populate leaf nodes recursively without bounds checking.
+    /// </summary>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <param name="item">The current node to find leaf nodes from.</param>
+    /// <param name="leavesSpan">The span to fill with leaf nodes.</param>
+    /// <param name="index">Current index in the span, used internally for recursion.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void GetLeavesUnsafe<TKey, TSelf>(this TSelf item, Span<ChildWithKeyBox<TKey, TSelf>> leavesSpan, ref int index)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+    {
+        foreach (var pair in item.Children)
+        {
+            if (pair.Value.IsLeaf())
+                leavesSpan.DangerousGetReferenceAt(index++) = pair.Value;
+            else
+                GetLeavesUnsafe(pair.Value.Item, leavesSpan, ref index);
         }
     }
 }

@@ -9,10 +9,10 @@ public class IHaveBoxedChildrenTests
     public void EnumerateChildren_ShouldReturnAllChildrenRecursively()
     {
         // Arrange
-        var leaf1 = new TestTree(Array.Empty<ChildBox<TestTree>>());
-        var leaf2 = new TestTree(Array.Empty<ChildBox<TestTree>>());
+        var leaf1 = new TestTree(null);
+        var leaf2 = new TestTree(null);
         var node = new TestTree(new ChildBox<TestTree>[] { leaf1, leaf2 });
-        ChildBox<TestTree> root = new TestTree(new ChildBox<TestTree>[] { node });
+        ChildBox<TestTree> root = new TestTree(node);
 
         // Act
         var allChildrenBfs = root.EnumerateChildrenBfs().ToArray();
@@ -27,9 +27,9 @@ public class IHaveBoxedChildrenTests
     public void EnumerateChildrenDfs_ShouldReturnAllChildrenInDepthFirstOrder()
     {
         // Arrange
-        var grandChild = new ChildBox<TestTree> { Item = new TestTree(Array.Empty<ChildBox<TestTree>>()) };
-        var child = new ChildBox<TestTree> { Item = new TestTree(new[] { grandChild }) };
-        ChildBox<TestTree> root = new TestTree(new[] { child });
+        ChildBox<TestTree> grandChild = new TestTree(null);
+        ChildBox<TestTree> child = new TestTree(grandChild);
+        ChildBox<TestTree> root = new TestTree(child);
 
         // Act
         var allChildren = root.Item.EnumerateChildrenDfs().ToArray();
@@ -44,8 +44,8 @@ public class IHaveBoxedChildrenTests
     public void EnumerateChildrenBfs_ShouldReturnAllChildrenInBreadthFirstOrder()
     {
         // Arrange
-        var grandChild = new ChildBox<TestTree> { Item = new TestTree(Array.Empty<ChildBox<TestTree>>()) };
-        var child = new ChildBox<TestTree> { Item = new TestTree(new[] { grandChild }) };
+        ChildBox<TestTree> grandChild = new TestTree(null);
+        ChildBox<TestTree> child = new TestTree(new[] { grandChild });
         ChildBox<TestTree> root = new TestTree(new[] { child });
 
         // Act
@@ -61,8 +61,8 @@ public class IHaveBoxedChildrenTests
     public void CountChildren_ShouldReturnCorrectNumberOfDirectChildren()
     {
         // Arrange
-        var child1 = new TestTree(Array.Empty<ChildBox<TestTree>>());
-        var child2 = new TestTree(Array.Empty<ChildBox<TestTree>>());
+        var child1 = new TestTree(null);
+        var child2 = new TestTree(null);
         ChildBox<TestTree> root = new TestTree(new ChildBox<TestTree>[] { child1, child2 });
 
         // Act
@@ -76,7 +76,7 @@ public class IHaveBoxedChildrenTests
     public void CountChildren_ShouldReturnZeroForLeafNode()
     {
         // Arrange
-        ChildBox<TestTree> leaf = new TestTree(Array.Empty<ChildBox<TestTree>>());
+        ChildBox<TestTree> leaf = new TestTree(null);
 
         // Act
         var count = leaf.CountChildren();
@@ -90,9 +90,9 @@ public class IHaveBoxedChildrenTests
     public void CountChildrenRecursive_ShouldReturnTotalNumberOfAllChildren()
     {
         // Arrange
-        var grandChild = new TestTree(Array.Empty<ChildBox<TestTree>>());
+        var grandChild = new TestTree(null);
         var child = new TestTree(new ChildBox<TestTree>[] { grandChild });
-        ChildBox<TestTree> root = new TestTree(new ChildBox<TestTree>[] { child });
+        ChildBox<TestTree> root = new TestTree(child);
 
         // Act
         var count = root.CountChildren();
@@ -105,8 +105,8 @@ public class IHaveBoxedChildrenTests
     public void GetChildrenRecursive_ShouldReturnAllChildrenIncludingDescendants()
     {
         // Arrange
-        var grandChild1 = new TestTree(Array.Empty<ChildBox<TestTree>>());
-        var grandChild2 = new TestTree(Array.Empty<ChildBox<TestTree>>());
+        var grandChild1 = new TestTree(null);
+        var grandChild2 = new TestTree(null);
         var child1 = new TestTree(new ChildBox<TestTree>[] { grandChild1 });
         var child2 = new TestTree(new ChildBox<TestTree>[] { grandChild2 });
         var children = new ChildBox<TestTree>[] { child1, child2 };
@@ -120,10 +120,43 @@ public class IHaveBoxedChildrenTests
         allChildren.Should().Contain(new ChildBox<TestTree>[] { child1, child2, grandChild1, grandChild2 });
     }
 
+    [Fact]
+    public void CountLeaves_ShouldReturnCorrectNumberOfLeafNodes()
+    {
+        // Arrange
+        var leaf1 = new TestTree(null);
+        var leaf2 = new TestTree(null);
+        var node = new TestTree(new ChildBox<TestTree>[] { leaf1, leaf2 });
+        ChildBox<TestTree> root = new TestTree(new ChildBox<TestTree>[] { node });
+
+        // Act
+        var leafCount = root.CountLeaves();
+
+        // Assert
+        leafCount.Should().Be(2); // leaf1 and leaf2 are leaves
+    }
+
+    [Fact]
+    public void GetLeaves_ShouldReturnAllLeafNodes()
+    {
+        // Arrange
+        ChildBox<TestTree> leaf1 = new TestTree(null);
+        ChildBox<TestTree> leaf2 = new TestTree(null);
+        ChildBox<TestTree> node = new TestTree(new[] { leaf1, leaf2 });
+        ChildBox<TestTree> root = new TestTree(new[] { node });
+
+        // Act
+        var leaves = root.GetLeaves();
+
+        // Assert
+        leaves.Should().HaveCount(2).And.Contain(new[] { leaf1, leaf2 });
+    }
+
     private struct TestTree : IHaveBoxedChildren<TestTree>
     {
         public ChildBox<TestTree>[] Children { get; }
 
-        public TestTree(ChildBox<TestTree>[] children) => Children = children;
+        public TestTree(ChildBox<TestTree>[]? children) => Children = children ?? Array.Empty<ChildBox<TestTree>>();
+        public TestTree(TestTree child) => Children = new ChildBox<TestTree>[]{ child };
     }
 }

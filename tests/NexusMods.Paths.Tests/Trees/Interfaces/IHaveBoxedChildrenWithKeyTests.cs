@@ -134,6 +134,44 @@ public class IHaveBoxedChildrenWithKeyTests
         allChildren.Should().Contain(new ChildWithKeyBox<int, TestTree>[]{ child1, child2, grandChild1, grandChild2 });
     }
 
+    [Fact]
+    public void CountLeaves_ShouldReturnCorrectNumberOfLeafNodes()
+    {
+        // Arrange
+        var leaf1 = new TestTree(new());
+        var leaf2 = new TestTree(new());
+        var node = new TestTree(new()
+        {
+            [1] = leaf1,
+            [2] = leaf2
+        });
+        ChildWithKeyBox<int, TestTree> root = new TestTree(new() { [0] = node });
+
+        // Act
+        var leafCount = root.CountLeaves();
+
+        // Assert
+        leafCount.Should().Be(2);
+    }
+
+    [Fact]
+    public void GetLeaves_ShouldReturnAllLeafNodesRecursively()
+    {
+        // Arrange
+        var leaf1 = new TestTree(new());
+        var leaf2 = new TestTree(new());
+        var node1 = new TestTree(new() { [1] = leaf1 });
+        var node2 = new TestTree(new() { [2] = leaf2 });
+        ChildWithKeyBox<int, TestTree> root = new TestTree(new() { [0] = node1, [3] = node2 });
+
+        // Act
+        var leaves = root.GetLeaves().ToArray();
+
+        // Assert
+        leaves.Should().HaveCount(2)
+            .And.Contain(new ChildWithKeyBox<int, TestTree>[]{ leaf1, leaf2 });
+    }
+
     private struct TestTree : IHaveBoxedChildrenWithKey<int, TestTree>
     {
         public Dictionary<int, ChildWithKeyBox<int, TestTree>> Children { get; }

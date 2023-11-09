@@ -109,6 +109,7 @@ Available Methods:
 | `CountChildren`              | Counts the total number of child nodes under this node.              |                                   |
 | `CountDirectories`           | Counts directories under this node (directory).                      | `IHaveAFileOrDirectory`           |
 | `CountFiles`                 | Counts files under this node (directory).                            | `IHaveAFileOrDirectory`           |
+| `CountLeaves`                | Returns number of leaf nodes in this tree.                           |                                   |
 | `EnumerateChildrenBfs`       | Enumerates children of this node Breadth First.                      |                                   |
 | `EnumerateChildrenDfs`       | Enumerates children of this node using Depth First.                  |                                   |
 | `EnumerateKeysBfs`           | Enumerates child keys of this node Breadth First.                    | `IHaveKey`                        |
@@ -120,6 +121,8 @@ Available Methods:
 | `GetChildrenRecursiveUnsafe` | Retrieves all children of this node (no bound checks).               |                                   |
 | `GetKeys`                    | Retrieves all keys of the children of this node.                     | `IHaveKey`                        |
 | `GetKeysUnsafe`              | Retrieves all keys of the children of this node (no bound checks).   | `IHaveKey`                        |
+| `GetLeaves`                  | Retrieves all leaves of this tree.                                   |                                   |
+| `GetLeavesUnsafe`            | Retrieves all leaves of this tree (no bound checks).                 |                                   |
 | `GetSiblingCount`            | Returns the number of siblings this node has.                        | `IHaveParent`                     |
 | `GetSiblings`[1]             | Returns all siblings of this node.                                   | `IHaveParent`                     |
 | `GetValues`                  | Retrieves all values of the children of this node.                   | `IHaveValue`                      |

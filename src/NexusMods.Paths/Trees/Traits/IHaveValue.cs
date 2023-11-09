@@ -108,9 +108,9 @@ public static class IHaveValueExtensionsForIHaveBoxedChildren
     public static TValue[] GetValues<TSelf, TValue>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveValue<TValue>
     {
-        int totalValues = item.CountChildren(); // Ensure this method counts all descendants.
+        var totalValues = item.CountChildren(); // Ensure this method counts all descendants.
         var values = GC.AllocateUninitializedArray<TValue>(totalValues);
-        int index = 0;
+        var index = 0;
         GetValuesUnsafe<TSelf, TValue>(item, values, ref index);
         return values;
     }
@@ -226,9 +226,9 @@ public static class IHaveValueExtensionsForIHaveObservableChildren
     public static TValue[] GetValues<TSelf, TValue>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveValue<TValue>
     {
-        int totalValues = item.CountChildren(); // Ensure this method counts all descendants.
+        var totalValues = item.CountChildren(); // Ensure this method counts all descendants.
         var values = GC.AllocateUninitializedArray<TValue>(totalValues);
-        int index = 0;
+        var index = 0;
         GetValuesUnsafe<TSelf, TValue>(item, values, ref index);
         return values;
     }
@@ -354,9 +354,9 @@ public static class IHaveValueExtensionsForIHaveBoxedChildrenWithValue
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveValue<TValue>
         where TKey : notnull
     {
-        int totalValues = item.CountChildren<TSelf, TKey>(); // Ensure this method counts all descendants.
+        var totalValues = item.CountChildren<TSelf, TKey>(); // Ensure this method counts all descendants.
         var values = GC.AllocateUninitializedArray<TValue>(totalValues);
-        int index = 0;
+        var index = 0;
         GetValuesUnsafe<TKey, TSelf, TValue>(item, values, ref index);
         return values;
     }

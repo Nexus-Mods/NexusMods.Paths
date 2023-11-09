@@ -31,7 +31,7 @@ public static class IHavePathSegmentExtensions
     {
         // Remember to follow the rules:
         // Pre-calculate the length of the path.
-        int pathLength = item.Segment.Length;
+        var pathLength = item.Segment.Length;
 
         // Start with the current item and walk up the tree.
         var currentItem = item;
@@ -46,7 +46,7 @@ public static class IHavePathSegmentExtensions
         static void Action(Span<char> span, TSelf item)
         {
             var currentItem = item;
-            int position = span.Length;
+            var position = span.Length;
 
             // Append the current (leaf) segment first.
             var segmentSpan = currentItem.Segment.Path.AsSpan();

@@ -192,9 +192,9 @@ public static class IHaveBoxedChildrenExtensions
     public static ChildBox<TSelf>[] GetChildrenRecursive<TSelf>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>
     {
-        int totalChildren = item.CountChildren();
+        var totalChildren = item.CountChildren();
         var children = GC.AllocateUninitializedArray<ChildBox<TSelf>>(totalChildren);
-        int index = 0;
+        var index = 0;
         GetChildrenRecursiveUnsafe(item, children, ref index);
         return children;
     }
@@ -209,7 +209,7 @@ public static class IHaveBoxedChildrenExtensions
     /// </param>
     /// <param name="index">The current index in the span.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void GetChildrenRecursiveUnsafe<TSelf>(TSelf item, Span<ChildBox<TSelf>> childrenSpan, ref int index)
+    public static void GetChildrenRecursiveUnsafe<TSelf>(this TSelf item, Span<ChildBox<TSelf>> childrenSpan, ref int index)
         where TSelf : struct, IHaveBoxedChildren<TSelf>
     {
         // Populate breadth first. Improved cache locality helps here.
@@ -218,5 +218,88 @@ public static class IHaveBoxedChildrenExtensions
 
         foreach (var child in item.Children)
             GetChildrenRecursiveUnsafe(child.Item, childrenSpan, ref index);
+    }
+
+    /// <summary>
+    ///     Counts the number of leaf nodes (nodes with no children) of the current node.
+    /// </summary>
+    /// <param name="item">The node whose leaf nodes are to be counted.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>The count of leaf nodes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CountLeaves<TSelf>(this ChildBox<TSelf> item) where TSelf : struct, IHaveBoxedChildren<TSelf>
+        => item.Item.CountLeaves();
+
+    /// <summary>
+    ///     Counts the number of leaf nodes (nodes with no children) of the current node.
+    /// </summary>
+    /// <param name="item">The node whose leaf nodes are to be counted.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>The count of leaf nodes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CountLeaves<TSelf>(this TSelf item) where TSelf : struct, IHaveBoxedChildren<TSelf>
+    {
+        var leafCount = 0;
+        CountLeavesRecursive(item, ref leafCount);
+        return leafCount;
+    }
+
+    private static void CountLeavesRecursive<TSelf>(TSelf item, ref int leafCount)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+    {
+        foreach (var child in item.Children)
+        {
+            if (child.IsLeaf())
+                leafCount++;
+            else
+                CountLeavesRecursive(child.Item, ref leafCount);
+        }
+    }
+
+    /// <summary>
+    ///     Recursively returns all leaf nodes of this node.
+    /// </summary>
+    /// <param name="item">The node whose leaf nodes to obtain.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An array of all leaf nodes of this node.</returns>
+    public static ChildBox<TSelf>[] GetLeaves<TSelf>(this ChildBox<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf> => item.Item.GetLeaves();
+
+    /// <summary>
+    ///     Recursively returns all leaf nodes of this node.
+    /// </summary>
+    /// <param name="item">The node whose leaf nodes to obtain.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An array of all leaf nodes of this node.</returns>
+    public static ChildBox<TSelf>[] GetLeaves<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+    {
+        var totalLeaves = item.CountLeaves();
+        var leaves = GC.AllocateUninitializedArray<ChildBox<TSelf>>(totalLeaves);
+        var index = 0;
+        GetLeavesUnsafe(item, leaves, ref index);
+        return leaves;
+    }
+
+    /// <summary>
+    ///     Helper method to populate leaf nodes recursively (unsafe / no bounds checks).
+    /// </summary>
+    /// <param name="item">The current node.</param>
+    /// <param name="leavesSpan">
+    ///     The span to fill with leaf nodes.
+    ///     Should be at least as long as value returned by a hypothetical <see cref="CountLeaves{TSelf}(NexusMods.Paths.Trees.Traits.ChildBox{TSelf})"/> method.
+    /// </param>
+    /// <param name="index">The current index in the span.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void GetLeavesUnsafe<TSelf>(this TSelf item, Span<ChildBox<TSelf>> leavesSpan, ref int index)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+    {
+        foreach (var child in item.Children)
+        {
+            if (child.IsLeaf())
+                leavesSpan.DangerousGetReferenceAt(index++) = child;
+            else
+                GetLeavesUnsafe(child.Item, leavesSpan, ref index);
+        }
     }
 }

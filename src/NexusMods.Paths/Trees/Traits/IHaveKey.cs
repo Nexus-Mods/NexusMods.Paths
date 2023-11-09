@@ -107,9 +107,9 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     public static TKey[] GetKeys<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
     {
-        int totalKeys = item.CountChildren(); // Ensure this method counts all descendants.
+        var totalKeys = item.CountChildren(); // Ensure this method counts all descendants.
         var keys = GC.AllocateUninitializedArray<TKey>(totalKeys);
-        int index = 0;
+        var index = 0;
         GetKeysUnsafe<TSelf, TKey>(item, keys, ref index);
         return keys;
     }
@@ -226,9 +226,9 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     public static TKey[] GetKeys<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
     {
-        int totalKeys = item.CountChildren(); // Ensure this method counts all descendants.
+        var totalKeys = item.CountChildren(); // Ensure this method counts all descendants.
         var keys = GC.AllocateUninitializedArray<TKey>(totalKeys);
-        int index = 0;
+        var index = 0;
         GetKeysUnsafe<TSelf, TKey>(item, keys, ref index);
         return keys;
     }
@@ -351,9 +351,9 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
     {
-        int totalChildren = item.CountChildren<TSelf, TKey>(); // Ensure CountChildren counts all descendants.
+        var totalChildren = item.CountChildren<TSelf, TKey>(); // Ensure CountChildren counts all descendants.
         var keys = GC.AllocateUninitializedArray<TKey>(totalChildren);
-        int index = 0;
+        var index = 0;
         GetKeysUnsafe<TSelf, TKey>(item, keys, ref index);
         return keys;
     }
