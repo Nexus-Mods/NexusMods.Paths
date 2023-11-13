@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using NexusMods.Paths.Extensions;
 using NexusMods.Paths.HighPerformance.CommunityToolkit;
 
 namespace NexusMods.Paths.Trees.Traits;
@@ -247,7 +245,7 @@ public static class IHaveValueExtensionsForIHaveObservableChildren
     {
         // Populate breadth first. Improved cache locality helps here.
         foreach (var child in item.Children)
-            buffer[index++] = child.Item.Value;
+            buffer.DangerousGetReferenceAt(index++) = child.Item.Value;
 
         foreach (var child in item.Children)
             GetValuesUnsafe(child.Item, buffer, ref index);

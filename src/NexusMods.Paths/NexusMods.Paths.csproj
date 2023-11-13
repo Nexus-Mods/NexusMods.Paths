@@ -13,8 +13,4 @@
     <ItemGroup>
         <InternalsVisibleTo Include="NexusMods.Paths.Benchmarks" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Trees\" />
-    </ItemGroup>
 </Project>

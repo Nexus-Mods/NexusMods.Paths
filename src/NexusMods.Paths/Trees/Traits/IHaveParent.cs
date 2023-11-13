@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using NexusMods.Paths.HighPerformance.CommunityToolkit;
 
 namespace NexusMods.Paths.Trees.Traits;
 
@@ -116,7 +117,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildren
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveParent<TSelf>, IEquatable<TSelf>
     {
         var result = GC.AllocateUninitializedArray<ChildBox<TSelf>>(item.GetSiblingCount());
-        GetSiblings(item, result);
+        GetSiblingsUnsafe(item, result);
         return result;
     }
 
@@ -130,7 +131,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildren
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveParent<TSelf>, IEquatable<TSelf>
     {
         var result = GC.AllocateUninitializedArray<ChildBox<TSelf>>(item.GetSiblingCount());
-        GetSiblings(item, result);
+        GetSiblingsUnsafe(item, result);
         return result;
     }
 
@@ -144,7 +145,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildren
     /// </param>
     /// <returns>The amount of siblings inserted into the buffer.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetSiblings<TSelf>(this ChildBox<TSelf> item, Span<ChildBox<TSelf>> resultsBuf)
+    public static int GetSiblingsUnsafe<TSelf>(this ChildBox<TSelf> item, Span<ChildBox<TSelf>> resultsBuf)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveParent<TSelf>, IEquatable<TSelf>
     {
         // Note: While this code is mostly duplicated from other overload, it is not the same.
@@ -158,7 +159,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildren
             foreach (var child in parentChildren) // <= lowered to 'for'
             {
                 if (!child.Equals(item))
-                    resultsBuf[writeIndex++] = child;
+                    resultsBuf.DangerousGetReferenceAt(writeIndex++) = child;
             }
 
             return item.GetSiblingCount();
@@ -177,7 +178,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildren
     /// </param>
     /// <returns>The amount of siblings inserted into the buffer.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetSiblings<TSelf>(this TSelf item, Span<ChildBox<TSelf>> resultsBuf)
+    public static int GetSiblingsUnsafe<TSelf>(this TSelf item, Span<ChildBox<TSelf>> resultsBuf)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveParent<TSelf>, IEquatable<TSelf>
     {
         var parent = item.Parent;
@@ -189,7 +190,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildren
             foreach (var child in parentChildren) // <= lowered to 'for'
             {
                 if (!child.Item.Equals(item))
-                    resultsBuf[writeIndex++] = child;
+                    resultsBuf.DangerousGetReferenceAt(writeIndex++) = child;
             }
 
             return item.GetSiblingCount();
@@ -287,7 +288,7 @@ public static class IHaveParentExtensionsForIHaveObservableChildren
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveParent<TSelf>, IEquatable<TSelf>
     {
         var result = GC.AllocateUninitializedArray<ChildBox<TSelf>>(item.GetSiblingCount());
-        GetSiblings(item, result);
+        GetSiblingsUnsafe(item, result);
         return result;
     }
 
@@ -301,7 +302,7 @@ public static class IHaveParentExtensionsForIHaveObservableChildren
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveParent<TSelf>, IEquatable<TSelf>
     {
         var result = GC.AllocateUninitializedArray<ChildBox<TSelf>>(item.GetSiblingCount());
-        GetSiblings(item, result);
+        GetSiblingsUnsafe(item, result);
         return result;
     }
 
@@ -315,7 +316,7 @@ public static class IHaveParentExtensionsForIHaveObservableChildren
     /// </param>
     /// <returns>The amount of siblings inserted into the buffer.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetSiblings<TSelf>(this ChildBox<TSelf> item, Span<ChildBox<TSelf>> resultsBuf)
+    public static int GetSiblingsUnsafe<TSelf>(this ChildBox<TSelf> item, Span<ChildBox<TSelf>> resultsBuf)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveParent<TSelf>, IEquatable<TSelf>
     {
         // Note: While this code is mostly duplicated from other overload, it is not the same.
@@ -329,7 +330,7 @@ public static class IHaveParentExtensionsForIHaveObservableChildren
             foreach (var child in parentChildren) // <= lowered to 'for'
             {
                 if (!child.Equals(item))
-                    resultsBuf[writeIndex++] = child;
+                    resultsBuf.DangerousGetReferenceAt(writeIndex++) = child;
             }
 
             return item.GetSiblingCount();
@@ -348,7 +349,7 @@ public static class IHaveParentExtensionsForIHaveObservableChildren
     /// </param>
     /// <returns>The amount of siblings inserted into the buffer.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetSiblings<TSelf>(this TSelf item, Span<ChildBox<TSelf>> resultsBuf)
+    public static int GetSiblingsUnsafe<TSelf>(this TSelf item, Span<ChildBox<TSelf>> resultsBuf)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveParent<TSelf>, IEquatable<TSelf>
     {
         var parent = item.Parent;
@@ -360,7 +361,7 @@ public static class IHaveParentExtensionsForIHaveObservableChildren
             foreach (var child in parentChildren) // <= lowered to 'for'
             {
                 if (!child.Item.Equals(item))
-                    resultsBuf[writeIndex++] = child;
+                    resultsBuf.DangerousGetReferenceAt(writeIndex++) = child;
             }
 
             return item.GetSiblingCount();
@@ -459,7 +460,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildrenWithKey
     {
         var count = item.GetSiblingCount<TSelf, TKey>();
         var result = GC.AllocateUninitializedArray<ChildWithKeyBox<TKey, TSelf>>(count);
-        GetSiblings<TSelf, TKey>(item, result);
+        GetSiblingsUnsafe<TSelf, TKey>(item, result);
         return result;
     }
 
@@ -473,7 +474,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildrenWithKey
     /// </param>
     /// <returns>The amount of siblings inserted into the buffer.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetSiblings<TSelf, TKey>(this TSelf item, Span<ChildWithKeyBox<TKey, TSelf>> resultsBuf)
+    public static int GetSiblingsUnsafe<TSelf, TKey>(this TSelf item, Span<ChildWithKeyBox<TKey, TSelf>> resultsBuf)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveParent<TSelf>, IEquatable<TSelf> where TKey : notnull
     {
         var parent = item.Parent;
@@ -485,7 +486,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildrenWithKey
             foreach (var child in parentChildren)
             {
                 if (!child.Value.Item.Equals(item))
-                    resultsBuf[writeIndex++] = child.Value;
+                    resultsBuf.DangerousGetReferenceAt(writeIndex++) = child.Value;
             }
 
             return item.GetSiblingCount<TSelf, TKey>();
@@ -505,7 +506,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildrenWithKey
     {
         var count = item.GetSiblingCount();
         var result = GC.AllocateUninitializedArray<ChildWithKeyBox<TKey, TSelf>>(count);
-        GetSiblings(item, result);
+        GetSiblingsUnsafe(item, result);
         return result;
     }
 
@@ -519,7 +520,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildrenWithKey
     /// </param>
     /// <returns>The amount of siblings inserted into the buffer.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetSiblings<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item, Span<ChildWithKeyBox<TKey, TSelf>> resultsBuf)
+    public static int GetSiblingsUnsafe<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item, Span<ChildWithKeyBox<TKey, TSelf>> resultsBuf)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveParent<TSelf>, IEquatable<TSelf> where TKey : notnull
     {
         var parent = item.Item.Parent;
@@ -534,7 +535,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildrenWithKey
             foreach (var child in parentChildren)
             {
                 if (!child.Value.Equals(item))
-                    resultsBuf[writeIndex++] = child.Value;
+                    resultsBuf.DangerousGetReferenceAt(writeIndex++) = child.Value;
             }
 
             return item.GetSiblingCount();
