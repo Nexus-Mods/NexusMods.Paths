@@ -138,7 +138,9 @@ Available Methods:
 
 [1] Siblings are determined on Value equality *when called from internal boxed struct*. This means, when called from struct, if all fields are the same on two nodes, they may be (incorrectly) assumed as same node.
 
-!!! note "All methods require the `IHaveBoxedChildren` or `IHaveBoxedChildrenWithKey` interface to be implemented, thus they are omitted from the table."
+!!! note "All methods require one of the container interfaces such as `IHaveBoxedChildren` to be implemented, thus they are omitted from the table."
+
+!!! note "Unless specified, the functions ignore the current node. e.g. `GetValues`, `CountLeaves` etc. will return only children."
 
 # Benchmarks
 
