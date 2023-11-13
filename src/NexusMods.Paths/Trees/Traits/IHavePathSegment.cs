@@ -338,7 +338,7 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildrenWithKey
         if (!root.Segment.Equals(pathParts.DangerousGetReferenceAt(0)))
             return null;
 
-        return pathParts.Length == 1 ? root : FindNodeRecursive(root, pathParts, 1);
+        return pathParts.Length == 1 ? root : FindNodeInternal(root, pathParts, 1);
     }
 
     /// <summary>
@@ -365,30 +365,33 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildrenWithKey
         where TSelf : struct, IHaveBoxedChildrenWithKey<RelativePath, TSelf>, IHavePathSegment
     {
         var pathParts = fullPath.Path.Split('/');
-        return FindNodeRecursive(root, pathParts, 0);
+        return FindNodeInternal(root, pathParts, 0);
     }
 
     /// <summary>
-    ///     Recursive helper method to find a node by path segments.
+    ///     Helper method to find a node by path segments.
     /// </summary>
     /// <param name="node">The current node being examined.</param>
     /// <param name="pathParts">Array of path parts representing the full path to search.</param>
     /// <param name="index">The current index in the pathParts array.</param>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given segment of the path, or null if not found.</returns>
-    private static TSelf? FindNodeRecursive<TSelf>(TSelf node, string[] pathParts, int index)
-        where TSelf : struct, IHaveBoxedChildrenWithKey<RelativePath, TSelf>, IHavePathSegment
+    private static TSelf? FindNodeInternal<TSelf>(TSelf node, string[] pathParts, int index) where TSelf : struct, IHaveBoxedChildrenWithKey<RelativePath, TSelf>, IHavePathSegment
     {
-        if (index >= pathParts.Length)
-            return node;
+        while (true)
+        {
+            if (index >= pathParts.Length)
+                return node;
 
-        var currentSegment = new RelativePath(pathParts.DangerousGetReferenceAt(index));
+            var currentSegment = new RelativePath(pathParts.DangerousGetReferenceAt(index));
 
-        // Check if the current node has a child with the extracted key.
-        if (!node.Children.TryGetValue(currentSegment, out var childBox))
-            return null;
+            // Check if the current node has a child with the extracted key.
+            if (!node.Children.TryGetValue(currentSegment, out var childBox))
+                return null;
 
-        // Recursively search the child node.
-        return FindNodeRecursive(childBox.Item, pathParts, index + 1);
+            // Recursively search the child node.
+            node = childBox.Item;
+            index += 1;
+        }
     }
 }
