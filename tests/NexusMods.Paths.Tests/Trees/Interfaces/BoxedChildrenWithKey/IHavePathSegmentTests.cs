@@ -67,6 +67,25 @@ public class IHavePathSegmentWithKeyTests
         foundNode!.Value.Segment.Path.Should().Be("grandchild");
     }
 
+    /*
+    // Broken because of bug: https://github.com/Nexus-Mods/NexusMods.Paths/issues/25
+    [Fact]
+    public void FindByPathFromRoot_WithExactPath_IsCaseInsensitive()
+    {
+        // Arrange
+        var grandchild = new TestTree( "grandchild");
+        var child = new TestTree(grandchild, "child");
+        ChildWithKeyBox<RelativePath, TestTree> root = new TestTree(child, "root");
+
+        // Act
+        var foundNode = root.FindByPathFromRoot(new RelativePath("Root/Child/GrandChild"));
+
+        // Assert
+        foundNode!.Should().NotBeNull();
+        foundNode!.Value.Segment.Path.Should().Be("grandchild");
+    }
+    */
+
     [Fact]
     public void FindByPathFromRoot_WithIncompletePath_ShouldReturnClosestNode()
     {
@@ -84,7 +103,7 @@ public class IHavePathSegmentWithKeyTests
     }
 
     [Fact]
-    public void FindByPathFromRoot_WithSelfPath_ShouldReturnSelfe()
+    public void FindByPathFromRoot_WithSelfPath_ShouldReturnSelf()
     {
         // Arrange
         var grandchild = new TestTree("grandchild");
