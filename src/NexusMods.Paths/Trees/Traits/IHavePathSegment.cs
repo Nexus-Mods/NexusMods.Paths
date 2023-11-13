@@ -335,10 +335,6 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildrenWithKey
         where TSelf : struct, IHaveBoxedChildrenWithKey<RelativePath, TSelf>, IHavePathSegment
     {
         var pathParts = fullPath.Path.Split('/');
-
-        if (pathParts.Length <= 0)
-            return null;
-
         if (!root.Segment.Equals(pathParts.DangerousGetReferenceAt(0)))
             return null;
 
