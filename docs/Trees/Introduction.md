@@ -117,6 +117,8 @@ Available Methods:
 | `EnumerateSiblings`[1]       | Enumerates (`IEnumerator`) over siblings of this node.                        | `IHaveParent`                     |
 | `EnumerateValuesBfs`         | Enumerates child values of this node Breadth First.                           | `IHaveValue`                      |
 | `EnumerateValuesDfs`         | Enumerates child values of this node using Depth First.                       | `IHaveValue`                      |
+| `FindByPathFromChild`        | Finds a given node in a tree using a relative path (starting from child).     | `IHavePathSegment`                |
+| `FindByPathFromRoot`         | Finds a given node in a tree using a relative path (starting from self).      | `IHavePathSegment`                |
 | `GetChildrenRecursive`       | Retrieves all children of this node (flattened).                              |                                   |
 | `GetChildrenRecursiveUnsafe` | Retrieves all children of this node (no bound checks).                        |                                   |
 | `GetKeys`                    | Retrieves all keys of the children of this node.                              | `IHaveKey`                        |
