@@ -132,6 +132,7 @@ Available Methods:
 | `GetValuesUnsafe`            | Retrieves all values of the children of this node (no bound checks).          | `IHaveValue`                      |
 | `IsLeaf`                     | Returns true if the node has no children.                                     |                                   |
 | `ReconstructPath`            | Reconstructs full path by walking to tree root.                               | `IHaveParent`, `IHavePathSegment` |
+| `ToDictionary`               | Populates a dictionary from the children of the tree node.                    | `IHaveKey`, `IHaveValue`          |
 
 [1] Siblings are determined on Value equality *when called from internal boxed struct*. This means, when called from struct, if all fields are the same on two nodes, they may be (incorrectly) assumed as same node.
 

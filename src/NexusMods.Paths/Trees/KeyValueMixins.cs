@@ -65,6 +65,58 @@ public static class MixinExtensionsForIHaveBoxedChildren
         foreach (var child in item.Children)
             GetKeyValuesUnsafe(child.Item, buffer, ref index);
     }
+
+    /// <summary>
+    ///     Recursively creates a dictionary with all the key-value pairs of the children of this node.
+    /// </summary>
+    /// <param name="item">The boxed node whose child key-value pairs to obtain.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <returns>A dictionary of all the key-value pairs of the children of this node.</returns>
+    public static Dictionary<TKey, TValue> ToDictionary<TSelf, TKey, TValue>(this ChildBox<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveValue<TValue>
+        where TKey : notnull
+    {
+        return item.Item.ToDictionary<TSelf, TKey, TValue>();
+    }
+
+    /// <summary>
+    ///     Recursively creates a dictionary with all the key-value pairs of the children of this node.
+    /// </summary>
+    /// <param name="item">The node whose child key-value pairs to obtain.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <returns>A dictionary of all the key-value pairs of the children of this node.</returns>
+    public static Dictionary<TKey, TValue> ToDictionary<TSelf, TKey, TValue>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveValue<TValue>
+        where TKey : notnull
+    {
+        var dictionary = new Dictionary<TKey, TValue>(item.CountChildren());
+        ToDictionary(item, dictionary);
+        return dictionary;
+    }
+
+    /// <summary>
+    ///     Helper method to populate a dictionary with key-value pairs recursively.
+    /// </summary>
+    /// <param name="item">The current node.</param>
+    /// <param name="dictionary">The dictionary to fill with key-value pairs.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ToDictionary<TSelf, TKey, TValue>(TSelf item, Dictionary<TKey, TValue> dictionary)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveValue<TValue>
+        where TKey : notnull
+    {
+        foreach (var child in item.Children)
+        {
+            dictionary[child.Item.Key] = child.Item.Value;
+            ToDictionary(child.Item, dictionary);
+        }
+    }
 }
 
 /// <summary>
@@ -124,6 +176,59 @@ public static class MixinExtensionsForIHaveBoxedChildrenWithKey
             var value = pair.Value.Item.Value;
             buffer.DangerousGetReferenceAt(index++) = new KeyValuePair<TKey, TValue>(key, value);
             GetKeyValuesUnsafe(pair.Value.Item, buffer, ref index);
+        }
+    }
+
+    /// <summary>
+    ///     Recursively creates a dictionary with all the key-value pairs of the children of this node.
+    /// </summary>
+    /// <param name="item">The boxed node whose child key-value pairs to obtain.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <returns>A dictionary of all the key-value pairs of the children of this node.</returns>
+    public static Dictionary<TKey, TValue> ToDictionary<TKey, TSelf, TValue>(this ChildWithKeyBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveValue<TValue>
+        where TKey : notnull
+    {
+        return item.Item.ToDictionary<TKey, TSelf, TValue>();
+    }
+
+    /// <summary>
+    ///     Recursively creates a dictionary with all the key-value pairs of the children of this node.
+    /// </summary>
+    /// <param name="item">The node whose child key-value pairs to obtain.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <returns>A dictionary of all the key-value pairs of the children of this node.</returns>
+    public static Dictionary<TKey, TValue> ToDictionary<TKey, TSelf, TValue>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveValue<TValue>
+        where TKey : notnull
+    {
+        var count = item.CountChildren<TSelf, TKey>();
+        var dictionary = new Dictionary<TKey, TValue>(count);
+        ToDictionary(item, dictionary);
+        return dictionary;
+    }
+
+    /// <summary>
+    ///     Helper method to populate a dictionary with key-value pairs recursively.
+    /// </summary>
+    /// <param name="item">The current node.</param>
+    /// <param name="dictionary">The dictionary to fill with key-value pairs.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ToDictionary<TSelf, TKey, TValue>(TSelf item, Dictionary<TKey, TValue> dictionary)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveValue<TValue>
+        where TKey : notnull
+    {
+        foreach (var child in item.Children)
+        {
+            dictionary[child.Value.Item.Key] = child.Value.Item.Value;
+            ToDictionary(child.Value.Item, dictionary);
         }
     }
 }
@@ -186,5 +291,57 @@ public static class MixinExtensionsForIHaveObservableChildren
 
         foreach (var child in item.Children)
             GetKeyValuesUnsafe(child.Item, buffer, ref index);
+    }
+
+    /// <summary>
+    ///     Recursively creates a dictionary with all the key-value pairs of the children of this node.
+    /// </summary>
+    /// <param name="item">The boxed node whose child key-value pairs to obtain.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <returns>A dictionary of all the key-value pairs of the children of this node.</returns>
+    public static Dictionary<TKey, TValue> ToDictionary<TSelf, TKey, TValue>(this ChildBox<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveValue<TValue>
+        where TKey : notnull
+    {
+        return item.Item.ToDictionary<TSelf, TKey, TValue>();
+    }
+
+    /// <summary>
+    ///     Recursively creates a dictionary with all the key-value pairs of the children of this node.
+    /// </summary>
+    /// <param name="item">The node whose child key-value pairs to obtain.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <returns>A dictionary of all the key-value pairs of the children of this node.</returns>
+    public static Dictionary<TKey, TValue> ToDictionary<TSelf, TKey, TValue>(this TSelf item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveValue<TValue>
+        where TKey : notnull
+    {
+        var dictionary = new Dictionary<TKey, TValue>(item.CountChildren());
+        ToDictionary(item, dictionary);
+        return dictionary;
+    }
+
+    /// <summary>
+    ///     Helper method to populate a dictionary with key-value pairs recursively.
+    /// </summary>
+    /// <param name="item">The current node.</param>
+    /// <param name="dictionary">The dictionary to fill with key-value pairs.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ToDictionary<TSelf, TKey, TValue>(TSelf item, Dictionary<TKey, TValue> dictionary)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveValue<TValue>
+        where TKey : notnull
+    {
+        foreach (var child in item.Children)
+        {
+            dictionary[child.Item.Key] = child.Item.Value;
+            ToDictionary(child.Item, dictionary);
+        }
     }
 }

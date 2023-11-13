@@ -29,6 +29,27 @@ public class IHaveKeyValueMixinTests
         );
     }
 
+    [Fact]
+    public void ToDictionary_ShouldReturnAllKeyValuesRecursively()
+    {
+        // Arrange
+        var grandChild1 = new TestTree(null, "Key3", 3);
+        var grandChild2 = new TestTree(null, "Key4", 4);
+        var child1 = new TestTree(grandChild1, "Key1", 1);
+        var child2 = new TestTree(grandChild2, "Key2", 2);
+        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { child1, child2 }, "RootKey", 0);
+
+        // Act
+        var dictionary = root.ToDictionary<TestTree, string, int>();
+
+        // Assert
+        dictionary.Should().Contain(new KeyValuePair<string, int>("Key1", 1));
+        dictionary.Should().Contain(new KeyValuePair<string, int>("Key2", 2));
+        dictionary.Should().Contain(new KeyValuePair<string, int>("Key3", 3));
+        dictionary.Should().Contain(new KeyValuePair<string, int>("Key4", 4));
+        dictionary.Count.Should().Be(4); // Ensure all pairs are included
+    }
+
     private struct TestTree : IHaveObservableChildren<TestTree>, IHaveKey<string>, IHaveValue<int>
     {
         public ObservableCollection<ChildBox<TestTree>> Children { get; }
