@@ -164,7 +164,7 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildren
         var currentSegment = end == -1 ? fullPath.SliceFast(start) : fullPath.SliceFast(start, end);
 
         // Compare the current segment with the node's segment.
-        if (!currentSegment.SequenceEqual(node.Segment.Path.AsSpan()))
+        if (!currentSegment.Equals(node.Segment.Path.AsSpan(), StringComparison.OrdinalIgnoreCase))
             return null;
 
         // Update start to the next segment.
@@ -280,7 +280,7 @@ public static class IHavePathSegmentExtensionsForIHaveObservableChildren
         var currentSegment = end == -1 ? fullPath.SliceFast(start) : fullPath.SliceFast(start, end);
 
         // Compare the current segment with the node's segment.
-        if (!currentSegment.SequenceEqual(node.Segment.Path.AsSpan()))
+        if (!currentSegment.Equals(node.Segment.Path.AsSpan(), StringComparison.OrdinalIgnoreCase))
             return null;
 
         // Update start to the next segment.
