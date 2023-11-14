@@ -60,7 +60,7 @@ public static class IHaveBoxedChildrenExtensions
     {
         // Return the current item's immediate children first.
         foreach (var child in item.Children)
-            yield return child.Item;
+            yield return child;
 
         // Then return the children of those children.
         foreach (var child in item.Children)
