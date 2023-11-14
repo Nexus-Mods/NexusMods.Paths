@@ -117,12 +117,11 @@ Available Methods:
 | `EnumerateSiblings`[1]       | Enumerates (`IEnumerator`) over siblings of this node.                        | `IHaveParent`                     |
 | `EnumerateValuesBfs`         | Enumerates child values of this node Breadth First.                           | `IHaveValue`                      |
 | `EnumerateValuesDfs`         | Enumerates child values of this node using Depth First.                       | `IHaveValue`                      |
-| `FindSubPathsByKeyFromChild` | Finds all nodes whose sub-path matches a Span of keys (starting from child).  | `IHaveKey`                        |
-| `FindSubPathsByKeyFromRoot`  | Finds all nodes whose sub-path matches a Span of keys (starting from self).   | `IHaveKey`                        |
-| `FindByKeyFromChild`         | Finds a given node in a tree using a Span of keys (starting from child).      | `IHaveKey`                        |
-| `FindByKeyFromRoot`          | Finds a given node in a tree using a Span of keys (starting from self).       | `IHaveKey`                        |
-| `FindByPathFromChild`        | Finds a given node in a tree using a relative path (starting from child).     | `IHavePathSegment`                |
-| `FindByPathFromRoot`         | Finds a given node in a tree using a relative path (starting from self).      | `IHavePathSegment`                |
+| `FindSubPathsByKeyUpward`    | Finds all nodes whose sub-path matches Span of keys (optimized version).      | `IHaveKey`, `IHaveParent`         |
+| `FindSubPathsByKey`[2]       | Finds all nodes whose sub-path matches Span of keys.                          | `IHaveKey`                        |
+| `FindByKey`[2]               | Finds a given node in a tree using a Span of keys.                            | `IHaveKey`                        |
+| `FindByKeyUpward`            | Verifies the path to the node against a Span of keys (inverse FindByKey).     | `IHaveKey`, `IHaveParent`         |
+| `FindByPath`[2]              | Finds a given node in a tree using a relative path.                           | `IHavePathSegment`                |
 | `GetChildrenRecursive`       | Retrieves all children of this node (flattened).                              |                                   |
 | `GetChildrenRecursiveUnsafe` | Retrieves all children of this node (no bound checks).                        |                                   |
 | `GetKeys`                    | Retrieves all keys of the children of this node.                              | `IHaveKey`                        |
@@ -141,6 +140,8 @@ Available Methods:
 | `ToDictionary`               | Populates a dictionary from the children of the tree node.                    | `IHaveKey`, `IHaveValue`          |
 
 [1] Siblings are determined on Value equality *when called from internal boxed struct*. This means, when called from struct, if all fields are the same on two nodes, they may be (incorrectly) assumed as same node.
+
+[2] Method has variants for including and excluding itself (the root).
 
 !!! note "All methods require one of the container interfaces such as `IHaveBoxedChildren` to be implemented, thus they are omitted from the table."
 
