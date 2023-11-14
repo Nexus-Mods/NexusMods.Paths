@@ -148,6 +148,136 @@ public class IHaveKeyTests
         foundNode!.Should().BeNull();
     }
 
+    [Fact]
+    public void FindSubPathsByKeyFromRoot_WithEmptyPath_ShouldReturnEmpty()
+    {
+        // Arrange
+        var child = new TestTree(null, 2);
+        ChildBox<TestTree> root = new TestTree(child, 1);
+
+        // Act
+        var foundNodes = root.FindSubPathsByKeyFromRoot<TestTree, int>(Array.Empty<int>());
+
+        // Assert
+        foundNodes.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void FindSubPathsByKeyFromChild_WithNestedPath_ShouldReturnAllMatchingNodes()
+    {
+        // Arrange
+        var deepChild1 = new TestTree(null, 5);
+        var deepChild2 = new TestTree(null, 5); // Same key as deepChild1
+        var grandChild1 = new TestTree(deepChild1, 4);
+        var grandChild2 = new TestTree(deepChild2, 4); // Same key as grandChild1
+        var child = new TestTree(new ObservableCollection<ChildBox<TestTree>> { grandChild1, grandChild2 }, 3);
+        ChildBox<TestTree> root = new TestTree(child, 2);
+
+        // Act
+        var foundNodes = root.FindSubPathsByKeyFromChild<TestTree, int>(new[] { 4, 5 });
+
+        // Assert
+        foundNodes.Count.Should().Be(2);
+        foundNodes.All(node => node.Key == 5).Should().BeTrue();
+    }
+
+    [Fact]
+    public void FindSubPathsByKeyFromChild_WithPartialMatchingPath_ShouldReturnPartialMatches()
+    {
+        // Arrange
+        var grandChild1 = new TestTree(null, 4);
+        var grandChild2 = new TestTree(null, 5);
+        var child1 = new TestTree(grandChild1, 2);
+        var child2 = new TestTree(grandChild2, 3);
+        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { child1, child2 }, 1);
+
+        // Act
+        var foundNodes = root.FindSubPathsByKeyFromChild<TestTree, int>(new[] { 4 });
+
+        // Assert
+        foundNodes.Count.Should().Be(1);
+        foundNodes[0].Key.Should().Be(4);
+    }
+
+    [Fact]
+    public void FindSubPathsByKeyFromChild_WithNonExistingPath_ShouldReturnEmpty()
+    {
+        // Arrange
+        var child = new TestTree(null, 2);
+        ChildBox<TestTree> root = new TestTree(child, 1);
+
+        // Act
+        var foundNodes = root.FindSubPathsByKeyFromChild<TestTree, int>(new[] { 99 });
+
+        // Assert
+        foundNodes.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void FindSubPathsByKeyFromChild_WithEmptyPath_ShouldReturnEmpty()
+    {
+        // Arrange
+        var child = new TestTree(null, 2);
+        ChildBox<TestTree> root = new TestTree(child, 1);
+
+        // Act
+        var foundNodes = root.FindSubPathsByKeyFromChild<TestTree, int>(Array.Empty<int>());
+
+        // Assert
+        foundNodes.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void FindSubPathsByKeyFromRoot_WithNestedPath_ShouldReturnAllMatchingNodes()
+    {
+        // Arrange
+        var deepChild1 = new TestTree(null, 5);
+        var deepChild2 = new TestTree(null, 5); // Same key as deepChild1
+        var grandChild1 = new TestTree(deepChild1, 4);
+        var grandChild2 = new TestTree(deepChild2, 4); // Same key as grandChild1
+        var child = new TestTree(new ObservableCollection<ChildBox<TestTree>> { grandChild1, grandChild2 }, 3);
+        ChildBox<TestTree> root = new TestTree(child, 2);
+
+        // Act
+        var foundNodes = root.FindSubPathsByKeyFromRoot<TestTree, int>(new[] { 4, 5 });
+
+        // Assert
+        foundNodes.Count.Should().Be(2);
+        foundNodes.All(node => node.Key == 5).Should().BeTrue();
+    }
+
+    [Fact]
+    public void FindSubPathsByKeyFromRoot_WithPartialMatchingPath_ShouldReturnPartialMatches()
+    {
+        // Arrange
+        var grandChild1 = new TestTree(null, 4);
+        var grandChild2 = new TestTree(null, 5);
+        var child1 = new TestTree(grandChild1, 2);
+        var child2 = new TestTree(grandChild2, 3);
+        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { child1, child2 }, 1);
+
+        // Act
+        var foundNodes = root.FindSubPathsByKeyFromRoot<TestTree, int>(new[] { 1, 2 });
+
+        // Assert
+        foundNodes.Count.Should().Be(1);
+        foundNodes[0].Key.Should().Be(2);
+    }
+
+    [Fact]
+    public void FindSubPathsByKeyFromRoot_WithNonExistingPath_ShouldReturnEmpty()
+    {
+        // Arrange
+        var child = new TestTree(null, 2);
+        ChildBox<TestTree> root = new TestTree(child, 1);
+
+        // Act
+        var foundNodes = root.FindSubPathsByKeyFromRoot<TestTree, int>(new[] { 99 });
+
+        // Assert
+        foundNodes.Should().BeEmpty();
+    }
+
     private struct TestTree : IHaveObservableChildren<TestTree>, IHaveKey<int>
     {
         public ObservableCollection<ChildBox<TestTree>> Children { get; }

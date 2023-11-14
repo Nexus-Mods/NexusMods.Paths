@@ -148,6 +148,84 @@ public class IHaveKeyTests
         foundNode.Should().BeNull();
     }
 
+    [Fact]
+    public void FindSubPathsByKeyFromChild_WithNestedPath_ShouldReturnAllMatchingNodes()
+    {
+        // Arrange
+        var deepChild1 = new TestTree(null, 5);
+        var grandChild1 = new TestTree(deepChild1, 4);
+        var child = new TestTree(new Dictionary<int, ChildWithKeyBox<int, TestTree>>()
+        {
+            { grandChild1.Key, grandChild1 }
+        }, 3);
+        ChildWithKeyBox<int, TestTree> root = new TestTree(child, 2);
+
+        // Act
+        var foundNodes = root.FindSubPathsByKeyFromChild(new[] { 4, 5 });
+
+        // Assert
+        foundNodes.Count.Should().Be(1);
+        foundNodes.All(node => node.Key == 5).Should().BeTrue();
+    }
+
+    [Fact]
+    public void FindSubPathsByKeyFromRoot_WithNestedPath_ShouldReturnAllMatchingNodes()
+    {
+        // Arrange
+        var deepChild1 = new TestTree(null, 5);
+        var grandChild1 = new TestTree(deepChild1, 4);
+        var child = new TestTree(new Dictionary<int, ChildWithKeyBox<int, TestTree>>()
+        {
+            { grandChild1.Key, grandChild1 }
+        }, 3);
+        ChildWithKeyBox<int, TestTree> root = new TestTree(child, 2);
+
+        // Act
+        var foundNodes = root.FindSubPathsByKeyFromRoot(new[] { 2, 3, 4, 5 });
+
+        // Assert
+        foundNodes.Count.Should().Be(1);
+        foundNodes.All(node => node.Key == 5).Should().BeTrue();
+    }
+
+    [Fact]
+    public void FindSubPathsByKeyFromChild_WithEmptyPath_ReturnsEmpty()
+    {
+        // Arrange
+        var deepChild1 = new TestTree(null, 5);
+        var grandChild1 = new TestTree(deepChild1, 4);
+        var child = new TestTree(new Dictionary<int, ChildWithKeyBox<int, TestTree>>()
+        {
+            { grandChild1.Key, grandChild1 }
+        }, 3);
+        ChildWithKeyBox<int, TestTree> root = new TestTree(child, 2);
+
+        // Act
+        var foundNodes = root.FindSubPathsByKeyFromChild(Array.Empty<int>());
+
+        // Assert
+        foundNodes.Count.Should().Be(0);
+    }
+
+    [Fact]
+    public void FindSubPathsByKeyFromRoot_WithEmptyPath_ReturnsEmpty()
+    {
+        // Arrange
+        var deepChild1 = new TestTree(null, 5);
+        var grandChild1 = new TestTree(deepChild1, 4);
+        var child = new TestTree(new Dictionary<int, ChildWithKeyBox<int, TestTree>>()
+        {
+            { grandChild1.Key, grandChild1 }
+        }, 3);
+        ChildWithKeyBox<int, TestTree> root = new TestTree(child, 2);
+
+        // Act
+        var foundNodes = root.FindSubPathsByKeyFromRoot(Array.Empty<int>());
+
+        // Assert
+        foundNodes.Count.Should().Be(0);
+    }
+
     private struct TestTree : IHaveBoxedChildrenWithKey<int, TestTree>, IHaveKey<int>
     {
         public Dictionary<int, ChildWithKeyBox<int, TestTree>> Children { get; }
