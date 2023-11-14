@@ -11,9 +11,9 @@ public class IHaveObservableChildrenTests
     public void EnumerateChildren_ShouldReturnAllChildrenRecursively()
     {
         // Arrange
-        var leaf1 = new TestTree(null);
-        var leaf2 = new TestTree(null);
-        var node = new TestTree(new ObservableCollection<Box<TestTree>> { leaf1, leaf2 });
+        Box<TestTree> leaf1 = new TestTree(null);
+        Box<TestTree> leaf2 = new TestTree(null);
+        Box<TestTree> node = new TestTree(new ObservableCollection<Box<TestTree>> { leaf1, leaf2 });
         Box<TestTree> root = new TestTree(node);
 
         // Act
@@ -38,8 +38,8 @@ public class IHaveObservableChildrenTests
 
         // Assert
         allChildren.Should().HaveCount(2);
-        allChildren[0].Should().BeEquivalentTo(child.Item);
-        allChildren[1].Should().BeEquivalentTo(grandChild.Item);
+        allChildren[0].Should().BeEquivalentTo(child);
+        allChildren[1].Should().BeEquivalentTo(grandChild);
     }
 
     [Fact]
@@ -55,8 +55,8 @@ public class IHaveObservableChildrenTests
 
         // Assert
         allChildren.Should().HaveCount(2);
-        allChildren[0].Should().BeEquivalentTo(child.Item);
-        allChildren[1].Should().BeEquivalentTo(grandChild.Item);
+        allChildren[0].Should().BeEquivalentTo(child);
+        allChildren[1].Should().BeEquivalentTo(grandChild);
     }
 
     [Fact]
