@@ -56,6 +56,98 @@ public class IHaveKeyTests
         keys.Should().Equal(1, 2, 3, 4);
     }
 
+    [Fact]
+    public void FindByKeyFromChild_WithExactPath_ShouldReturnCorrectNode()
+    {
+        // Arrange
+        var grandchild = new TestTree(null, 3);
+        var child = new TestTree(grandchild, 2);
+        ChildBox<TestTree> root = new TestTree(child, 1);
+
+        // Act
+        var foundNode = root.FindByKeyFromChild<TestTree, int>(new[] { 2, 3 });
+
+        // Assert
+        foundNode!.Should().NotBeNull();
+        foundNode!.Value.Key.Should().Be(3);
+    }
+
+    [Fact]
+    public void FindByKeyFromChild_WithIncompletePath_ShouldReturnClosestNode()
+    {
+        // Arrange
+        var grandchild = new TestTree(null, 3);
+        var child = new TestTree(grandchild, 2);
+        ChildBox<TestTree> root = new TestTree(child, 1);
+
+        // Act
+        var foundNode = root.FindByKeyFromChild<TestTree, int>(new[] { 2 });
+
+        // Assert
+        foundNode!.Should().NotBeNull();
+        foundNode!.Value.Key.Should().Be(2);
+    }
+
+    [Fact]
+    public void FindByKeyFromChild_WithNonExistingPath_ShouldReturnNull()
+    {
+        // Arrange
+        var child = new TestTree(null, 2);
+        ChildBox<TestTree> root = new TestTree(child, 1);
+
+        // Act
+        var foundNode = root.FindByKeyFromChild<TestTree, int>(new[] { 99 });
+
+        // Assert
+        foundNode!.Should().BeNull();
+    }
+
+    [Fact]
+    public void FindByKeyFromRoot_WithExactPath_ShouldReturnCorrectNode()
+    {
+        // Arrange
+        var grandchild = new TestTree(null, 3);
+        var child = new TestTree(grandchild, 2);
+        ChildBox<TestTree> root = new TestTree(child, 1);
+
+        // Act
+        var foundNode = root.FindByKeyFromRoot<TestTree, int>(new[] { 1, 2, 3 });
+
+        // Assert
+        foundNode!.Should().NotBeNull();
+        foundNode!.Value.Key.Should().Be(3);
+    }
+
+    [Fact]
+    public void FindByKeyFromRoot_WithIncompletePath_ShouldReturnClosestNode()
+    {
+        // Arrange
+        var grandchild = new TestTree(null, 3);
+        var child = new TestTree(grandchild, 2);
+        ChildBox<TestTree> root = new TestTree(child, 1);
+
+        // Act
+        var foundNode = root.FindByKeyFromRoot<TestTree, int>(new[] { 1, 2 });
+
+        // Assert
+        foundNode!.Should().NotBeNull();
+        foundNode!.Value.Key.Should().Be(2);
+    }
+
+    [Fact]
+    public void FindByKeyFromRoot_WithNonExistingPath_ShouldReturnNull()
+    {
+        // Arrange
+        var child = new TestTree(null, 2);
+        ChildBox<TestTree> root = new TestTree(child, 1);
+
+        // Act
+        var foundNode = root.FindByKeyFromRoot<TestTree, int>(new[] { 99 });
+
+        // Assert
+        foundNode!.Should().BeNull();
+    }
+
     private struct TestTree : IHaveBoxedChildren<TestTree>, IHaveKey<int>
     {
         public ChildBox<TestTree>[] Children { get; }
