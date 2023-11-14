@@ -122,7 +122,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>The total file count under this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CountFiles<TSelf>(this ChildBox<TSelf> item)
+    public static int CountFiles<TSelf>(this Box<TSelf> item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory =>
         item.Item.CountFiles();
 
@@ -160,7 +160,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>The total directory count under this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CountDirectories<TSelf>(this ChildBox<TSelf> item)
+    public static int CountDirectories<TSelf>(this Box<TSelf> item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory =>
         item.Item.CountDirectories();
 
@@ -206,7 +206,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>The total file count under this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CountFiles<TSelf>(this ChildBox<TSelf> item)
+    public static int CountFiles<TSelf>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory =>
         item.Item.CountFiles();
 
@@ -244,7 +244,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>The total directory count under this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CountDirectories<TSelf>(this ChildBox<TSelf> item)
+    public static int CountDirectories<TSelf>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory =>
         item.Item.CountDirectories();
 

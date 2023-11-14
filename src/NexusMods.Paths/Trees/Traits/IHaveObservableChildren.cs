@@ -15,7 +15,7 @@ public interface IHaveObservableChildren<TSelf> where TSelf : struct, IHaveObser
     /// <summary>
     ///     An observable collection containing all the children of this node.
     /// </summary>
-    public ObservableCollection<ChildBox<TSelf>> Children { get; }
+    public ObservableCollection<Box<TSelf>> Children { get; }
 }
 
 /// <summary>
@@ -28,7 +28,7 @@ public static class IHaveObservableChildrenExtensions
     ///     True if the current node is a leaf (it has no children).
     /// </summary>
     /// <param name="item">The node to check.</param>
-    public static bool IsLeaf<TSelf>(this ChildBox<TSelf> item)
+    public static bool IsLeaf<TSelf>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>
         => item.Item.IsLeaf();
 
@@ -46,7 +46,7 @@ public static class IHaveObservableChildrenExtensions
     /// <param name="item">The node whose children are to be enumerated.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>An IEnumerable of all child nodes of the current node.</returns>
-    public static IEnumerable<TSelf> EnumerateChildrenBfs<TSelf>(this ChildBox<TSelf> item)
+    public static IEnumerable<TSelf> EnumerateChildrenBfs<TSelf>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>
         => item.Item.EnumerateChildrenBfs();
 
@@ -74,7 +74,7 @@ public static class IHaveObservableChildrenExtensions
     /// <param name="item">The node whose children are to be enumerated.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>An IEnumerable of all child nodes of the current node.</returns>
-    public static IEnumerable<TSelf> EnumerateChildrenDfs<TSelf>(this ChildBox<TSelf> item)
+    public static IEnumerable<TSelf> EnumerateChildrenDfs<TSelf>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>
         => item.Item.EnumerateChildrenDfs();
 
@@ -101,7 +101,7 @@ public static class IHaveObservableChildrenExtensions
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>The count of direct child nodes.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CountChildren<TSelf>(this ChildBox<TSelf> item) where TSelf : struct, IHaveObservableChildren<TSelf>
+    public static int CountChildren<TSelf>(this Box<TSelf> item) where TSelf : struct, IHaveObservableChildren<TSelf>
         => item.Item.CountChildren();
 
     /// <summary>
@@ -133,7 +133,7 @@ public static class IHaveObservableChildrenExtensions
     /// <param name="item">The node whose children to obtain.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>An array of all the children of this node.</returns>
-    public static ChildBox<TSelf>[] GetChildrenRecursive<TSelf>(this ChildBox<TSelf> item)
+    public static Box<TSelf>[] GetChildrenRecursive<TSelf>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf> => item.Item.GetChildrenRecursive();
 
     /// <summary>
@@ -142,11 +142,11 @@ public static class IHaveObservableChildrenExtensions
     /// <param name="item">The node whose children to obtain.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>An array of all the children of this node.</returns>
-    public static ChildBox<TSelf>[] GetChildrenRecursive<TSelf>(this TSelf item)
+    public static Box<TSelf>[] GetChildrenRecursive<TSelf>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>
     {
         var totalChildren = item.CountChildren();
-        var children = GC.AllocateUninitializedArray<ChildBox<TSelf>>(totalChildren);
+        var children = GC.AllocateUninitializedArray<Box<TSelf>>(totalChildren);
         var index = 0;
         GetChildrenRecursiveUnsafe(item, children, ref index);
         return children;
@@ -158,11 +158,11 @@ public static class IHaveObservableChildrenExtensions
     /// <param name="item">The current node.</param>
     /// <param name="childrenSpan">
     ///     The span representing the array to fill with children.
-    ///     Should be at least as long as value returned by <see cref="CountChildren{TSelf}(NexusMods.Paths.Trees.Traits.ChildBox{TSelf})"/>
+    ///     Should be at least as long as value returned by <see cref="CountChildren{TSelf}(Box{TSelf})"/>
     /// </param>
     /// <param name="index">The current index in the span.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void GetChildrenRecursiveUnsafe<TSelf>(this TSelf item, Span<ChildBox<TSelf>> childrenSpan, ref int index)
+    public static void GetChildrenRecursiveUnsafe<TSelf>(this TSelf item, Span<Box<TSelf>> childrenSpan, ref int index)
         where TSelf : struct, IHaveObservableChildren<TSelf>
     {
         // Populate breadth first. Improved cache locality helps here.
@@ -180,7 +180,7 @@ public static class IHaveObservableChildrenExtensions
     /// <param name="item">The boxed node whose leaf nodes are to be counted.</param>
     /// <returns>The count of leaf nodes.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CountLeaves<TSelf>(this ChildBox<TSelf> item)
+    public static int CountLeaves<TSelf>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>
         => CountLeaves(item.Item);
 
@@ -223,7 +223,7 @@ public static class IHaveObservableChildrenExtensions
     /// <typeparam name="TSelf">The type of the child node.</typeparam>
     /// <param name="item">The boxed node whose leaf nodes are to be found.</param>
     /// <returns>An array of all leaf nodes under the current node.</returns>
-    public static ChildBox<TSelf>[] GetLeaves<TSelf>(this ChildBox<TSelf> item)
+    public static Box<TSelf>[] GetLeaves<TSelf>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>
         => GetLeaves(item.Item);
 
@@ -233,11 +233,11 @@ public static class IHaveObservableChildrenExtensions
     /// <typeparam name="TSelf">The type of the child node.</typeparam>
     /// <param name="item">The node whose leaf nodes are to be found.</param>
     /// <returns>An array of all leaf nodes under the current node.</returns>
-    public static ChildBox<TSelf>[] GetLeaves<TSelf>(this TSelf item)
+    public static Box<TSelf>[] GetLeaves<TSelf>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>
     {
         var totalLeaves = item.CountLeaves();
-        var leaves = GC.AllocateUninitializedArray<ChildBox<TSelf>>(totalLeaves);
+        var leaves = GC.AllocateUninitializedArray<Box<TSelf>>(totalLeaves);
         var index = 0;
         GetLeavesUnsafe(item, leaves, ref index);
         return leaves;
@@ -251,7 +251,7 @@ public static class IHaveObservableChildrenExtensions
     /// <param name="leavesSpan">The span to fill with leaf nodes.</param>
     /// <param name="index">Current index in the span, used internally for recursion.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void GetLeavesUnsafe<TSelf>(TSelf item, Span<ChildBox<TSelf>> leavesSpan, ref int index)
+    public static void GetLeavesUnsafe<TSelf>(TSelf item, Span<Box<TSelf>> leavesSpan, ref int index)
         where TSelf : struct, IHaveObservableChildren<TSelf>
     {
         foreach (var child in item.Children)

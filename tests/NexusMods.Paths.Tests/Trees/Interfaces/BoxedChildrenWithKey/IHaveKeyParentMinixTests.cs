@@ -1,3 +1,4 @@
+using NexusMods.Paths.Trees;
 using NexusMods.Paths.Trees.Traits;
 
 namespace NexusMods.Paths.Tests.Trees.Interfaces.BoxedChildrenWithKey;
@@ -77,7 +78,7 @@ public class IHaveKeyParentMixinTests
 
     private struct TestTree : IHaveBoxedChildrenWithKey<int, TestTree>, IHaveKey<int>, IHaveParent<TestTree>
     {
-        public ParentBox<TestTree>? Parent { get; private set; }
+        public Box<TestTree>? Parent { get; private set; }
         public Dictionary<int, ChildWithKeyBox<int, TestTree>> Children { get; }
         public int Key { get; }
 

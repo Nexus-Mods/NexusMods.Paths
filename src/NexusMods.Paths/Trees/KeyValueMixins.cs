@@ -19,7 +19,7 @@ public static class MixinExtensionsForIHaveBoxedChildren
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An array of all the key-value pairs of the children of this node.</returns>
-    public static KeyValuePair<TKey, TValue>[] GetKeyValues<TSelf, TKey, TValue>(this ChildBox<TSelf> item)
+    public static KeyValuePair<TKey, TValue>[] GetKeyValues<TSelf, TKey, TValue>(this Box<TSelf> item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveValue<TValue> =>
         item.Item.GetKeyValues<TSelf, TKey, TValue>();
 
@@ -74,7 +74,7 @@ public static class MixinExtensionsForIHaveBoxedChildren
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>A dictionary of all the key-value pairs of the children of this node.</returns>
-    public static Dictionary<TKey, TValue> ToDictionary<TSelf, TKey, TValue>(this ChildBox<TSelf> item)
+    public static Dictionary<TKey, TValue> ToDictionary<TSelf, TKey, TValue>(this Box<TSelf> item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveValue<TValue>
         where TKey : notnull
     {
@@ -246,7 +246,7 @@ public static class MixinExtensionsForIHaveObservableChildren
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An array of all the key-value pairs of the children of this node.</returns>
-    public static KeyValuePair<TKey, TValue>[] GetKeyValues<TSelf, TKey, TValue>(this ChildBox<TSelf> item)
+    public static KeyValuePair<TKey, TValue>[] GetKeyValues<TSelf, TKey, TValue>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveValue<TValue> =>
         item.Item.GetKeyValues<TSelf, TKey, TValue>();
 
@@ -301,7 +301,7 @@ public static class MixinExtensionsForIHaveObservableChildren
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>A dictionary of all the key-value pairs of the children of this node.</returns>
-    public static Dictionary<TKey, TValue> ToDictionary<TSelf, TKey, TValue>(this ChildBox<TSelf> item)
+    public static Dictionary<TKey, TValue> ToDictionary<TSelf, TKey, TValue>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveValue<TValue>
         where TKey : notnull
     {

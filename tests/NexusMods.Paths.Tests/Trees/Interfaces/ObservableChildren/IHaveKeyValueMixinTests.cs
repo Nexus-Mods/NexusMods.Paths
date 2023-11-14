@@ -15,7 +15,7 @@ public class IHaveKeyValueMixinTests
         var grandChild2 = new TestTree(null, "Key4", 4);
         var child1 = new TestTree(grandChild1, "Key1", 1);
         var child2 = new TestTree(grandChild2, "Key2", 2);
-        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { child1, child2 }, "RootKey", 0);
+        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { child1, child2 }, "RootKey", 0);
 
         // Act
         var keyValuePairs = root.GetKeyValues<TestTree, string, int>();
@@ -37,7 +37,7 @@ public class IHaveKeyValueMixinTests
         var grandChild2 = new TestTree(null, "Key4", 4);
         var child1 = new TestTree(grandChild1, "Key1", 1);
         var child2 = new TestTree(grandChild2, "Key2", 2);
-        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { child1, child2 }, "RootKey", 0);
+        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { child1, child2 }, "RootKey", 0);
 
         // Act
         var dictionary = root.ToDictionary<TestTree, string, int>();
@@ -52,20 +52,20 @@ public class IHaveKeyValueMixinTests
 
     private struct TestTree : IHaveObservableChildren<TestTree>, IHaveKey<string>, IHaveValue<int>
     {
-        public ObservableCollection<ChildBox<TestTree>> Children { get; }
+        public ObservableCollection<Box<TestTree>> Children { get; }
         public string Key { get; }
         public int Value { get; set; }
 
-        public TestTree(ObservableCollection<ChildBox<TestTree>>? children, string key, int value = default)
+        public TestTree(ObservableCollection<Box<TestTree>>? children, string key, int value = default)
         {
-            Children = children ?? new ObservableCollection<ChildBox<TestTree>>();
+            Children = children ?? new ObservableCollection<Box<TestTree>>();
             Key = key;
             Value = value;
         }
 
         public TestTree(TestTree child, string key, int value = default)
         {
-            Children = new ObservableCollection<ChildBox<TestTree>> { child };
+            Children = new ObservableCollection<Box<TestTree>> { child };
             Key = key;
             Value = value;
         }

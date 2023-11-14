@@ -1,3 +1,4 @@
+using NexusMods.Paths.Trees;
 using NexusMods.Paths.Trees.Traits;
 
 namespace NexusMods.Paths.Tests.Trees.Interfaces;
@@ -8,7 +9,7 @@ public class IHavePathSegmentTests
     [Fact]
     public void ReconstructPath_WithSingleNode_ReturnsSingleSegment()
     {
-        var root = new TestTree(Array.Empty<ChildBox<TestTree>>())
+        var root = new TestTree(Array.Empty<Box<TestTree>>())
         {
             Segment = new RelativePath("root")
         };
@@ -20,14 +21,14 @@ public class IHavePathSegmentTests
     [Fact]
     public void ReconstructPath_WithChildNode_ReturnsBothSegments()
     {
-        var root = new TestTree(Array.Empty<ChildBox<TestTree>>())
+        var root = new TestTree(Array.Empty<Box<TestTree>>())
         {
             Segment = new RelativePath("root")
         };
 
-        var child = new TestTree(Array.Empty<ChildBox<TestTree>>())
+        var child = new TestTree(Array.Empty<Box<TestTree>>())
         {
-            Parent = new ParentBox<TestTree> { Item = root },
+            Parent = new Box<TestTree> { Item = root },
             Segment = new RelativePath("child")
         };
 
@@ -38,20 +39,20 @@ public class IHavePathSegmentTests
     [Fact]
     public void ReconstructPath_WithNestedNodes_ReturnsAllSegments()
     {
-        var root = new TestTree(Array.Empty<ChildBox<TestTree>>())
+        var root = new TestTree(Array.Empty<Box<TestTree>>())
         {
             Segment = new RelativePath("root")
         };
 
-        var intermediate = new TestTree(Array.Empty<ChildBox<TestTree>>())
+        var intermediate = new TestTree(Array.Empty<Box<TestTree>>())
         {
-            Parent = new ParentBox<TestTree> { Item = root },
+            Parent = new Box<TestTree> { Item = root },
             Segment = new RelativePath("intermediate")
         };
 
-        var child = new TestTree(Array.Empty<ChildBox<TestTree>>())
+        var child = new TestTree(Array.Empty<Box<TestTree>>())
         {
-            Parent = new ParentBox<TestTree> { Item = intermediate },
+            Parent = new Box<TestTree> { Item = intermediate },
             Segment = new RelativePath("child")
         };
 
@@ -61,11 +62,11 @@ public class IHavePathSegmentTests
 
     private struct TestTree : IHaveBoxedChildren<TestTree>, IHaveParent<TestTree>, IHavePathSegment
     {
-        public ChildBox<TestTree>[] Children { get; }
-        public ParentBox<TestTree>? Parent { get; set; }
+        public Box<TestTree>[] Children { get; }
+        public Box<TestTree>? Parent { get; set; }
         public RelativePath Segment { get; set; }
 
-        public TestTree(ChildBox<TestTree>[] children)
+        public TestTree(Box<TestTree>[] children)
         {
             Children = children;
         }

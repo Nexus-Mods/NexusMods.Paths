@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using NexusMods.Paths.Trees;
 using NexusMods.Paths.Trees.Traits;
 
 namespace NexusMods.Paths.Tests.Trees.Interfaces.ObservableChildren;
@@ -14,7 +15,7 @@ public class IHaveKeyTests
         var grandChild2 = new TestTree(null, 4);
         var child1 = new TestTree(grandChild1, 1);
         var child2 = new TestTree(grandChild2, 2);
-        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { child1, child2 }, 0);
+        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { child1, child2 }, 0);
 
         // Act
         var keys = root.EnumerateKeysBfs<TestTree, int>().ToArray();
@@ -31,7 +32,7 @@ public class IHaveKeyTests
         var grandChild2 = new TestTree(null, 4);
         var child1 = new TestTree(grandChild1, 1);
         var child2 = new TestTree(grandChild2, 2);
-        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { child1, child2 }, 0);
+        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { child1, child2 }, 0);
         // Act
         var keys = root.EnumerateKeysDfs<TestTree, int>().ToArray();
 
@@ -47,7 +48,7 @@ public class IHaveKeyTests
         var grandChild2 = new TestTree(null, 4);
         var child1 = new TestTree(grandChild1, 1);
         var child2 = new TestTree(grandChild2, 2);
-        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { child1, child2 }, 0);
+        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { child1, child2 }, 0);
 
         // Act
         var keys = root.GetKeys<TestTree, int>();
@@ -62,7 +63,7 @@ public class IHaveKeyTests
         // Arrange
         var grandchild = new TestTree(null, 3);
         var child = new TestTree(grandchild, 2);
-        ChildBox<TestTree> root = new TestTree(child, 1);
+        Box<TestTree> root = new TestTree(child, 1);
 
         // Act
         var foundNode = root.FindByKeyFromChild<TestTree, int>(new[] { 2, 3 });
@@ -78,7 +79,7 @@ public class IHaveKeyTests
         // Arrange
         var grandchild = new TestTree(null, 3);
         var child = new TestTree(grandchild, 2);
-        ChildBox<TestTree> root = new TestTree(child, 1);
+        Box<TestTree> root = new TestTree(child, 1);
 
         // Act
         var foundNode = root.FindByKeyFromChild<TestTree, int>(new[] { 2 });
@@ -93,7 +94,7 @@ public class IHaveKeyTests
     {
         // Arrange
         var child = new TestTree(null, 2);
-        ChildBox<TestTree> root = new TestTree(child, 1);
+        Box<TestTree> root = new TestTree(child, 1);
 
         // Act
         var foundNode = root.FindByKeyFromChild<TestTree, int>(new[] { 99 });
@@ -108,7 +109,7 @@ public class IHaveKeyTests
         // Arrange
         var grandchild = new TestTree(null, 3);
         var child = new TestTree(grandchild, 2);
-        ChildBox<TestTree> root = new TestTree(child, 1);
+        Box<TestTree> root = new TestTree(child, 1);
 
         // Act
         var foundNode = root.FindByKeyFromRoot<TestTree, int>(new[] { 1, 2, 3 });
@@ -124,7 +125,7 @@ public class IHaveKeyTests
         // Arrange
         var grandchild = new TestTree(null, 3);
         var child = new TestTree(grandchild, 2);
-        ChildBox<TestTree> root = new TestTree(child, 1);
+        Box<TestTree> root = new TestTree(child, 1);
 
         // Act
         var foundNode = root.FindByKeyFromRoot<TestTree, int>(new[] { 1, 2 });
@@ -139,7 +140,7 @@ public class IHaveKeyTests
     {
         // Arrange
         var child = new TestTree(null, 2);
-        ChildBox<TestTree> root = new TestTree(child, 1);
+        Box<TestTree> root = new TestTree(child, 1);
 
         // Act
         var foundNode = root.FindByKeyFromRoot<TestTree, int>(new[] { 99 });
@@ -153,7 +154,7 @@ public class IHaveKeyTests
     {
         // Arrange
         var child = new TestTree(null, 2);
-        ChildBox<TestTree> root = new TestTree(child, 1);
+        Box<TestTree> root = new TestTree(child, 1);
 
         // Act
         var foundNodes = root.FindSubPathsByKeyFromRoot<TestTree, int>(Array.Empty<int>());
@@ -170,8 +171,8 @@ public class IHaveKeyTests
         var deepChild2 = new TestTree(null, 5); // Same key as deepChild1
         var grandChild1 = new TestTree(deepChild1, 4);
         var grandChild2 = new TestTree(deepChild2, 4); // Same key as grandChild1
-        var child = new TestTree(new ObservableCollection<ChildBox<TestTree>> { grandChild1, grandChild2 }, 3);
-        ChildBox<TestTree> root = new TestTree(child, 2);
+        var child = new TestTree(new ObservableCollection<Box<TestTree>> { grandChild1, grandChild2 }, 3);
+        Box<TestTree> root = new TestTree(child, 2);
 
         // Act
         var foundNodes = root.FindSubPathsByKeyFromChild<TestTree, int>(new[] { 4, 5 });
@@ -189,7 +190,7 @@ public class IHaveKeyTests
         var grandChild2 = new TestTree(null, 5);
         var child1 = new TestTree(grandChild1, 2);
         var child2 = new TestTree(grandChild2, 3);
-        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { child1, child2 }, 1);
+        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { child1, child2 }, 1);
 
         // Act
         var foundNodes = root.FindSubPathsByKeyFromChild<TestTree, int>(new[] { 4 });
@@ -204,7 +205,7 @@ public class IHaveKeyTests
     {
         // Arrange
         var child = new TestTree(null, 2);
-        ChildBox<TestTree> root = new TestTree(child, 1);
+        Box<TestTree> root = new TestTree(child, 1);
 
         // Act
         var foundNodes = root.FindSubPathsByKeyFromChild<TestTree, int>(new[] { 99 });
@@ -218,7 +219,7 @@ public class IHaveKeyTests
     {
         // Arrange
         var child = new TestTree(null, 2);
-        ChildBox<TestTree> root = new TestTree(child, 1);
+        Box<TestTree> root = new TestTree(child, 1);
 
         // Act
         var foundNodes = root.FindSubPathsByKeyFromChild<TestTree, int>(Array.Empty<int>());
@@ -235,8 +236,8 @@ public class IHaveKeyTests
         var deepChild2 = new TestTree(null, 5); // Same key as deepChild1
         var grandChild1 = new TestTree(deepChild1, 4);
         var grandChild2 = new TestTree(deepChild2, 4); // Same key as grandChild1
-        var child = new TestTree(new ObservableCollection<ChildBox<TestTree>> { grandChild1, grandChild2 }, 3);
-        ChildBox<TestTree> root = new TestTree(child, 2);
+        var child = new TestTree(new ObservableCollection<Box<TestTree>> { grandChild1, grandChild2 }, 3);
+        Box<TestTree> root = new TestTree(child, 2);
 
         // Act
         var foundNodes = root.FindSubPathsByKeyFromRoot<TestTree, int>(new[] { 4, 5 });
@@ -254,7 +255,7 @@ public class IHaveKeyTests
         var grandChild2 = new TestTree(null, 5);
         var child1 = new TestTree(grandChild1, 2);
         var child2 = new TestTree(grandChild2, 3);
-        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { child1, child2 }, 1);
+        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { child1, child2 }, 1);
 
         // Act
         var foundNodes = root.FindSubPathsByKeyFromRoot<TestTree, int>(new[] { 1, 2 });
@@ -269,7 +270,7 @@ public class IHaveKeyTests
     {
         // Arrange
         var child = new TestTree(null, 2);
-        ChildBox<TestTree> root = new TestTree(child, 1);
+        Box<TestTree> root = new TestTree(child, 1);
 
         // Act
         var foundNodes = root.FindSubPathsByKeyFromRoot<TestTree, int>(new[] { 99 });
@@ -280,18 +281,18 @@ public class IHaveKeyTests
 
     private struct TestTree : IHaveObservableChildren<TestTree>, IHaveKey<int>
     {
-        public ObservableCollection<ChildBox<TestTree>> Children { get; }
+        public ObservableCollection<Box<TestTree>> Children { get; }
         public int Key { get; set; }
 
-        public TestTree(ObservableCollection<ChildBox<TestTree>>? children, int key = default)
+        public TestTree(ObservableCollection<Box<TestTree>>? children, int key = default)
         {
-            Children = children ?? new ObservableCollection<ChildBox<TestTree>>();
+            Children = children ?? new ObservableCollection<Box<TestTree>>();
             Key = key;
         }
 
         public TestTree(TestTree child, int key = default)
         {
-            Children = new ObservableCollection<ChildBox<TestTree>> { child };
+            Children = new ObservableCollection<Box<TestTree>> { child };
             Key = key;
         }
     }

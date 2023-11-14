@@ -91,7 +91,7 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildren
     ///     This is very slow, at O(N). If you need to use this with large trees, consider using the
     ///     dictionary variant based on <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" /> instead.
     /// </remarks>
-    public static TSelf? FindByPathFromRoot<TSelf>(this ChildBox<TSelf> root, RelativePath fullPath)
+    public static TSelf? FindByPathFromRoot<TSelf>(this Box<TSelf> root, RelativePath fullPath)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHavePathSegment =>
         root.Item.FindByPathFromRoot(fullPath);
 
@@ -126,7 +126,7 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildren
     ///     This is very slow, at O(N). If you need to use this with large trees, consider using the
     ///     dictionary variant based on <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" /> instead.
     /// </remarks>
-    public static TSelf? FindByPathFromChild<TSelf>(this ChildBox<TSelf> root, RelativePath fullPath)
+    public static TSelf? FindByPathFromChild<TSelf>(this Box<TSelf> root, RelativePath fullPath)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHavePathSegment =>
         root.Item.FindByPathFromChild(fullPath);
 
@@ -207,7 +207,7 @@ public static class IHavePathSegmentExtensionsForIHaveObservableChildren
     ///     This is very slow, at O(N). If you need to use this with large trees, consider using the
     ///     dictionary variant based on <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" /> instead.
     /// </remarks>
-    public static TSelf? FindByPathFromRoot<TSelf>(this ChildBox<TSelf> root, RelativePath fullPath)
+    public static TSelf? FindByPathFromRoot<TSelf>(this Box<TSelf> root, RelativePath fullPath)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHavePathSegment =>
         root.Item.FindByPathFromRoot(fullPath);
 
@@ -242,7 +242,7 @@ public static class IHavePathSegmentExtensionsForIHaveObservableChildren
     ///     This is very slow, at O(N). If you need to use this with large trees, consider using the
     ///     dictionary variant based on <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" /> instead.
     /// </remarks>
-    public static TSelf? FindByPathFromChild<TSelf>(this ChildBox<TSelf> root, RelativePath fullPath)
+    public static TSelf? FindByPathFromChild<TSelf>(this Box<TSelf> root, RelativePath fullPath)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHavePathSegment =>
         root.Item.FindByPathFromChild(fullPath);
 

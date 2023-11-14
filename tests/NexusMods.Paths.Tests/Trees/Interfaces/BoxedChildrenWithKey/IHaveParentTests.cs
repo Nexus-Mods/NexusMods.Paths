@@ -1,3 +1,4 @@
+using NexusMods.Paths.Trees;
 using NexusMods.Paths.Trees.Traits;
 
 namespace NexusMods.Paths.Tests.Trees.Interfaces.BoxedChildrenWithKey;
@@ -8,7 +9,7 @@ public class IHaveParentTests
     [Fact]
     public void EnumerateSiblings_WithParent_YieldsAllButSelf()
     {
-        ParentBox<TestTree> root = new TestTree();
+        Box<TestTree> root = new TestTree();
         var child1 = new TestTree(0) { Parent = root };
         var child2 = new TestTree(1) { Parent = root };
         var child3 = new TestTree(2) { Parent = root };
@@ -25,7 +26,7 @@ public class IHaveParentTests
     [Fact]
     public void EnumerateSiblings_WithParent_YieldsAllButSelf_WhenBoxed()
     {
-        ParentBox<TestTree> root = new TestTree();
+        Box<TestTree> root = new TestTree();
         ChildWithKeyBox<int, TestTree> child1 = new TestTree(0) { Parent = root };
         ChildWithKeyBox<int, TestTree> child2 = new TestTree(1) { Parent = root };
         ChildWithKeyBox<int, TestTree> child3 = new TestTree(2) { Parent = root };
@@ -49,7 +50,7 @@ public class IHaveParentTests
     [Fact]
     public void GetSiblingCount_WithParent_ReturnsParentChildCountMinusOne()
     {
-        ParentBox<TestTree> root = new TestTree();
+        Box<TestTree> root = new TestTree();
         var child = new TestTree(0) { Parent = root };
         root.Item.Children.Add(0,child );
         root.Item.Children.Add(1, new TestTree(1) { Parent = root });
@@ -74,7 +75,7 @@ public class IHaveParentTests
     [Fact]
     public void GetSiblings_WithParent_ReturnsCorrectSiblings()
     {
-        ParentBox<TestTree> root = new TestTree();
+        Box<TestTree> root = new TestTree();
         var tree = new TestTree(0) { Parent = root };
         root.Item.Children.Add(0, tree);
         root.Item.Children.Add(1, new TestTree(1) { Parent = root });
@@ -94,7 +95,7 @@ public class IHaveParentTests
     [Fact]
     public void GetSiblings_WithParent_ReturnsCorrectSiblings_WhenBoxed()
     {
-        ParentBox<TestTree> parent = new TestTree();
+        Box<TestTree> parent = new TestTree();
         ChildWithKeyBox<int, TestTree> child1 = new TestTree(0) { Parent = parent };
         ChildWithKeyBox<int, TestTree> child2 = new TestTree(1) { Parent = parent };
         parent.Item.Children.Add(0, child1);
@@ -108,7 +109,7 @@ public class IHaveParentTests
     private struct TestTree : IHaveBoxedChildrenWithKey<int, TestTree>, IHaveParent<TestTree>, IEquatable<TestTree>
     {
         public Dictionary<int, ChildWithKeyBox<int, TestTree>> Children { get; } = new();
-        public ParentBox<TestTree>? Parent { get; internal set; }
+        public Box<TestTree>? Parent { get; internal set; }
         public int Value { get; internal set; }
         public TestTree(int value)
         {

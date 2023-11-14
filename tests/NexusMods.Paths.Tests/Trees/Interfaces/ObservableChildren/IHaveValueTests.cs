@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using NexusMods.Paths.Trees;
 using NexusMods.Paths.Trees.Traits;
 
 namespace NexusMods.Paths.Tests.Trees.Interfaces.ObservableChildren;
@@ -10,16 +11,16 @@ public class IHaveValueTests
     public void EnumerateValuesBfs_ShouldReturnAllValuesInBreadthFirstOrder()
     {
         // Arrange
-        var grandChild1 = new TestTree(new ObservableCollection<ChildBox<TestTree>>(), 3);
-        var grandChild2 = new TestTree(new ObservableCollection<ChildBox<TestTree>>(), 4);
+        var grandChild1 = new TestTree(new ObservableCollection<Box<TestTree>>(), 3);
+        var grandChild2 = new TestTree(new ObservableCollection<Box<TestTree>>(), 4);
         var child1 = new TestTree(grandChild1, 1);
         var child2 = new TestTree(grandChild2, 2);
-        var rootChildren = new ObservableCollection<ChildBox<TestTree>>
+        var rootChildren = new ObservableCollection<Box<TestTree>>
         {
             child1,
             child2
         };
-        ChildBox<TestTree> root = new TestTree(rootChildren, 0);
+        Box<TestTree> root = new TestTree(rootChildren, 0);
 
         // Act
         var values = root.EnumerateValuesBfs<TestTree, int>().ToArray();
@@ -36,12 +37,12 @@ public class IHaveValueTests
         var grandChild2 = new TestTree(null, 4);
         var child1 = new TestTree(grandChild1, 1);
         var child2 = new TestTree(grandChild2, 2);
-        var rootChildren = new ObservableCollection<ChildBox<TestTree>>
+        var rootChildren = new ObservableCollection<Box<TestTree>>
         {
             child1,
             child2
         };
-        ChildBox<TestTree> root = new TestTree(rootChildren, 0);
+        Box<TestTree> root = new TestTree(rootChildren, 0);
 
         // Act
         var values = root.EnumerateValuesDfs<TestTree, int>().ToArray();
@@ -58,7 +59,7 @@ public class IHaveValueTests
         var grandChild2 = new TestTree(null, 4);
         var child1 = new TestTree(grandChild1, 1);
         var child2 = new TestTree(grandChild2, 2);
-        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { child1, child2 }, 0);
+        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { child1, child2 }, 0);
 
         // Act
         var values = root.GetValues<TestTree, int>();
@@ -69,16 +70,16 @@ public class IHaveValueTests
 
     private struct TestTree : IHaveObservableChildren<TestTree>, IHaveValue<int>
     {
-        public ObservableCollection<ChildBox<TestTree>> Children { get; }
+        public ObservableCollection<Box<TestTree>> Children { get; }
         public int Value { get; }
 
-        public TestTree(ObservableCollection<ChildBox<TestTree>>? children, int value = default)
+        public TestTree(ObservableCollection<Box<TestTree>>? children, int value = default)
         {
-            Children = children ?? new ObservableCollection<ChildBox<TestTree>>();
+            Children = children ?? new ObservableCollection<Box<TestTree>>();
             Value = value;
         }
 
-        public TestTree(TestTree child, int value = default) : this(new ObservableCollection<ChildBox<TestTree>> { child }, value)
+        public TestTree(TestTree child, int value = default) : this(new ObservableCollection<Box<TestTree>> { child }, value)
         { }
     }
 }

@@ -1,3 +1,4 @@
+using NexusMods.Paths.Trees;
 using NexusMods.Paths.Trees.Traits;
 
 namespace NexusMods.Paths.Tests.Trees.Interfaces.BoxedChildren;
@@ -13,7 +14,7 @@ public class IHaveValueTests
         var grandChild2 = new TestTree(null, 4);
         var child1 = new TestTree(grandChild1, 1);
         var child2 = new TestTree(grandChild2, 2);
-        ChildBox<TestTree> root = new TestTree(new ChildBox<TestTree>[] { child1, child2 }, 0);
+        Box<TestTree> root = new TestTree(new Box<TestTree>[] { child1, child2 }, 0);
 
         // Act
         var values = root.EnumerateValuesBfs<TestTree, int>().ToArray();
@@ -30,7 +31,7 @@ public class IHaveValueTests
         var grandChild2 = new TestTree(null, 4);
         var child1 = new TestTree(grandChild1, 1);
         var child2 = new TestTree(grandChild2 , 2);
-        ChildBox<TestTree> root = new TestTree(new ChildBox<TestTree>[] { child1, child2 }, 0);
+        Box<TestTree> root = new TestTree(new Box<TestTree>[] { child1, child2 }, 0);
 
         // Act
         var values = root.EnumerateValuesDfs<TestTree, int>().ToArray();
@@ -45,9 +46,9 @@ public class IHaveValueTests
         // Arrange
         var grandChild1 = new TestTree(null, 3);
         var grandChild2 = new TestTree(null, 4);
-        var child1 = new TestTree(new ChildBox<TestTree>[] { grandChild1 }, 1);
-        var child2 = new TestTree(new ChildBox<TestTree>[] { grandChild2 }, 2);
-        ChildBox<TestTree> root = new TestTree(new ChildBox<TestTree>[] { child1,child2 }, 0);
+        var child1 = new TestTree(new Box<TestTree>[] { grandChild1 }, 1);
+        var child2 = new TestTree(new Box<TestTree>[] { grandChild2 }, 2);
+        Box<TestTree> root = new TestTree(new Box<TestTree>[] { child1,child2 }, 0);
 
         // Act
         var values = root.GetValues<TestTree, int>();
@@ -58,18 +59,18 @@ public class IHaveValueTests
 
     private struct TestTree : IHaveBoxedChildren<TestTree>, IHaveValue<int>
     {
-        public ChildBox<TestTree>[] Children { get; }
+        public Box<TestTree>[] Children { get; }
         public int Value { get; set; }
 
-        public TestTree(ChildBox<TestTree>[]? children, int value = default)
+        public TestTree(Box<TestTree>[]? children, int value = default)
         {
-            Children = children ?? Array.Empty<ChildBox<TestTree>>();
+            Children = children ?? Array.Empty<Box<TestTree>>();
             Value = value;
         }
 
         public TestTree(TestTree child, int value = default)
         {
-            Children = new[] { new ChildBox<TestTree> { Item = child} };
+            Children = new[] { new Box<TestTree> { Item = child} };
             Value = value;
         }
     }

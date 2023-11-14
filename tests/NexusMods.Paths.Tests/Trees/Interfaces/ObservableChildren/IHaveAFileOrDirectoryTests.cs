@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using NexusMods.Paths.Trees;
 using NexusMods.Paths.Trees.Traits;
 
 namespace NexusMods.Paths.Tests.Trees.Interfaces.ObservableChildren;
@@ -12,8 +13,8 @@ public class IHaveAFileOrDirectoryTests
         // Arrange
         var leaf1 = new TestTree(new(), true);
         var leaf2 = new TestTree(new(), true);
-        var directory = new TestTree(new ObservableCollection<ChildBox<TestTree>> { leaf1, leaf2 }, false);
-        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { directory }, false);
+        var directory = new TestTree(new ObservableCollection<Box<TestTree>> { leaf1, leaf2 }, false);
+        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { directory }, false);
 
         // Act
         var fileCount = root.CountFiles();
@@ -27,8 +28,8 @@ public class IHaveAFileOrDirectoryTests
     {
         // Arrange
         var leaf1 = new TestTree(new(), true);
-        var directory = new TestTree(new ObservableCollection<ChildBox<TestTree>> { leaf1 }, false);
-        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { directory }, false);
+        var directory = new TestTree(new ObservableCollection<Box<TestTree>> { leaf1 }, false);
+        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { directory }, false);
 
         // Act
         var directoryCount = root.CountDirectories();
@@ -39,11 +40,11 @@ public class IHaveAFileOrDirectoryTests
 
     private struct TestTree : IHaveObservableChildren<TestTree>, IHaveAFileOrDirectory
     {
-        public ObservableCollection<ChildBox<TestTree>> Children { get; }
+        public ObservableCollection<Box<TestTree>> Children { get; }
         public bool IsFile { get; }
         public bool IsDirectory => !IsFile;
 
-        public TestTree(ObservableCollection<ChildBox<TestTree>> children, bool isFile)
+        public TestTree(ObservableCollection<Box<TestTree>> children, bool isFile)
         {
             Children = children;
             IsFile = isFile;

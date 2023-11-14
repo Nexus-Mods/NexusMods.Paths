@@ -1,3 +1,4 @@
+using NexusMods.Paths.Trees;
 using NexusMods.Paths.Trees.Traits;
 
 namespace NexusMods.Paths.Tests.Trees.Interfaces.BoxedChildren;
@@ -11,7 +12,7 @@ public class IHavePathSegmentTests
         // Arrange
         var grandchild = new TestTree(null, "grandchild");
         var child = new TestTree(grandchild, "child");
-        ChildBox<TestTree> root = new TestTree(child, "root");
+        Box<TestTree> root = new TestTree(child, "root");
 
         // Act
         var foundNode = root.FindByPathFromChild(new RelativePath("child/grandchild"));
@@ -27,7 +28,7 @@ public class IHavePathSegmentTests
         // Arrange
         var grandchild = new TestTree(null, "grandchild");
         var child = new TestTree(grandchild, "child");
-        ChildBox<TestTree> root = new TestTree(child, "root");
+        Box<TestTree> root = new TestTree(child, "root");
 
         // Act
         var foundNode = root.FindByPathFromChild(new RelativePath("child"));
@@ -42,7 +43,7 @@ public class IHavePathSegmentTests
     {
         // Arrange
         var child = new TestTree(null, "child");
-        ChildBox<TestTree> root = new TestTree(child, "root");
+        Box<TestTree> root = new TestTree(child, "root");
 
         // Act
         var foundNode = root.FindByPathFromChild(new RelativePath("non/existing/path"));
@@ -57,7 +58,7 @@ public class IHavePathSegmentTests
         // Arrange
         var grandchild = new TestTree(null, "grandchild");
         var child = new TestTree(grandchild, "child");
-        ChildBox<TestTree> root = new TestTree(child, "root");
+        Box<TestTree> root = new TestTree(child, "root");
 
         // Act
         var foundNode = root.FindByPathFromRoot(new RelativePath("root/child/grandchild"));
@@ -73,7 +74,7 @@ public class IHavePathSegmentTests
         // Arrange
         var grandchild = new TestTree(null, "grandchild");
         var child = new TestTree(grandchild, "child");
-        ChildBox<TestTree> root = new TestTree(child, "root");
+        Box<TestTree> root = new TestTree(child, "root");
 
         // Act
         var foundNode = root.FindByPathFromRoot(new RelativePath("Root/Child/GrandChild"));
@@ -89,7 +90,7 @@ public class IHavePathSegmentTests
         // Arrange
         var grandchild = new TestTree(null, "grandchild");
         var child = new TestTree(grandchild, "child");
-        ChildBox<TestTree> root = new TestTree(child, "root");
+        Box<TestTree> root = new TestTree(child, "root");
 
         // Act
         var foundNode = root.FindByPathFromRoot(new RelativePath("root/child"));
@@ -104,7 +105,7 @@ public class IHavePathSegmentTests
     {
         // Arrange
         var child = new TestTree(null, "child");
-        ChildBox<TestTree> root = new TestTree(child, "root");
+        Box<TestTree> root = new TestTree(child, "root");
 
         // Act
         var foundNode = root.FindByPathFromRoot(new RelativePath("non/existing/path"));
@@ -118,7 +119,7 @@ public class IHavePathSegmentTests
     {
         // Arrange
         var child = new TestTree(null, "child");
-        ChildBox<TestTree> root = new TestTree(child, "root");
+        Box<TestTree> root = new TestTree(child, "root");
 
         // Act
         var foundNode = root.FindByPathFromRoot(new RelativePath("root/fakechild"));
@@ -129,18 +130,18 @@ public class IHavePathSegmentTests
 
     private struct TestTree : IHaveBoxedChildren<TestTree>, IHavePathSegment
     {
-        public ChildBox<TestTree>[] Children { get; set; }
+        public Box<TestTree>[] Children { get; set; }
         public RelativePath Segment { get; set; }
 
-        public TestTree(ChildBox<TestTree>[]? children, string segment)
+        public TestTree(Box<TestTree>[]? children, string segment)
         {
-            Children = children ?? Array.Empty<ChildBox<TestTree>>();
+            Children = children ?? Array.Empty<Box<TestTree>>();
             Segment = segment;
         }
 
         public TestTree(TestTree child, string segment)
         {
-            Children = new ChildBox<TestTree>[] {child };
+            Children = new Box<TestTree>[] {child };
             Segment = segment;
         }
     }

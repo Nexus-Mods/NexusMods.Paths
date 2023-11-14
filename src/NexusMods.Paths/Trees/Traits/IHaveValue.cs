@@ -29,7 +29,7 @@ public static class IHaveValueExtensionsForIHaveBoxedChildren
     /// <typeparam name="TSelf">The type of the child node.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An IEnumerable of all child values of the current node.</returns>
-    public static IEnumerable<TValue> EnumerateValuesBfs<TSelf, TValue>(this ChildBox<TSelf> item)
+    public static IEnumerable<TValue> EnumerateValuesBfs<TSelf, TValue>(this Box<TSelf> item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveValue<TValue>
         => item.Item.EnumerateValuesBfs<TSelf, TValue>();
 
@@ -62,7 +62,7 @@ public static class IHaveValueExtensionsForIHaveBoxedChildren
     /// <typeparam name="TSelf">The type of the child node.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An IEnumerable of all child values of the current node.</returns>
-    public static IEnumerable<TValue> EnumerateValuesDfs<TSelf, TValue>(this ChildBox<TSelf> item)
+    public static IEnumerable<TValue> EnumerateValuesDfs<TSelf, TValue>(this Box<TSelf> item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveValue<TValue>
         => item.Item.EnumerateValuesDfs<TSelf, TValue>();
 
@@ -92,7 +92,7 @@ public static class IHaveValueExtensionsForIHaveBoxedChildren
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An array of all the values of the children of this node.</returns>
-    public static TValue[] GetValues<TSelf, TValue>(this ChildBox<TSelf> item)
+    public static TValue[] GetValues<TSelf, TValue>(this Box<TSelf> item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveValue<TValue>
         => item.Item.GetValues<TSelf, TValue>();
 
@@ -119,7 +119,7 @@ public static class IHaveValueExtensionsForIHaveBoxedChildren
     /// <param name="item">The current node.</param>
     /// <param name="buffer">
     ///     The span to fill with values.
-    ///     Should be at least as big as <see cref="IHaveBoxedChildrenExtensions.CountChildren{TSelf}(NexusMods.Paths.Trees.Traits.ChildBox{TSelf})"/>
+    ///     Should be at least as big as <see cref="IHaveBoxedChildrenExtensions.CountChildren{TSelf}(Box{TSelf})"/>
     /// </param>
     /// <param name="index">The current index in the array.</param>
     public static void GetValuesUnsafe<TSelf, TValue>(TSelf item, Span<TValue> buffer, ref int index)
@@ -147,7 +147,7 @@ public static class IHaveValueExtensionsForIHaveObservableChildren
     /// <typeparam name="TSelf">The type of the child node.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An IEnumerable of all child values of the current node.</returns>
-    public static IEnumerable<TValue> EnumerateValuesBfs<TSelf, TValue>(this ChildBox<TSelf> item)
+    public static IEnumerable<TValue> EnumerateValuesBfs<TSelf, TValue>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveValue<TValue>
         => item.Item.EnumerateValuesBfs<TSelf, TValue>();
 
@@ -180,7 +180,7 @@ public static class IHaveValueExtensionsForIHaveObservableChildren
     /// <typeparam name="TSelf">The type of the child node.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An IEnumerable of all child values of the current node.</returns>
-    public static IEnumerable<TValue> EnumerateValuesDfs<TSelf, TValue>(this ChildBox<TSelf> item)
+    public static IEnumerable<TValue> EnumerateValuesDfs<TSelf, TValue>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveValue<TValue>
         => item.Item.EnumerateValuesDfs<TSelf, TValue>();
 
@@ -210,7 +210,7 @@ public static class IHaveValueExtensionsForIHaveObservableChildren
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An array of all the values of the children of this node.</returns>
-    public static TValue[] GetValues<TSelf, TValue>(this ChildBox<TSelf> item)
+    public static TValue[] GetValues<TSelf, TValue>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveValue<TValue> =>
         item.Item.GetValues<TSelf, TValue>();
 
@@ -237,7 +237,7 @@ public static class IHaveValueExtensionsForIHaveObservableChildren
     /// <param name="item">The current node.</param>
     /// <param name="buffer">
     ///     The span to fill with values.
-    ///     If calling on root node, should be at least as big as <see cref="IHaveObservableChildrenExtensions.CountChildren{TSelf}(NexusMods.Paths.Trees.Traits.ChildBox{TSelf})"/>
+    ///     If calling on root node, should be at least as big as <see cref="IHaveObservableChildrenExtensions.CountChildren{TSelf}(Box{TSelf})"/>
     /// </param>
     /// <param name="index">The current index in the array.</param>
     private static void GetValuesUnsafe<TSelf, TValue>(TSelf item, Span<TValue> buffer, ref int index)

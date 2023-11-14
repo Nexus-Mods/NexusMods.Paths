@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using NexusMods.Paths.Trees;
 using NexusMods.Paths.Trees.Traits;
 
 namespace NexusMods.Paths.Tests.Trees.Interfaces.ObservableChildren;
@@ -9,21 +10,21 @@ public class IHaveParentTests
     [Fact]
     public void GetSiblings_WithNoParent_ReturnsHasNoParent()
     {
-        ChildBox<TestTree> root = new TestTree();
+        Box<TestTree> root = new TestTree();
         root.Item.HasParent().Should().Be(false);
     }
 
     [Fact]
     public void GetSiblings_WithNoParent_ReturnsIsTreeRoot()
     {
-        ChildBox<TestTree> root = new TestTree();
+        Box<TestTree> root = new TestTree();
         root.Item.IsTreeRoot().Should().Be(true);
     }
 
     [Fact]
     public void EnumerateSiblings_WithNoParent_YieldsNoSiblings()
     {
-        ChildBox<TestTree> root = new TestTree();
+        Box<TestTree> root = new TestTree();
         var siblings = root.EnumerateSiblings().ToArray();
         siblings.Should().BeEmpty();
     }
@@ -31,11 +32,11 @@ public class IHaveParentTests
     [Fact]
     public void EnumerateSiblings_WithParent_YieldsAllButSelf()
     {
-        var root = new ParentBox<TestTree>();
-        ParentBox<TestTree> sibling1 = new TestTree(0) { Parent = root };
-        ParentBox<TestTree> sibling2 = new TestTree(1) { Parent = root };
-        ParentBox<TestTree> sibling3 = new TestTree(2) { Parent = root };
-        root.Item.Children = new ObservableCollection<ChildBox<TestTree>>
+        var root = new Box<TestTree>();
+        Box<TestTree> sibling1 = new TestTree(0) { Parent = root };
+        Box<TestTree> sibling2 = new TestTree(1) { Parent = root };
+        Box<TestTree> sibling3 = new TestTree(2) { Parent = root };
+        root.Item.Children = new ObservableCollection<Box<TestTree>>
         {
             new() { Item = sibling1 },
             new() { Item = sibling2 },
@@ -44,18 +45,18 @@ public class IHaveParentTests
 
         var siblings = sibling3.Item.EnumerateSiblings().ToArray();
         siblings.Should().HaveCount(2);
-        siblings.Should().Contain(new ChildBox<TestTree> { Item = sibling1 });
-        siblings.Should().Contain(new ChildBox<TestTree> { Item = sibling2 });
+        siblings.Should().Contain(new Box<TestTree> { Item = sibling1 });
+        siblings.Should().Contain(new Box<TestTree> { Item = sibling2 });
     }
 
     [Fact]
     public void EnumerateSiblings_WithParent_YieldsAllButSelf_WhenBoxed()
     {
-        var root = new ParentBox<TestTree>();
-        ParentBox<TestTree> sibling1 = new TestTree(0) { Parent = root };
-        ParentBox<TestTree> sibling2 = new TestTree(1) { Parent = root };
-        ParentBox<TestTree> sibling3 = new TestTree(2) { Parent = root };
-        root.Item.Children = new ObservableCollection<ChildBox<TestTree>>
+        var root = new Box<TestTree>();
+        Box<TestTree> sibling1 = new TestTree(0) { Parent = root };
+        Box<TestTree> sibling2 = new TestTree(1) { Parent = root };
+        Box<TestTree> sibling3 = new TestTree(2) { Parent = root };
+        root.Item.Children = new ObservableCollection<Box<TestTree>>
         {
             new() { Item = sibling1 },
             new() { Item = sibling2 },
@@ -72,15 +73,15 @@ public class IHaveParentTests
     [Fact]
     public void GetSiblingCount_WithNoParent_ReturnsZero()
     {
-        ChildBox<TestTree> root = new TestTree();
+        Box<TestTree> root = new TestTree();
         root.GetSiblingCount().Should().Be(0);
     }
 
     [Fact]
     public void GetSiblingCount_WithParent_ReturnsParentChildCountMinusOne()
     {
-        var root = new ParentBox<TestTree>();
-        root.Item.Children = new ObservableCollection<ChildBox<TestTree>>
+        var root = new Box<TestTree>();
+        root.Item.Children = new ObservableCollection<Box<TestTree>>
         {
             new TestTree() { Parent = root },
             new TestTree() { Parent = root }
@@ -93,7 +94,7 @@ public class IHaveParentTests
     [Fact]
     public void GetSiblings_WithNoParent_ReturnsEmpty_WhenBoxed()
     {
-        ChildBox<TestTree> root = new TestTree();
+        Box<TestTree> root = new TestTree();
         root.GetSiblings().Should().BeEmpty();
     }
 
@@ -107,11 +108,11 @@ public class IHaveParentTests
     [Fact]
     public void GetSiblings_WithParent_ReturnsAllButSelf()
     {
-        var root = new ParentBox<TestTree>();
-        ParentBox<TestTree> sibling1 = new TestTree(0) { Parent = root };
-        ParentBox<TestTree> sibling2 = new TestTree(1) { Parent = root };
-        ParentBox<TestTree> sibling3 = new TestTree(2) { Parent = root };
-        root.Item.Children = new ObservableCollection<ChildBox<TestTree>>
+        var root = new Box<TestTree>();
+        Box<TestTree> sibling1 = new TestTree(0) { Parent = root };
+        Box<TestTree> sibling2 = new TestTree(1) { Parent = root };
+        Box<TestTree> sibling3 = new TestTree(2) { Parent = root };
+        root.Item.Children = new ObservableCollection<Box<TestTree>>
         {
             new() { Item = sibling1 },
             new() { Item = sibling2 },
@@ -125,11 +126,11 @@ public class IHaveParentTests
     [Fact]
     public void GetSiblings_WithParent_ReturnsAllButSelf_WhenBoxed()
     {
-        var root = new ParentBox<TestTree>();
-        ParentBox<TestTree> sibling1 = new TestTree(0) { Parent = root };
-        ParentBox<TestTree> sibling2 = new TestTree(1) { Parent = root };
-        ParentBox<TestTree> sibling3 = new TestTree(2) { Parent = root };
-        root.Item.Children = new ObservableCollection<ChildBox<TestTree>>
+        var root = new Box<TestTree>();
+        Box<TestTree> sibling1 = new TestTree(0) { Parent = root };
+        Box<TestTree> sibling2 = new TestTree(1) { Parent = root };
+        Box<TestTree> sibling3 = new TestTree(2) { Parent = root };
+        root.Item.Children = new ObservableCollection<Box<TestTree>>
         {
             new() { Item = sibling1 },
             new() { Item = sibling2 },
@@ -145,8 +146,8 @@ public class IHaveParentTests
 
     private struct TestTree : IHaveObservableChildren<TestTree>, IHaveParent<TestTree>, IEquatable<TestTree>
     {
-        public ObservableCollection<ChildBox<TestTree>> Children { get; internal set; } = new();
-        public ParentBox<TestTree>? Parent { get; internal set; }
+        public ObservableCollection<Box<TestTree>> Children { get; internal set; } = new();
+        public Box<TestTree>? Parent { get; internal set; }
         public int Value { get; internal set; }
         public TestTree(int value)
         {

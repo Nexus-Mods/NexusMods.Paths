@@ -1,3 +1,4 @@
+using NexusMods.Paths.Trees;
 using NexusMods.Paths.Trees.Traits;
 
 namespace NexusMods.Paths.Tests.Trees.Interfaces;
@@ -9,9 +10,9 @@ public class IHaveParentWithKeyTests
     public void FindByKeysUpward_WithCorrectSequence_ShouldReturnCorrectNode()
     {
         // Arrange
-        var root = new ParentBox<TestTree>() { Item = new TestTree(1) };
-        ChildBox<TestTree> child2 = new TestTree(2) { Parent = root };
-        ChildBox<TestTree> grandChild = new TestTree(3) { Parent = child2.Item };
+        var root = new Box<TestTree>() { Item = new TestTree(1) };
+        Box<TestTree> child2 = new TestTree(2) { Parent = root };
+        Box<TestTree> grandChild = new TestTree(3) { Parent = child2.Item };
         child2.Item.Children = new[] { grandChild };
         root.Item.Children = new[] { child2 };
 
@@ -27,10 +28,10 @@ public class IHaveParentWithKeyTests
     public void FindByKeysUpward_WithIncorrectSequence_ShouldReturnNull()
     {
         // Arrange
-        var root = new ParentBox<TestTree>();
-        ChildBox<TestTree> child1 = new TestTree(1) { Parent = root };
-        ChildBox<TestTree> child2 = new TestTree(2) { Parent = root };
-        ChildBox<TestTree> grandChild = new TestTree(3) { Parent = child2.Item };
+        var root = new Box<TestTree>();
+        Box<TestTree> child1 = new TestTree(1) { Parent = root };
+        Box<TestTree> child2 = new TestTree(2) { Parent = root };
+        Box<TestTree> grandChild = new TestTree(3) { Parent = child2.Item };
         child2.Item.Children = new[] { grandChild };
         root.Item.Children = new[] { child1, child2 };
 
@@ -45,12 +46,12 @@ public class IHaveParentWithKeyTests
     public void FindByKeysUpward_WithPartialSequence_ShouldReturnResult()
     {
         // Arrange
-        var root = new ParentBox<TestTree>();
+        var root = new Box<TestTree>();
         var child1 = new TestTree(1) { Parent = root };
         var child2 = new TestTree(2) { Parent = root };
-        ChildBox<TestTree> grandChild = new TestTree(3) { Parent = child2 };
+        Box<TestTree> grandChild = new TestTree(3) { Parent = child2 };
         child2.Children = new[] { grandChild };
-        root.Item.Children = new ChildBox<TestTree>[] { child1, child2 };
+        root.Item.Children = new Box<TestTree>[] { child1, child2 };
 
         // Act
         var foundNode = grandChild.FindByKeysUpward<TestTree, int>(new[] { 2, 3 });
@@ -62,8 +63,8 @@ public class IHaveParentWithKeyTests
 
     private struct TestTree : IHaveBoxedChildren<TestTree>, IHaveParent<TestTree>, IHaveKey<int>, IEquatable<TestTree>
     {
-        public ChildBox<TestTree>[] Children { get; internal set; } = Array.Empty<ChildBox<TestTree>>();
-        public ParentBox<TestTree>? Parent { get; internal set; }
+        public Box<TestTree>[] Children { get; internal set; } = Array.Empty<Box<TestTree>>();
+        public Box<TestTree>? Parent { get; internal set; }
         public int Key { get; }
         public TestTree(int key)
         {

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using NexusMods.Paths.Trees;
 using NexusMods.Paths.Trees.Traits;
 
 namespace NexusMods.Paths.Tests.Trees.Interfaces.ObservableChildren;
@@ -14,8 +15,8 @@ public class IHaveKeyParentMixinTests
         var deepChild2 = new TestTree(null, 5); // Same key as deepChild1
         var grandChild1 = new TestTree(deepChild1, 4);
         var grandChild2 = new TestTree(deepChild2, 4); // Same key as grandChild1
-        var child = new TestTree(new ObservableCollection<ChildBox<TestTree>> { grandChild1, grandChild2 }, 3);
-        ChildBox<TestTree> root = new TestTree(child, 2);
+        var child = new TestTree(new ObservableCollection<Box<TestTree>> { grandChild1, grandChild2 }, 3);
+        Box<TestTree> root = new TestTree(child, 2);
 
         // Act
         var foundNodes = root.FindSubPathsByKeyUpward<TestTree, int>(new[] { 4, 5 });
@@ -33,7 +34,7 @@ public class IHaveKeyParentMixinTests
         var grandChild2 = new TestTree(null, 5);
         var child1 = new TestTree(grandChild1, 2);
         var child2 = new TestTree(grandChild2, 3);
-        ChildBox<TestTree> root = new TestTree(new ObservableCollection<ChildBox<TestTree>> { child1, child2 }, 1);
+        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { child1, child2 }, 1);
 
         // Act
         var foundNodes = root.FindSubPathsByKeyUpward<TestTree, int>(new[] { 4 });
@@ -48,7 +49,7 @@ public class IHaveKeyParentMixinTests
     {
         // Arrange
         var child = new TestTree(null, 2);
-        ChildBox<TestTree> root = new TestTree(child, 1);
+        Box<TestTree> root = new TestTree(child, 1);
 
         // Act
         var foundNodes = root.FindSubPathsByKeyUpward<TestTree, int>(new[] { 99 });
@@ -62,7 +63,7 @@ public class IHaveKeyParentMixinTests
     {
         // Arrange
         var child = new TestTree(null, 2);
-        ChildBox<TestTree> root = new TestTree(child, 1);
+        Box<TestTree> root = new TestTree(child, 1);
 
         // Act
         var foundNodes = root.FindSubPathsByKeyUpward<TestTree, int>(Array.Empty<int>());
@@ -73,14 +74,14 @@ public class IHaveKeyParentMixinTests
 
     private struct TestTree : IHaveObservableChildren<TestTree>, IHaveKey<int>, IHaveParent<TestTree>
     {
-        public ParentBox<TestTree>? Parent { get; private set; }
-        public ObservableCollection<ChildBox<TestTree>> Children { get; }
+        public Box<TestTree>? Parent { get; private set; }
+        public ObservableCollection<Box<TestTree>> Children { get; }
         public int Key { get; }
 
-        public TestTree(ObservableCollection<ChildBox<TestTree>>? children, int key = default)
+        public TestTree(ObservableCollection<Box<TestTree>>? children, int key = default)
         {
             Key = key;
-            Children = children ?? new ObservableCollection<ChildBox<TestTree>>();
+            Children = children ?? new ObservableCollection<Box<TestTree>>();
             foreach (var child in Children)
                 child.Item.Parent = this;
         }
@@ -89,7 +90,7 @@ public class IHaveKeyParentMixinTests
         {
             Key = key;
             child.Parent = this;
-            Children = new ObservableCollection<ChildBox<TestTree>> { child };
+            Children = new ObservableCollection<Box<TestTree>> { child };
         }
     }
 }
