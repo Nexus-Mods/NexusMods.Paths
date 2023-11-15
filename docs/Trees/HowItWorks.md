@@ -253,3 +253,20 @@ private static void SumChildrenDepthRecursive<TSelf, TKey>(this TSelf item, ref 
 | CountChildrenDepth_ViaInterface | 21.20 ms | 0.054 ms | 0.045 ms |     212 B |
 | CountChildrenDepth_ManuallyImpl | 21.11 ms | 0.178 ms | 0.167 ms |     206 B |
 ```
+
+### Sanity Testing New Functionality
+
+Disable the implicit conversion operators, and see if the code compiles.
+
+Trait functionality should not rely on implicit conversions, as they are most likely un-intended and may lead to performance
+degradation. They are only there for end user convenience.
+
+```csharp
+/// <summary />
+public static implicit operator TSelf(Box<TSelf> box) => box.Item; // <= make this explicit
+
+/// <summary />
+public static implicit operator TSelf(KeyedBox<TKey, TSelf> box) => box.Item; // <= make this explicit
+```
+
+If you get compile errors (on main library), fix them, and then revert the conversion operators.
