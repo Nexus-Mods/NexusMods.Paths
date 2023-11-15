@@ -40,7 +40,7 @@ public static class IHavePathSegmentExtensions
         {
             // Each parent adds its own segment length plus one for the separator.
             pathLength += currentItem.Parent!.Item.Segment.Length + 1;
-            currentItem = currentItem.Parent;
+            currentItem = currentItem.Parent.Item;
         }
 
         // Create the string.
@@ -129,7 +129,7 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildren
     ///     This is very slow, at O(N). If you need to use this with large trees, consider using the
     ///     dictionary variant based on <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" /> instead.
     /// </remarks>
-    public static TSelf? FindByPathFromChild<TSelf>(this Box<TSelf> root, RelativePath fullPath)
+    public static Box<TSelf>? FindByPathFromChild<TSelf>(this Box<TSelf> root, RelativePath fullPath)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHavePathSegment =>
         root.Item.FindByPathFromChild(fullPath);
 
@@ -145,7 +145,7 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildren
     ///     This is very slow, at O(N). If you need to use this with large trees, consider using the
     ///     dictionary variant based on <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" /> instead.
     /// </remarks>
-    public static TSelf? FindByPathFromChild<TSelf>(this TSelf root, RelativePath fullPath)
+    public static Box<TSelf>? FindByPathFromChild<TSelf>(this TSelf root, RelativePath fullPath)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHavePathSegment
     {
         var start = 0; // Start index of the current segment.

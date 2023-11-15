@@ -19,7 +19,7 @@ public class IHavePathSegmentTests
 
         // Assert
         foundNode!.Should().NotBeNull();
-        foundNode!.Value.Segment.Path.Should().Be("grandchild");
+        foundNode!.Item.Segment.Path.Should().Be("grandchild");
     }
 
     [Fact]
@@ -35,7 +35,7 @@ public class IHavePathSegmentTests
 
         // Assert
         foundNode!.Should().NotBeNull();
-        foundNode!.Value.Segment.Path.Should().Be("child");
+        foundNode!.Item.Segment.Path.Should().Be("child");
     }
 
     [Fact]
