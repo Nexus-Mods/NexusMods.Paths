@@ -48,37 +48,44 @@ public void EnumerateChildren()
 
 !!! note "These methods have 0 overhead compared to a manual human implementation."
 
-### Using in Practice
-
-When using the type, you may choose to either box the root, or not box it.
-
-=== "Box the Root"
-
-    ```csharp
-    // Box the Root (Code is cleaner if you put the box type on the left!!)
-    var root = (Box<TestTree>) new TestTree(new Box<TestTree>[] { child1, child2 });
-    root.CountChildren();
-
-    // Note: Refer to interface, e.g. IHaveBoxedChildren to determine box type.
-    ```
-
-=== "Don't box the Root"
-
-    ```csharp
-    // Don't box the Root.
-    var root = new TestTree(new Box<TestTree>[] { child1, child2 });
-    root.CountChildren<TestTree, RelativePath>();
-    ```
-
-*If multiple generic types are involved* and you are not boxing the root, you might need to specify the generic types manually on method calls.  
-
-In those situations you may wish to re-export them in the base type for usage convenience.  
+Then consider adding a constructor. Use a 'Create' method to do so, and return a boxed item.
 
 ```csharp
 public struct TreeNode : IHaveBoxedChildrenWithKey<RelativePath, TreeNode>
 {
     public Dictionary<RelativePath, ChildrenWithKeyBox<RelativePath, TreeNode>> Children { get; }
 
+    // Create a Constructor. 
+    public static KeyedBox<int, TestTree> Create(Dictionary<int, KeyedBox<int, TestTree>>? children = null) 
+        => (KeyedBox<int, TestTree>) new TestTree()
+        {
+            Children = children ?? new Dictionary<int, KeyedBox<int, TestTree>>()
+        };
+}
+```
+
+#### Micro Optimization
+
+!!! tip "Not Boxing the Root"
+
+    Depending on your use case, you can choose to not box the root, and store unboxed `TestTree` directly in a class.  
+    This saves a pointer dereference.
+
+!!! warning
+
+    Some methods (they are deliberately marked 'Obsolete') may also cause a box/heap allocation if called from unboxed item.  
+
+If you don't box the root, you might sometimes need to specify the generic types manually on method calls (no auto inference).  
+
+You can work around this by exporting helper methods for convenience (if desired).  
+
+```csharp
+public struct TreeNode : IHaveBoxedChildrenWithKey<RelativePath, TreeNode>
+{
+    // .. other code
+
+    // [Optional] Re-export methods for convenience if you are working with non-boxed root.
+    
     /// <inheritdoc cref="IHaveBoxedChildrenWithKeyExtensions.CountChildren{TSelf,TKey}"/>
     public int CountChildren() => this.CountChildren<TreeNode, RelativePath>();
 
@@ -86,10 +93,6 @@ public struct TreeNode : IHaveBoxedChildrenWithKey<RelativePath, TreeNode>
     public int EnumerateChildren() => this.CountChildren<TreeNode, RelativePath>();
 }
 ```
-
-!!! tip "Not Boxing the Root is generally better for Performance"
-
-!!! note "Some methods should only be used from boxed objects, i.e. `Box<TreeNode>`. Wrappers for underlying struct are available but should be avoided."
 
 ### Adding Functionality 
 
