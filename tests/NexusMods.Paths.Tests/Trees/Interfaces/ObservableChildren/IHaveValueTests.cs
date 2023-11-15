@@ -11,16 +11,11 @@ public class IHaveValueTests
     public void EnumerateValuesBfs_ShouldReturnAllValuesInBreadthFirstOrder()
     {
         // Arrange
-        var grandChild1 = new TestTree(new ObservableCollection<Box<TestTree>>(), 3);
-        var grandChild2 = new TestTree(new ObservableCollection<Box<TestTree>>(), 4);
-        var child1 = new TestTree(grandChild1, 1);
-        var child2 = new TestTree(grandChild2, 2);
-        var rootChildren = new ObservableCollection<Box<TestTree>>
-        {
-            child1,
-            child2
-        };
-        Box<TestTree> root = new TestTree(rootChildren, 0);
+        var grandChild1 = TestTree.Create(null, 3);
+        var grandChild2 = TestTree.Create(null, 4);
+        var child1 = TestTree.Create(grandChild1, 1);
+        var child2 = TestTree.Create(grandChild2, 2);
+        var root = TestTree.Create(new ObservableCollection<Box<TestTree>> { child1, child2 });
 
         // Act
         var values = root.EnumerateValuesBfs<TestTree, int>().ToArray();
@@ -33,16 +28,11 @@ public class IHaveValueTests
     public void EnumerateValuesDfs_ShouldReturnAllValuesInDepthFirstOrder()
     {
         // Arrange
-        var grandChild1 = new TestTree(null, 3);
-        var grandChild2 = new TestTree(null, 4);
-        var child1 = new TestTree(grandChild1, 1);
-        var child2 = new TestTree(grandChild2, 2);
-        var rootChildren = new ObservableCollection<Box<TestTree>>
-        {
-            child1,
-            child2
-        };
-        Box<TestTree> root = new TestTree(rootChildren, 0);
+        var grandChild1 = TestTree.Create(null, 3);
+        var grandChild2 = TestTree.Create(null, 4);
+        var child1 = TestTree.Create(grandChild1, 1);
+        var child2 = TestTree.Create(grandChild2 , 2);
+        var root = TestTree.Create(new ObservableCollection<Box<TestTree>> { child1, child2 });
 
         // Act
         var values = root.EnumerateValuesDfs<TestTree, int>().ToArray();
@@ -55,11 +45,11 @@ public class IHaveValueTests
     public void GetValues_ShouldReturnAllValuesRecursively()
     {
         // Arrange
-        var grandChild1 = new TestTree(null, 3);
-        var grandChild2 = new TestTree(null, 4);
-        var child1 = new TestTree(grandChild1, 1);
-        var child2 = new TestTree(grandChild2, 2);
-        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { child1, child2 }, 0);
+        var grandChild1 = TestTree.Create(null, 3);
+        var grandChild2 = TestTree.Create(null, 4);
+        var child1 = TestTree.Create(new ObservableCollection<Box<TestTree>> { grandChild1 }, 1);
+        var child2 = TestTree.Create(new ObservableCollection<Box<TestTree>> { grandChild2 }, 2);
+        var root = TestTree.Create(new ObservableCollection<Box<TestTree>> { child1,child2 });
 
         // Act
         var values = root.GetValues<TestTree, int>();
@@ -70,16 +60,25 @@ public class IHaveValueTests
 
     private struct TestTree : IHaveObservableChildren<TestTree>, IHaveValue<int>
     {
-        public ObservableCollection<Box<TestTree>> Children { get; }
-        public int Value { get; }
+        public ObservableCollection<Box<TestTree>> Children { get; private init; }
+        public int Value { get; private init; }
 
-        public TestTree(ObservableCollection<Box<TestTree>>? children, int value = default)
+        public static Box<TestTree> Create(ObservableCollection<Box<TestTree>>? children, int value = default)
         {
-            Children = children ?? new ObservableCollection<Box<TestTree>>();
-            Value = value;
+            return (Box<TestTree>)new TestTree()
+            {
+                Children = children ?? new ObservableCollection<Box<TestTree>>(),
+                Value = value
+            };
         }
 
-        public TestTree(TestTree child, int value = default) : this(new ObservableCollection<Box<TestTree>> { child }, value)
-        { }
+        public static Box<TestTree> Create(TestTree child, int value = default)
+        {
+            return (Box<TestTree>)new TestTree()
+            {
+                Children = new ObservableCollection<Box<TestTree>> { new() { Item = child} },
+                Value = value
+            };
+        }
     }
 }

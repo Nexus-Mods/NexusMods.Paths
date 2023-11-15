@@ -132,7 +132,7 @@ public static class MixinExtensionsForIHaveBoxedChildrenWithKey
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An array of all the key-value pairs of the children of this node.</returns>
-    public static KeyValuePair<TKey, TValue>[] GetKeyValues<TKey, TSelf, TValue>(this ChildWithKeyBox<TKey, TSelf> item)
+    public static KeyValuePair<TKey, TValue>[] GetKeyValues<TKey, TSelf, TValue>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveValue<TValue>, IHaveKey<TKey>
         where TKey : notnull
         => item.Item.GetKeyValues<TKey, TSelf, TValue>();
@@ -187,7 +187,7 @@ public static class MixinExtensionsForIHaveBoxedChildrenWithKey
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>A dictionary of all the key-value pairs of the children of this node.</returns>
-    public static Dictionary<TKey, TValue> ToDictionary<TKey, TSelf, TValue>(this ChildWithKeyBox<TKey, TSelf> item)
+    public static Dictionary<TKey, TValue> ToDictionary<TKey, TSelf, TValue>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveValue<TValue>
         where TKey : notnull
     {

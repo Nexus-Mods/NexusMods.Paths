@@ -10,11 +10,11 @@ public class IHaveValueTests
     public void EnumerateValuesBfs_ShouldReturnAllValuesInBreadthFirstOrder()
     {
         // Arrange
-        var grandChild1 = new TestTree(null, 3);
-        var grandChild2 = new TestTree(null, 4);
-        var child1 = new TestTree(grandChild1, 1);
-        var child2 = new TestTree(grandChild2, 2);
-        Box<TestTree> root = new TestTree(new Box<TestTree>[] { child1, child2 }, 0);
+        var grandChild1 = TestTree.Create(null, 3);
+        var grandChild2 = TestTree.Create(null, 4);
+        var child1 = TestTree.Create(grandChild1, 1);
+        var child2 = TestTree.Create(grandChild2, 2);
+        var root = TestTree.Create(new[] { child1, child2 });
 
         // Act
         var values = root.EnumerateValuesBfs<TestTree, int>().ToArray();
@@ -27,11 +27,11 @@ public class IHaveValueTests
     public void EnumerateValuesDfs_ShouldReturnAllValuesInDepthFirstOrder()
     {
         // Arrange
-        var grandChild1 = new TestTree(null, 3);
-        var grandChild2 = new TestTree(null, 4);
-        var child1 = new TestTree(grandChild1, 1);
-        var child2 = new TestTree(grandChild2 , 2);
-        Box<TestTree> root = new TestTree(new Box<TestTree>[] { child1, child2 }, 0);
+        var grandChild1 = TestTree.Create(null, 3);
+        var grandChild2 = TestTree.Create(null, 4);
+        var child1 = TestTree.Create(grandChild1, 1);
+        var child2 = TestTree.Create(grandChild2 , 2);
+        var root = TestTree.Create(new[] { child1, child2 });
 
         // Act
         var values = root.EnumerateValuesDfs<TestTree, int>().ToArray();
@@ -44,11 +44,11 @@ public class IHaveValueTests
     public void GetValues_ShouldReturnAllValuesRecursively()
     {
         // Arrange
-        var grandChild1 = new TestTree(null, 3);
-        var grandChild2 = new TestTree(null, 4);
-        var child1 = new TestTree(new Box<TestTree>[] { grandChild1 }, 1);
-        var child2 = new TestTree(new Box<TestTree>[] { grandChild2 }, 2);
-        Box<TestTree> root = new TestTree(new Box<TestTree>[] { child1,child2 }, 0);
+        var grandChild1 = TestTree.Create(null, 3);
+        var grandChild2 = TestTree.Create(null, 4);
+        var child1 = TestTree.Create(new[] { grandChild1 }, 1);
+        var child2 = TestTree.Create(new[] { grandChild2 }, 2);
+        var root = TestTree.Create(new[] { child1,child2 });
 
         // Act
         var values = root.GetValues<TestTree, int>();
@@ -59,19 +59,25 @@ public class IHaveValueTests
 
     private struct TestTree : IHaveBoxedChildren<TestTree>, IHaveValue<int>
     {
-        public Box<TestTree>[] Children { get; }
-        public int Value { get; set; }
+        public Box<TestTree>[] Children { get; private init; }
+        public int Value { get; private init; }
 
-        public TestTree(Box<TestTree>[]? children, int value = default)
+        public static Box<TestTree> Create(Box<TestTree>[]? children, int value = default)
         {
-            Children = children ?? Array.Empty<Box<TestTree>>();
-            Value = value;
+            return (Box<TestTree>)new TestTree()
+            {
+                Children = children ?? Array.Empty<Box<TestTree>>(),
+                Value = value
+            };
         }
 
-        public TestTree(TestTree child, int value = default)
+        public static Box<TestTree> Create(TestTree child, int value = default)
         {
-            Children = new[] { new Box<TestTree> { Item = child} };
-            Value = value;
+            return (Box<TestTree>)new TestTree()
+            {
+                Children = new[] { new Box<TestTree> { Item = child} },
+                Value = value
+            };
         }
     }
 }

@@ -10,11 +10,15 @@ public class IHaveKeyValueWithKeyTests
     public void GetKeyValues_ShouldReturnAllKeyValuesRecursively()
     {
         // Arrange
-        var grandChild1 = new TestTree(3, "Key3");
-        var grandChild2 = new TestTree(4, "Key4");
-        var child1 = new TestTree(grandChild1, 1, "Key1");
-        var child2 = new TestTree(grandChild2, 2, "Key2");
-        ChildWithKeyBox<string, TestTree> root = new TestTree(new Dictionary<string, ChildWithKeyBox<string, TestTree>> { { child1.Key, child1 }, { child2.Key, child2 } }, 0, "RootKey");
+        var grandChild1 = TestTree.Create(3, "Key3");
+        var grandChild2 = TestTree.Create(4, "Key4");
+        var child1 = TestTree.Create(grandChild1, 1, "Key1");
+        var child2 = TestTree.Create(grandChild2, 2, "Key2");
+        var root = TestTree.Create(new Dictionary<string, KeyedBox<string, TestTree>>
+        {
+            { child1.Item.Key, child1 },
+            { child2.Item.Key, child2 }
+        }, 0, "RootKey");
 
         // Act
         var keyValuePairs = root.GetKeyValues<string, TestTree, int>();
@@ -32,11 +36,15 @@ public class IHaveKeyValueWithKeyTests
     public void ToDictionary_ShouldReturnAllKeyValuesRecursively()
     {
         // Arrange
-        var grandChild1 = new TestTree(3, "Key3");
-        var grandChild2 = new TestTree(4, "Key4");
-        var child1 = new TestTree(grandChild1, 1, "Key1");
-        var child2 = new TestTree(grandChild2, 2, "Key2");
-        ChildWithKeyBox<string, TestTree> root = new TestTree(new Dictionary<string, ChildWithKeyBox<string, TestTree>> { { "Key1", child1 }, { "Key2", child2 } }, 0, "RootKey");
+        var grandChild1 = TestTree.Create(3, "Key3");
+        var grandChild2 = TestTree.Create(4, "Key4");
+        var child1 = TestTree.Create(grandChild1, 1, "Key1");
+        var child2 = TestTree.Create(grandChild2, 2, "Key2");
+        var root = TestTree.Create(new Dictionary<string, KeyedBox<string, TestTree>>
+        {
+            { "Key1", child1 },
+            { "Key2", child2 }
+        }, 0, "RootKey");
 
         // Act
         var dictionary = root.ToDictionary<string, TestTree, int>();
@@ -51,32 +59,41 @@ public class IHaveKeyValueWithKeyTests
 
     private struct TestTree : IHaveBoxedChildrenWithKey<string, TestTree>, IHaveValue<int>, IHaveKey<string>
     {
-        public Dictionary<string, ChildWithKeyBox<string, TestTree>> Children { get; }
-        public int Value { get; }
-        public string Key { get; }
+        public Dictionary<string, KeyedBox<string, TestTree>> Children { get; private init; }
+        public int Value { get; private init; }
+        public string Key { get; private init; }
 
-        public TestTree(int value, string key)
+        public static KeyedBox<string, TestTree> Create(int value, string key)
         {
-            Children = new Dictionary<string, ChildWithKeyBox<string, TestTree>>();
-            Value = value;
-            Key = key;
-        }
-
-        public TestTree(TestTree child, int value, string key)
-        {
-            Children = new Dictionary<string, ChildWithKeyBox<string, TestTree>>()
+            return (KeyedBox<string, TestTree>)new TestTree()
             {
-                { child.Key, child }
+                Children = new Dictionary<string, KeyedBox<string, TestTree>>(),
+                Value = value,
+                Key = key
             };
-            Value = value;
-            Key = key;
         }
 
-        public TestTree(Dictionary<string, ChildWithKeyBox<string, TestTree>>? children, int value, string key)
+        public static KeyedBox<string, TestTree> Create(KeyedBox<string, TestTree> child, int value, string key)
         {
-            Children = children ?? new Dictionary<string, ChildWithKeyBox<string, TestTree>>();
-            Value = value;
-            Key = key;
+            return (KeyedBox<string, TestTree>)new TestTree()
+            {
+                Children = new Dictionary<string, KeyedBox<string, TestTree>>()
+                {
+                    { child.Item.Key, child }
+                },
+                Value = value,
+                Key = key,
+            };
+        }
+
+        public static KeyedBox<string, TestTree> Create(Dictionary<string, KeyedBox<string, TestTree>>? children, int value, string key)
+        {
+            return (KeyedBox<string, TestTree>)new TestTree()
+            {
+                Children = children ?? new Dictionary<string, KeyedBox<string, TestTree>>(),
+                Value = value,
+                Key = key
+            };
         }
     }
 }

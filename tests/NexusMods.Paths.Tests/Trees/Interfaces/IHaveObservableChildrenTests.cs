@@ -11,10 +11,10 @@ public class IHaveObservableChildrenTests
     public void EnumerateChildren_ShouldReturnAllChildrenRecursively()
     {
         // Arrange
-        Box<TestTree> leaf1 = new TestTree(null);
-        Box<TestTree> leaf2 = new TestTree(null);
-        Box<TestTree> node = new TestTree(new ObservableCollection<Box<TestTree>> { leaf1, leaf2 });
-        Box<TestTree> root = new TestTree(node);
+        var leaf1 = TestTree.Create();
+        var leaf2 = TestTree.Create();
+        var node = TestTree.Create(new ObservableCollection<Box<TestTree>> { leaf1, leaf2 });
+        var root = TestTree.Create(node);
 
         // Act
         var allChildrenBfs = root.EnumerateChildrenBfs().ToArray();
@@ -29,9 +29,9 @@ public class IHaveObservableChildrenTests
     public void EnumerateChildrenDfs_ShouldReturnAllChildrenInDepthFirstOrder()
     {
         // Arrange
-        Box<TestTree> grandChild = new TestTree(null);
-        Box<TestTree> child = new TestTree(grandChild);
-        Box<TestTree> root = new TestTree(child);
+        var grandChild = TestTree.Create();
+        var child = TestTree.Create(grandChild);
+        var root = TestTree.Create(child);
 
         // Act
         var allChildren = root.Item.EnumerateChildrenDfs().ToArray();
@@ -46,9 +46,9 @@ public class IHaveObservableChildrenTests
     public void EnumerateChildrenBfs_ShouldReturnAllChildrenInBreadthFirstOrder()
     {
         // Arrange
-        Box<TestTree> grandChild = new TestTree(null);
-        Box<TestTree> child = new TestTree(grandChild);
-        Box<TestTree> root = new TestTree(child);
+        var grandChild = TestTree.Create();
+        var child = TestTree.Create(new ObservableCollection<Box<TestTree>> { grandChild });
+        var root = TestTree.Create(new ObservableCollection<Box<TestTree>> { child });
 
         // Act
         var allChildren = root.Item.EnumerateChildrenBfs().ToArray();
@@ -63,9 +63,9 @@ public class IHaveObservableChildrenTests
     public void CountChildren_ShouldReturnCorrectNumberOfDirectChildren()
     {
         // Arrange
-        var child1 = new TestTree(null);
-        var child2 = new TestTree(null);
-        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { child1, child2 });
+        var child1 = TestTree.Create();
+        var child2 = TestTree.Create();
+        var root = TestTree.Create(new ObservableCollection<Box<TestTree>> { child1, child2 });
 
         // Act
         var count = root.CountChildren();
@@ -78,7 +78,7 @@ public class IHaveObservableChildrenTests
     public void CountChildren_ShouldReturnZeroForLeafNode()
     {
         // Arrange
-        Box<TestTree> leaf = new TestTree(null);
+        var leaf = TestTree.Create();
 
         // Act
         var count = leaf.CountChildren();
@@ -92,9 +92,9 @@ public class IHaveObservableChildrenTests
     public void CountChildrenRecursive_ShouldReturnTotalNumberOfAllChildren()
     {
         // Arrange
-        var grandChild = new TestTree(null);
-        var child = new TestTree(grandChild);
-        Box<TestTree> root = new TestTree(child);
+        var grandChild = TestTree.Create();
+        var child = TestTree.Create(grandChild);
+        var root = TestTree.Create(child);
 
         // Act
         var count = root.CountChildren();
@@ -107,29 +107,29 @@ public class IHaveObservableChildrenTests
     public void GetChildrenRecursive_ShouldReturnAllChildrenIncludingDescendants()
     {
         // Arrange
-        var grandChild1 = new TestTree(null);
-        var grandChild2 = new TestTree(null);
-        var child1 = new TestTree(grandChild1);
-        var child2 = new TestTree(grandChild2);
+        var grandChild1 = TestTree.Create();
+        var grandChild2 = TestTree.Create();
+        var child1 = TestTree.Create(grandChild1);
+        var child2 = TestTree.Create(grandChild2);
         var children = new ObservableCollection<Box<TestTree>> { child1, child2 };
-        Box<TestTree> root = new TestTree(children);
+        var root = TestTree.Create(children);
 
         // Act
         var allChildren = root.GetChildrenRecursive().ToArray();
 
         // Assert
         allChildren.Length.Should().Be(4); // Including child1, child2, grandChild1, grandChild2
-        allChildren.Should().Contain(new Box<TestTree>[] { child1, child2, grandChild1, grandChild2 });
+        allChildren.Should().Contain(new[] { child1, child2, grandChild1, grandChild2 });
     }
 
     [Fact]
     public void CountLeaves_ShouldReturnCorrectNumberOfLeafNodes()
     {
         // Arrange
-        var leaf1 = new TestTree(null);
-        var leaf2 = new TestTree(null);
-        var node = new TestTree(new ObservableCollection<Box<TestTree>> { leaf1, leaf2 });
-        Box<TestTree> root = new TestTree(node);
+        var leaf1 = TestTree.Create();
+        var leaf2 = TestTree.Create();
+        var node = TestTree.Create(new ObservableCollection<Box<TestTree>> { leaf1, leaf2 });
+        var root = TestTree.Create(new ObservableCollection<Box<TestTree>> { node });
 
         // Act
         var leafCount = root.CountLeaves();
@@ -142,10 +142,10 @@ public class IHaveObservableChildrenTests
     public void GetLeaves_ShouldReturnAllLeafNodes()
     {
         // Arrange
-        Box<TestTree> leaf1 = new TestTree(null);
-        Box<TestTree> leaf2 = new TestTree(null);
-        Box<TestTree> node = new TestTree(new ObservableCollection<Box<TestTree>> { leaf1, leaf2 });
-        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { node });
+        var leaf1 = TestTree.Create();
+        var leaf2 = TestTree.Create();
+        var node = TestTree.Create(new ObservableCollection<Box<TestTree>> { leaf1, leaf2 });
+        var root = TestTree.Create(new ObservableCollection<Box<TestTree>> { node });
 
         // Act
         var leaves = root.GetLeaves();
@@ -156,10 +156,22 @@ public class IHaveObservableChildrenTests
 
     private struct TestTree : IHaveObservableChildren<TestTree>
     {
-        public ObservableCollection<Box<TestTree>> Children { get; }
+        public ObservableCollection<Box<TestTree>> Children { get; private init; }
 
-        public TestTree(TestTree child) => Children = new ObservableCollection<Box<TestTree>> { child };
+        public static Box<TestTree> Create(ObservableCollection<Box<TestTree>>? children) => (Box<TestTree>) new TestTree()
+        {
+            Children = children ?? new ObservableCollection<Box<TestTree>>()
+        };
 
-        public TestTree(ObservableCollection<Box<TestTree>>? children) => Children = children ?? new ObservableCollection<Box<TestTree>>();
+        public static Box<TestTree> Create(Box<TestTree>? child) => (Box<TestTree>) new TestTree()
+        {
+            Children = child != null ? new ObservableCollection<Box<TestTree>> { child } : new ObservableCollection<Box<TestTree>>()
+        };
+
+        public static Box<TestTree> Create() => (Box<TestTree>) new TestTree()
+        {
+            Children = new ObservableCollection<Box<TestTree>>()
+        };
     }
 }
+

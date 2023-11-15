@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using NexusMods.Paths.Extensions;
 using NexusMods.Paths.HighPerformance.CommunityToolkit;
 
@@ -91,9 +92,12 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildren
     ///     This is very slow, at O(N). If you need to use this with large trees, consider using the
     ///     dictionary variant based on <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" /> instead.
     /// </remarks>
-    public static TSelf? FindByPathFromRoot<TSelf>(this Box<TSelf> root, RelativePath fullPath)
-        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHavePathSegment =>
-        root.Item.FindByPathFromRoot(fullPath);
+    public static Box<TSelf>? FindByPathFromRoot<TSelf>(this Box<TSelf> root, RelativePath fullPath)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHavePathSegment
+    {
+        var start = 0; // Start index of the current segment.
+        return FindNodeRecursive(root, fullPath.Path.AsSpan(), ref start);
+    }
 
     /// <summary>
     ///     Finds a node in the tree based on a given relative path.
@@ -107,12 +111,11 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildren
     ///     This is very slow, at O(N). If you need to use this with large trees, consider using the
     ///     dictionary variant based on <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" /> instead.
     /// </remarks>
-    public static TSelf? FindByPathFromRoot<TSelf>(this TSelf root, RelativePath fullPath)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static Box<TSelf>? FindByPathFromRoot<TSelf>(this TSelf root, RelativePath fullPath)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHavePathSegment
-    {
-        var start = 0; // Start index of the current segment.
-        return FindNodeRecursive(root, fullPath.Path.AsSpan(), ref start);
-    }
+        => FindByPathFromRoot((Box<TSelf>) root, fullPath);
 
     /// <summary>
     ///     Finds a node in the tree based on a given relative path.
@@ -148,15 +151,15 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildren
         var start = 0; // Start index of the current segment.
         foreach (var child in root.Children)
         {
-            var found = FindNodeRecursive(child.Item, fullPath.Path.AsSpan(), ref start);
-            if (found.HasValue)
+            var found = FindNodeRecursive(child, fullPath.Path.AsSpan(), ref start);
+            if (found != null)
                 return found;
         }
 
         return null;
     }
 
-    private static TSelf? FindNodeRecursive<TSelf>(TSelf node, ReadOnlySpan<char> fullPath, ref int start)
+    private static Box<TSelf>? FindNodeRecursive<TSelf>(Box<TSelf> node, ReadOnlySpan<char> fullPath, ref int start)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHavePathSegment
     {
         // Find the end of the current segment.
@@ -164,7 +167,7 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildren
         var currentSegment = end == -1 ? fullPath.SliceFast(start) : fullPath.SliceFast(start, end);
 
         // Compare the current segment with the node's segment.
-        if (!currentSegment.Equals(node.Segment.Path.AsSpan(), StringComparison.OrdinalIgnoreCase))
+        if (!currentSegment.Equals(node.Item.Segment.Path.AsSpan(), StringComparison.OrdinalIgnoreCase))
             return null;
 
         // Update start to the next segment.
@@ -177,10 +180,10 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildren
             return node;
 
         // Otherwise, search the children.
-        foreach (var child in node.Children)
+        foreach (var child in node.Item.Children)
         {
-            var found = FindNodeRecursive(child.Item, fullPath, ref start);
-            if (found.HasValue)
+            var found = FindNodeRecursive(child, fullPath, ref start);
+            if (found != null)
                 return found;
         }
 
@@ -207,9 +210,12 @@ public static class IHavePathSegmentExtensionsForIHaveObservableChildren
     ///     This is very slow, at O(N). If you need to use this with large trees, consider using the
     ///     dictionary variant based on <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" /> instead.
     /// </remarks>
-    public static TSelf? FindByPathFromRoot<TSelf>(this Box<TSelf> root, RelativePath fullPath)
-        where TSelf : struct, IHaveObservableChildren<TSelf>, IHavePathSegment =>
-        root.Item.FindByPathFromRoot(fullPath);
+    public static Box<TSelf>? FindByPathFromRoot<TSelf>(this Box<TSelf> root, RelativePath fullPath)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHavePathSegment
+    {
+        var start = 0; // Start index of the current segment.
+        return FindNodeRecursive(root, fullPath.Path.AsSpan(), ref start);
+    }
 
     /// <summary>
     ///     Finds a node in the tree based on a given relative path.
@@ -223,12 +229,11 @@ public static class IHavePathSegmentExtensionsForIHaveObservableChildren
     ///     This is very slow, at O(N). If you need to use this with large trees, consider using the
     ///     dictionary variant based on <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" /> instead.
     /// </remarks>
-    public static TSelf? FindByPathFromRoot<TSelf>(this TSelf root, RelativePath fullPath)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static Box<TSelf>? FindByPathFromRoot<TSelf>(this TSelf root, RelativePath fullPath)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHavePathSegment
-    {
-        var start = 0; // Start index of the current segment.
-        return FindNodeRecursive(root, fullPath.Path.AsSpan(), ref start);
-    }
+        => FindByPathFromRoot((Box<TSelf>) root, fullPath);
 
     /// <summary>
     ///     Finds a node in the tree based on a given relative path.
@@ -242,7 +247,7 @@ public static class IHavePathSegmentExtensionsForIHaveObservableChildren
     ///     This is very slow, at O(N). If you need to use this with large trees, consider using the
     ///     dictionary variant based on <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" /> instead.
     /// </remarks>
-    public static TSelf? FindByPathFromChild<TSelf>(this Box<TSelf> root, RelativePath fullPath)
+    public static Box<TSelf>? FindByPathFromChild<TSelf>(this Box<TSelf> root, RelativePath fullPath)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHavePathSegment =>
         root.Item.FindByPathFromChild(fullPath);
 
@@ -258,21 +263,21 @@ public static class IHavePathSegmentExtensionsForIHaveObservableChildren
     ///     This is very slow, at O(N). If you need to use this with large trees, consider using the
     ///     dictionary variant based on <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" /> instead.
     /// </remarks>
-    public static TSelf? FindByPathFromChild<TSelf>(this TSelf root, RelativePath fullPath)
+    public static Box<TSelf>? FindByPathFromChild<TSelf>(this TSelf root, RelativePath fullPath)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHavePathSegment
     {
         var start = 0; // Start index of the current segment.
         foreach (var child in root.Children)
         {
-            var found = FindNodeRecursive(child.Item, fullPath.Path.AsSpan(), ref start);
-            if (found.HasValue)
+            var found = FindNodeRecursive(child, fullPath.Path.AsSpan(), ref start);
+            if (found != null)
                 return found;
         }
 
         return null;
     }
 
-    private static TSelf? FindNodeRecursive<TSelf>(TSelf node, ReadOnlySpan<char> fullPath, ref int start)
+    private static Box<TSelf>? FindNodeRecursive<TSelf>(Box<TSelf> node, ReadOnlySpan<char> fullPath, ref int start)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHavePathSegment
     {
         // Find the end of the current segment.
@@ -280,7 +285,7 @@ public static class IHavePathSegmentExtensionsForIHaveObservableChildren
         var currentSegment = end == -1 ? fullPath.SliceFast(start) : fullPath.SliceFast(start, end);
 
         // Compare the current segment with the node's segment.
-        if (!currentSegment.Equals(node.Segment.Path.AsSpan(), StringComparison.OrdinalIgnoreCase))
+        if (!currentSegment.Equals(node.Item.Segment.Path.AsSpan(), StringComparison.OrdinalIgnoreCase))
             return null;
 
         // Update start to the next segment.
@@ -293,10 +298,10 @@ public static class IHavePathSegmentExtensionsForIHaveObservableChildren
             return node;
 
         // Otherwise, search the children.
-        foreach (var child in node.Children)
+        foreach (var child in node.Item.Children)
         {
-            var found = FindNodeRecursive(child.Item, fullPath, ref start);
-            if (found.HasValue)
+            var found = FindNodeRecursive(child, fullPath, ref start);
+            if (found != null)
                 return found;
         }
 
@@ -319,9 +324,15 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildrenWithKey
     /// <param name="fullPath">The full relative path from this node to find.</param>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given full path, or null if not found.</returns>
-    public static TSelf? FindByPathFromRoot<TSelf>(this ChildWithKeyBox<RelativePath, TSelf> root, RelativePath fullPath)
+    public static KeyedBox<RelativePath, TSelf>? FindByPathFromRoot<TSelf>(this KeyedBox<RelativePath, TSelf> root, RelativePath fullPath)
         where TSelf : struct, IHaveBoxedChildrenWithKey<RelativePath, TSelf>, IHavePathSegment
-        => FindByPathFromRoot(root.Item, fullPath);
+    {
+        var pathParts = fullPath.Path.Split('/');
+        if (!root.Item.Segment.Equals(pathParts.DangerousGetReferenceAt(0)))
+            return null;
+
+        return pathParts.Length == 1 ? root : FindNodeInternal(root, pathParts, 1);
+    }
 
     /// <summary>
     ///     Finds a node in the tree based on a given relative path.
@@ -331,15 +342,11 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildrenWithKey
     /// <param name="fullPath">The full relative path from this node to find.</param>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given full path, or null if not found.</returns>
-    public static TSelf? FindByPathFromRoot<TSelf>(this TSelf root, RelativePath fullPath)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static KeyedBox<RelativePath, TSelf>? FindByPathFromRoot<TSelf>(this TSelf root, RelativePath fullPath)
         where TSelf : struct, IHaveBoxedChildrenWithKey<RelativePath, TSelf>, IHavePathSegment
-    {
-        var pathParts = fullPath.Path.Split('/');
-        if (!root.Segment.Equals(pathParts.DangerousGetReferenceAt(0)))
-            return null;
-
-        return pathParts.Length == 1 ? root : FindNodeInternal(root, pathParts, 1);
-    }
+        => FindByPathFromRoot((KeyedBox<RelativePath, TSelf>) root, fullPath);
 
     /// <summary>
     ///     Finds a node in the tree based on a given relative path.
@@ -349,9 +356,12 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildrenWithKey
     /// <param name="fullPath">The full relative path from this node to find.</param>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given full path, or null if not found.</returns>
-    public static TSelf? FindByPathFromChild<TSelf>(this ChildWithKeyBox<RelativePath, TSelf> root, RelativePath fullPath)
+    public static KeyedBox<RelativePath, TSelf>? FindByPathFromChild<TSelf>(this KeyedBox<RelativePath, TSelf> root, RelativePath fullPath)
         where TSelf : struct, IHaveBoxedChildrenWithKey<RelativePath, TSelf>, IHavePathSegment
-        => FindByPathFromChild(root.Item, fullPath);
+    {
+        var pathParts = fullPath.Path.Split('/');
+        return FindNodeInternal(root, pathParts, 0);
+    }
 
     /// <summary>
     ///     Finds a node in the tree based on a given relative path.
@@ -361,22 +371,13 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildrenWithKey
     /// <param name="fullPath">The full relative path from this node to find.</param>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given full path, or null if not found.</returns>
-    public static TSelf? FindByPathFromChild<TSelf>(this TSelf root, RelativePath fullPath)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static KeyedBox<RelativePath, TSelf>? FindByPathFromChild<TSelf>(this TSelf root, RelativePath fullPath)
         where TSelf : struct, IHaveBoxedChildrenWithKey<RelativePath, TSelf>, IHavePathSegment
-    {
-        var pathParts = fullPath.Path.Split('/');
-        return FindNodeInternal(root, pathParts, 0);
-    }
+        => FindByPathFromChild((KeyedBox<RelativePath, TSelf>)root, fullPath);
 
-    /// <summary>
-    ///     Helper method to find a node by path segments.
-    /// </summary>
-    /// <param name="node">The current node being examined.</param>
-    /// <param name="pathParts">Array of path parts representing the full path to search.</param>
-    /// <param name="index">The current index in the pathParts array.</param>
-    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
-    /// <returns>The node that matches the given segment of the path, or null if not found.</returns>
-    private static TSelf? FindNodeInternal<TSelf>(TSelf node, string[] pathParts, int index) where TSelf : struct, IHaveBoxedChildrenWithKey<RelativePath, TSelf>, IHavePathSegment
+    private static KeyedBox<RelativePath, TSelf>? FindNodeInternal<TSelf>(KeyedBox<RelativePath, TSelf> node, string[] pathParts, int index) where TSelf : struct, IHaveBoxedChildrenWithKey<RelativePath, TSelf>, IHavePathSegment
     {
         while (true)
         {
@@ -386,11 +387,11 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildrenWithKey
             var currentSegment = new RelativePath(pathParts.DangerousGetReferenceAt(index));
 
             // Check if the current node has a child with the extracted key.
-            if (!node.Children.TryGetValue(currentSegment, out var childBox))
+            if (!node.Item.Children.TryGetValue(currentSegment, out var childBox))
                 return null;
 
             // Recursively search the child node.
-            node = childBox.Item;
+            node = childBox;
             index += 1;
         }
     }

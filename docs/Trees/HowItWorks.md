@@ -126,13 +126,13 @@ public interface IHaveChildrenWithKey<TKey, TSelf>
     /// <remarks>
     ///     This should point to an empty dictionary if there are no items.
     /// </remarks>
-    public Dictionary<TKey, ChildWithKeyBox<TKey, TSelf>> Children { get; }
+    public Dictionary<TKey, KeyedBox<TKey, TSelf>> Children { get; }
 }
 
 /// <summary>
 ///     A boxed element that implements <see cref="IHaveChildrenWithKey{TKey,TSelf}" />
 /// </summary>
-public class ChildWithKeyBox<TKey, TSelf>
+public class KeyedBox<TKey, TSelf>
     where TSelf : struct, IHaveChildrenWithKey<TKey, TSelf>
     where TKey : notnull
 {
@@ -143,16 +143,16 @@ public class ChildWithKeyBox<TKey, TSelf>
 
     // Implicit Conversions for convenience
     /// <summary />
-    public static implicit operator TSelf(ChildWithKeyBox<TKey, TSelf> box) => box.Item;
+    public static implicit operator TSelf(KeyedBox<TKey, TSelf> box) => box.Item;
 
     /// <summary />
-    public static implicit operator ChildWithKeyBox<TKey, TSelf>(TSelf item) => new() { Item = item };
+    public static implicit operator KeyedBox<TKey, TSelf>(TSelf item) => new() { Item = item };
 }
 ```
 
 The trick here is to wrap the struct around in a `class`, then use a generic constraint to ensure that the `TSelf` struct implements the interface.
 
-This way, when you access the dictionary, you get the boxed struct `ChildWithKeyBox<TKey, TSelf>`. When you use
+This way, when you access the dictionary, you get the boxed struct `KeyedBox<TKey, TSelf>`. When you use
 the internal field `TSelf`, you are now operating on a struct, thus avoiding code sharing, and therefore virtual method calls. 
 
 ## Implementing New Functionality
@@ -170,7 +170,7 @@ In other words, in case of the interface above, you should implement an extensio
 /// <typeparam name="TSelf">The type of child node.</typeparam>
 /// <returns>The count of direct child nodes.</returns>
 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-public static int CountChildren<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item)
+public static int CountChildren<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
     where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
     where TKey : notnull
     => item.Item.CountChildren<TSelf, TKey>(); // <= Redirect for boxed elements.

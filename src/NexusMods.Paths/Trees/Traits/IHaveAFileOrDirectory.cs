@@ -33,7 +33,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>The total file count under this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CountFiles<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item)
+    public static int CountFiles<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
         where TKey : notnull =>
         item.Item.CountFiles<TSelf, TKey>();
@@ -75,7 +75,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>The total directory count under this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CountDirectories<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item)
+    public static int CountDirectories<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
         where TKey : notnull  => item.Item.CountDirectories<TSelf, TKey>();
 

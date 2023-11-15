@@ -10,10 +10,10 @@ public class IHaveAFileOrDirectoryTests
     public void CountFiles_ShouldReturnTotalFilesCount()
     {
         // Arrange
-        var leaf1 = new TestTree(Array.Empty<Box<TestTree>>(), true);
-        var leaf2 = new TestTree(Array.Empty<Box<TestTree>>(), true);
-        var directory = new TestTree(new Box<TestTree>[] { leaf1, leaf2 }, false);
-        Box<TestTree> root = new TestTree(new Box<TestTree>[] { directory }, false);
+        var leaf1 = TestTree.Create(true);
+        var leaf2 = TestTree.Create(true);
+        var directory = TestTree.Create(false, new[] { leaf1, leaf2 });
+        var root = TestTree.Create(false, new[] { directory });
 
         // Act
         var fileCount = root.CountFiles();
@@ -26,9 +26,9 @@ public class IHaveAFileOrDirectoryTests
     public void CountDirectories_ShouldReturnTotalDirectoriesCount()
     {
         // Arrange
-        var leaf1 = new TestTree(Array.Empty<Box<TestTree>>(), true);
-        var directory = new TestTree(new Box<TestTree>[] { leaf1 }, false);
-        Box<TestTree> root = new TestTree(new Box<TestTree>[] { directory }, false);
+        var leaf1 = TestTree.Create(true);
+        var directory = TestTree.Create(false, leaf1);
+        var root = TestTree.Create(false, directory);
 
         // Act
         var directoryCount = root.CountDirectories();
@@ -39,14 +39,35 @@ public class IHaveAFileOrDirectoryTests
 
     private struct TestTree : IHaveBoxedChildren<TestTree>, IHaveAFileOrDirectory
     {
-        public Box<TestTree>[] Children { get; }
-        public bool IsFile { get; }
+        public Box<TestTree>[] Children { get; private init; }
+        public bool IsFile { get; private init; }
         public bool IsDirectory => !IsFile;
 
-        public TestTree(Box<TestTree>[] children, bool isFile)
+        public static Box<TestTree> Create(bool isFile, Box<TestTree>[]? children)
         {
-            Children = children;
-            IsFile = isFile;
+            return (Box<TestTree>)new TestTree()
+            {
+                Children = children ?? Array.Empty<Box<TestTree>>(),
+                IsFile = isFile
+            };
+        }
+
+        public static Box<TestTree> Create(bool isFile, Box<TestTree> child)
+        {
+            return (Box<TestTree>)new TestTree()
+            {
+                Children = new[] { new Box<TestTree> { Item = child } },
+                IsFile = isFile
+            };
+        }
+
+        public static Box<TestTree> Create(bool isFile)
+        {
+            return (Box<TestTree>)new TestTree()
+            {
+                Children = Array.Empty<Box<TestTree>>(),
+                IsFile = isFile
+            };
         }
     }
 }

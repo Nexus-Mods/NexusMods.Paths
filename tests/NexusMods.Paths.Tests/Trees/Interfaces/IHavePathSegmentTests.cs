@@ -63,8 +63,8 @@ public class IHavePathSegmentTests
     private struct TestTree : IHaveBoxedChildren<TestTree>, IHaveParent<TestTree>, IHavePathSegment
     {
         public Box<TestTree>[] Children { get; }
-        public Box<TestTree>? Parent { get; set; }
-        public RelativePath Segment { get; set; }
+        public Box<TestTree>? Parent { get; init; }
+        public RelativePath Segment { get; init; }
 
         public TestTree(Box<TestTree>[] children)
         {

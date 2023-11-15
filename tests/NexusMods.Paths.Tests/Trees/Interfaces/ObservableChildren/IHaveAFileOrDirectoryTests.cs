@@ -11,10 +11,10 @@ public class IHaveAFileOrDirectoryTests
     public void CountFiles_ShouldReturnTotalFilesCount()
     {
         // Arrange
-        var leaf1 = new TestTree(new(), true);
-        var leaf2 = new TestTree(new(), true);
-        var directory = new TestTree(new ObservableCollection<Box<TestTree>> { leaf1, leaf2 }, false);
-        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { directory }, false);
+        var leaf1 = TestTree.Create(true);
+        var leaf2 = TestTree.Create(true);
+        var directory = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { leaf1, leaf2 });
+        var root = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { directory });
 
         // Act
         var fileCount = root.CountFiles();
@@ -27,9 +27,9 @@ public class IHaveAFileOrDirectoryTests
     public void CountDirectories_ShouldReturnTotalDirectoriesCount()
     {
         // Arrange
-        var leaf1 = new TestTree(new(), true);
-        var directory = new TestTree(new ObservableCollection<Box<TestTree>> { leaf1 }, false);
-        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { directory }, false);
+        var leaf1 = TestTree.Create(true);
+        var directory = TestTree.Create(false, leaf1);
+        var root = TestTree.Create(false, directory);
 
         // Act
         var directoryCount = root.CountDirectories();
@@ -40,14 +40,35 @@ public class IHaveAFileOrDirectoryTests
 
     private struct TestTree : IHaveObservableChildren<TestTree>, IHaveAFileOrDirectory
     {
-        public ObservableCollection<Box<TestTree>> Children { get; }
-        public bool IsFile { get; }
+        public ObservableCollection<Box<TestTree>> Children { get; private init; }
+        public bool IsFile { get; private init; }
         public bool IsDirectory => !IsFile;
 
-        public TestTree(ObservableCollection<Box<TestTree>> children, bool isFile)
+        public static Box<TestTree> Create(bool isFile, ObservableCollection<Box<TestTree>>? children)
         {
-            Children = children;
-            IsFile = isFile;
+            return (Box<TestTree>)new TestTree()
+            {
+                Children = children ?? new ObservableCollection<Box<TestTree>>(),
+                IsFile = isFile
+            };
+        }
+
+        public static Box<TestTree> Create(bool isFile, Box<TestTree> child)
+        {
+            return (Box<TestTree>)new TestTree()
+            {
+                Children = new ObservableCollection<Box<TestTree>> { new() { Item = child } },
+                IsFile = isFile
+            };
+        }
+
+        public static Box<TestTree> Create(bool isFile)
+        {
+            return (Box<TestTree>)new TestTree()
+            {
+                Children = new ObservableCollection<Box<TestTree>>(),
+                IsFile = isFile
+            };
         }
     }
 }

@@ -10,11 +10,11 @@ public class IHaveKeyValueMixinTests
     public void GetKeyValues_ShouldReturnAllKeyValuesRecursively()
     {
         // Arrange
-        var grandChild1 = new TestTree(null, "Key3", 3);
-        var grandChild2 = new TestTree(null, "Key4", 4);
-        var child1 = new TestTree(grandChild1, "Key1", 1);
-        var child2 = new TestTree(grandChild2, "Key2", 2);
-        Box<TestTree> root = new TestTree(new Box<TestTree>[] { child1, child2 }, "RootKey", 0);
+        var grandChild1 = TestTree.Create(null, "Key3", 3);
+        var grandChild2 = TestTree.Create(null, "Key4", 4);
+        var child1 = TestTree.Create("Key1", 1, grandChild1);
+        var child2 = TestTree.Create("Key2", 2, grandChild2);
+        var root = TestTree.Create(new[] { child1, child2 }, "RootKey");
 
         // Act
         var keyValuePairs = root.GetKeyValues<TestTree, string, int>();
@@ -32,11 +32,11 @@ public class IHaveKeyValueMixinTests
     public void ToDictionary_ShouldReturnAllKeyValuesRecursively()
     {
         // Arrange
-        var grandChild1 = new TestTree(null, "Key3", 3);
-        var grandChild2 = new TestTree(null, "Key4", 4);
-        var child1 = new TestTree(grandChild1, "Key1", 1);
-        var child2 = new TestTree(grandChild2, "Key2", 2);
-        Box<TestTree> root = new TestTree(new Box<TestTree>[] { child1, child2 }, "RootKey", 0);
+        var grandChild1 = TestTree.Create(null, "Key3", 3);
+        var grandChild2 = TestTree.Create(null, "Key4", 4);
+        var child1 = TestTree.Create("Key1", 1, grandChild1);
+        var child2 = TestTree.Create("Key2", 2, grandChild2);
+        var root = TestTree.Create(new[] { child1, child2 }, "RootKey");
 
         // Act
         var dictionary = root.ToDictionary<TestTree, string, int>();
@@ -51,22 +51,26 @@ public class IHaveKeyValueMixinTests
 
     private struct TestTree : IHaveBoxedChildren<TestTree>, IHaveKey<string>, IHaveValue<int>
     {
-        public Box<TestTree>[] Children { get; }
-        public string Key { get; }
-        public int Value { get; set; }
+        public Box<TestTree>[] Children { get; private set; }
+        public string Key { get; private set; }
+        public int Value { get; private set; }
 
-        public TestTree(Box<TestTree>[]? children, string key, int value = default)
+        public static Box<TestTree> Create(Box<TestTree>[]? children, string key, int value = default)
         {
-            Children = children ?? Array.Empty<Box<TestTree>>();
-            Key = key;
-            Value = value;
+            var tree = (Box<TestTree>) new TestTree();
+            tree.Item.Key = key;
+            tree.Item.Value = value;
+            tree.Item.Children = children ?? Array.Empty<Box<TestTree>>();
+            return tree;
         }
 
-        public TestTree(TestTree child, string key, int value = default)
+        public static Box<TestTree> Create(string key, int value = default, Box<TestTree>? child = null)
         {
-            Children = new[] { new Box<TestTree> { Item = child } };
-            Key = key;
-            Value = value;
+            var tree = (Box<TestTree>) new TestTree();
+            tree.Item.Key = key;
+            tree.Item.Value = value;
+            tree.Item.Children = child != null ? new[] { child } : Array.Empty<Box<TestTree>>();
+            return tree;
         }
     }
 }

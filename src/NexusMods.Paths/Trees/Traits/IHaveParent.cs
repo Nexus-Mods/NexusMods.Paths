@@ -15,6 +15,9 @@ public interface IHaveParent<TSelf> where TSelf : struct, IHaveParent<TSelf>
     /// <summary>
     ///     Returns the parent node if it exists. If not, the node is considered the root node.
     /// </summary>
+    /// <remarks>
+    ///     This can be cast parent boxes like <see cref="KeyedBox{TKey,TSelf}"/> if using the appropriate type.
+    /// </remarks>
     public Box<TSelf>? Parent { get; }
 
     /// <summary>
@@ -382,7 +385,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildrenWithKey
     /// <param name="item">The 'this' item.</param>
     /// <returns>The total amount of siblings.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetSiblingCount<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item)
+    public static int GetSiblingCount<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveParent<TSelf> where TKey : notnull
         => item.Item.GetSiblingCount<TSelf, TKey>();
 
@@ -408,11 +411,11 @@ public static class IHaveParentExtensionsForIHaveBoxedChildrenWithKey
     /// <param name="item">The item whose siblings to obtain.</param>
     /// <returns>All of the siblings of this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ChildWithKeyBox<TKey, TSelf>[] GetSiblings<TSelf, TKey>(this TSelf item)
+    public static KeyedBox<TKey, TSelf>[] GetSiblings<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveParent<TSelf>, IEquatable<TSelf> where TKey : notnull
     {
         var count = item.GetSiblingCount<TSelf, TKey>();
-        var result = GC.AllocateUninitializedArray<ChildWithKeyBox<TKey, TSelf>>(count);
+        var result = GC.AllocateUninitializedArray<KeyedBox<TKey, TSelf>>(count);
         GetSiblingsUnsafe<TSelf, TKey>(item, result);
         return result;
     }
@@ -427,7 +430,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildrenWithKey
     /// </param>
     /// <returns>The amount of siblings inserted into the buffer.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetSiblingsUnsafe<TSelf, TKey>(this TSelf item, Span<ChildWithKeyBox<TKey, TSelf>> resultsBuf)
+    public static int GetSiblingsUnsafe<TSelf, TKey>(this TSelf item, Span<KeyedBox<TKey, TSelf>> resultsBuf)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveParent<TSelf>, IEquatable<TSelf> where TKey : notnull
     {
         var parent = item.Parent;
@@ -454,11 +457,11 @@ public static class IHaveParentExtensionsForIHaveBoxedChildrenWithKey
     /// <param name="item">The item whose siblings to obtain.</param>
     /// <returns>All of the siblings of this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ChildWithKeyBox<TKey, TSelf>[] GetSiblings<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item)
+    public static KeyedBox<TKey, TSelf>[] GetSiblings<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveParent<TSelf>, IEquatable<TSelf> where TKey : notnull
     {
         var count = item.GetSiblingCount();
-        var result = GC.AllocateUninitializedArray<ChildWithKeyBox<TKey, TSelf>>(count);
+        var result = GC.AllocateUninitializedArray<KeyedBox<TKey, TSelf>>(count);
         GetSiblingsUnsafe(item, result);
         return result;
     }
@@ -473,7 +476,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildrenWithKey
     /// </param>
     /// <returns>The amount of siblings inserted into the buffer.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetSiblingsUnsafe<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item, Span<ChildWithKeyBox<TKey, TSelf>> resultsBuf)
+    public static int GetSiblingsUnsafe<TSelf, TKey>(this KeyedBox<TKey, TSelf> item, Span<KeyedBox<TKey, TSelf>> resultsBuf)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveParent<TSelf>, IEquatable<TSelf> where TKey : notnull
     {
         var parent = item.Item.Parent;
@@ -503,7 +506,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildrenWithKey
     /// <param name="item">The item whose siblings to obtain.</param>
     /// <returns>All of the siblings of this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IEnumerable<ChildWithKeyBox<TKey, TSelf>> EnumerateSiblings<TSelf, TKey>(this TSelf item)
+    public static IEnumerable<KeyedBox<TKey, TSelf>> EnumerateSiblings<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveParent<TSelf>, IEquatable<TSelf> where TKey : notnull
     {
         var parent = item.Parent;
@@ -525,7 +528,7 @@ public static class IHaveParentExtensionsForIHaveBoxedChildrenWithKey
     /// <param name="item">The item whose siblings to obtain.</param>
     /// <returns>All of the siblings of this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IEnumerable<ChildWithKeyBox<TKey, TSelf>> EnumerateSiblings<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item)
+    public static IEnumerable<KeyedBox<TKey, TSelf>> EnumerateSiblings<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveParent<TSelf>, IEquatable<TSelf> where TKey : notnull
     {
         var parent = item.Item.Parent;
@@ -586,7 +589,7 @@ public static class IHaveParentExtensions
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <returns>The node that matches the sequence of keys from end to start, or null if no match is found.</returns>
     [ExcludeFromCodeCoverage]
-    public static TSelf? FindByKeysUpward<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> node, Span<TKey> keys)
+    public static TSelf? FindByKeysUpward<TSelf, TKey>(this KeyedBox<TKey, TSelf> node, Span<TKey> keys)
         where TSelf : struct, IHaveParent<TSelf>, IHaveKey<TKey>
         where TKey : notnull
         => node.Item.FindByKeysUpward(keys);

@@ -266,7 +266,7 @@ public static class IHaveValueExtensionsForIHaveBoxedChildrenWithValue
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An IEnumerable of all child values of the current node.</returns>
-    public static IEnumerable<TValue> EnumerateValuesBfs<TKey, TSelf, TValue>(this ChildWithKeyBox<TKey, TSelf> item)
+    public static IEnumerable<TValue> EnumerateValuesBfs<TKey, TSelf, TValue>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TValue, TSelf>, IHaveValue<TValue>
         where TValue : notnull
         where TKey : notnull => item.Item.EnumerateValuesBfs<TSelf, TValue>();
@@ -302,7 +302,7 @@ public static class IHaveValueExtensionsForIHaveBoxedChildrenWithValue
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <returns>An IEnumerable of all child values of the current node.</returns>
-    public static IEnumerable<TValue> EnumerateValuesDfs<TKey, TSelf, TValue>(this ChildWithKeyBox<TKey, TSelf> item)
+    public static IEnumerable<TValue> EnumerateValuesDfs<TKey, TSelf, TValue>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TValue, TSelf>, IHaveValue<TValue>
         where TValue : notnull
         where TKey : notnull => item.Item.EnumerateValuesDfs<TSelf, TValue>();
@@ -335,7 +335,7 @@ public static class IHaveValueExtensionsForIHaveBoxedChildrenWithValue
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An array of all the values of the children of this node.</returns>
-    public static TValue[] GetValues<TKey, TSelf, TValue>(this ChildWithKeyBox<TKey, TSelf> item)
+    public static TValue[] GetValues<TKey, TSelf, TValue>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveValue<TValue>
         where TKey : notnull
         => item.Item.GetValues<TKey, TSelf, TValue>();

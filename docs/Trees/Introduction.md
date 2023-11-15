@@ -56,7 +56,7 @@ When using the type, you may choose to either box the root, or not box it.
 
     ```csharp
     // Box the Root (Code is cleaner if you put the box type on the left!!)
-    ChildBox<TestTree> root = new TestTree(new ChildBox<TestTree>[] { child1, child2 });
+    var root = (Box<TestTree>) new TestTree(new Box<TestTree>[] { child1, child2 });
     root.CountChildren();
 
     // Note: Refer to interface, e.g. IHaveBoxedChildren to determine box type.
@@ -66,7 +66,7 @@ When using the type, you may choose to either box the root, or not box it.
 
     ```csharp
     // Don't box the Root.
-    var root = new TestTree(new ChildBox<TestTree>[] { child1, child2 });
+    var root = new TestTree(new Box<TestTree>[] { child1, child2 });
     root.CountChildren<TestTree, RelativePath>();
     ```
 
@@ -88,6 +88,8 @@ public struct TreeNode : IHaveBoxedChildrenWithKey<RelativePath, TreeNode>
 ```
 
 !!! tip "Not Boxing the Root is generally better for Performance"
+
+!!! note "Some methods should only be used from boxed objects, i.e. `Box<TreeNode>`. Wrappers for underlying struct are available but should be avoided."
 
 ### Adding Functionality 
 

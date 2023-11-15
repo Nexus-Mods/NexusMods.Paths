@@ -10,10 +10,10 @@ public class IHaveBoxedChildrenTests
     public void EnumerateChildren_ShouldReturnAllChildrenRecursively()
     {
         // Arrange
-        Box<TestTree> leaf1 = new TestTree(null);
-        Box<TestTree> leaf2 = new TestTree(null);
-        Box<TestTree> node = new TestTree(new Box<TestTree>[] { leaf1, leaf2 });
-        Box<TestTree> root = new TestTree(node);
+        var leaf1 = TestTree.Create();
+        var leaf2 = TestTree.Create();
+        var node = TestTree.Create(new[] { leaf1, leaf2 });
+        var root = TestTree.Create(node);
 
         // Act
         var allChildrenBfs = root.EnumerateChildrenBfs().ToArray();
@@ -28,9 +28,9 @@ public class IHaveBoxedChildrenTests
     public void EnumerateChildrenDfs_ShouldReturnAllChildrenInDepthFirstOrder()
     {
         // Arrange
-        Box<TestTree> grandChild = new TestTree(null);
-        Box<TestTree> child = new TestTree(grandChild);
-        Box<TestTree> root = new TestTree(child);
+        var grandChild = TestTree.Create();
+        var child = TestTree.Create(grandChild);
+        var root = TestTree.Create(child);
 
         // Act
         var allChildren = root.Item.EnumerateChildrenDfs().ToArray();
@@ -45,9 +45,9 @@ public class IHaveBoxedChildrenTests
     public void EnumerateChildrenBfs_ShouldReturnAllChildrenInBreadthFirstOrder()
     {
         // Arrange
-        Box<TestTree> grandChild = new TestTree(null);
-        Box<TestTree> child = new TestTree(new[] { grandChild });
-        Box<TestTree> root = new TestTree(new[] { child });
+        var grandChild = TestTree.Create();
+        var child = TestTree.Create(new[] { grandChild });
+        var root = TestTree.Create(new[] { child });
 
         // Act
         var allChildren = root.Item.EnumerateChildrenBfs().ToArray();
@@ -62,9 +62,9 @@ public class IHaveBoxedChildrenTests
     public void CountChildren_ShouldReturnCorrectNumberOfDirectChildren()
     {
         // Arrange
-        var child1 = new TestTree(null);
-        var child2 = new TestTree(null);
-        Box<TestTree> root = new TestTree(new Box<TestTree>[] { child1, child2 });
+        var child1 = TestTree.Create();
+        var child2 = TestTree.Create();
+        var root = TestTree.Create(new[] { child1, child2 });
 
         // Act
         var count = root.CountChildren();
@@ -77,7 +77,7 @@ public class IHaveBoxedChildrenTests
     public void CountChildren_ShouldReturnZeroForLeafNode()
     {
         // Arrange
-        Box<TestTree> leaf = new TestTree(null);
+        var leaf = TestTree.Create();
 
         // Act
         var count = leaf.CountChildren();
@@ -91,9 +91,9 @@ public class IHaveBoxedChildrenTests
     public void CountChildrenRecursive_ShouldReturnTotalNumberOfAllChildren()
     {
         // Arrange
-        var grandChild = new TestTree(null);
-        var child = new TestTree(new Box<TestTree>[] { grandChild });
-        Box<TestTree> root = new TestTree(child);
+        var grandChild = TestTree.Create();
+        var child = TestTree.Create(grandChild);
+        var root = TestTree.Create(child);
 
         // Act
         var count = root.CountChildren();
@@ -106,29 +106,29 @@ public class IHaveBoxedChildrenTests
     public void GetChildrenRecursive_ShouldReturnAllChildrenIncludingDescendants()
     {
         // Arrange
-        var grandChild1 = new TestTree(null);
-        var grandChild2 = new TestTree(null);
-        var child1 = new TestTree(new Box<TestTree>[] { grandChild1 });
-        var child2 = new TestTree(new Box<TestTree>[] { grandChild2 });
-        var children = new Box<TestTree>[] { child1, child2 };
-        Box<TestTree> root = new TestTree(children);
+        var grandChild1 = TestTree.Create();
+        var grandChild2 = TestTree.Create();
+        var child1 = TestTree.Create(grandChild1);
+        var child2 = TestTree.Create(grandChild2);
+        var children = new[] { child1, child2 };
+        var root = TestTree.Create(children);
 
         // Act
         var allChildren = root.GetChildrenRecursive().ToArray();
 
         // Assert
         allChildren.Length.Should().Be(4); // Including child1, child2, grandChild1, grandChild2
-        allChildren.Should().Contain(new Box<TestTree>[] { child1, child2, grandChild1, grandChild2 });
+        allChildren.Should().Contain(new[] { child1, child2, grandChild1, grandChild2 });
     }
 
     [Fact]
     public void CountLeaves_ShouldReturnCorrectNumberOfLeafNodes()
     {
         // Arrange
-        var leaf1 = new TestTree(null);
-        var leaf2 = new TestTree(null);
-        var node = new TestTree(new Box<TestTree>[] { leaf1, leaf2 });
-        Box<TestTree> root = new TestTree(new Box<TestTree>[] { node });
+        var leaf1 = TestTree.Create();
+        var leaf2 = TestTree.Create();
+        var node = TestTree.Create(new[] { leaf1, leaf2 });
+        var root = TestTree.Create(new[] { node });
 
         // Act
         var leafCount = root.CountLeaves();
@@ -141,10 +141,10 @@ public class IHaveBoxedChildrenTests
     public void GetLeaves_ShouldReturnAllLeafNodes()
     {
         // Arrange
-        Box<TestTree> leaf1 = new TestTree(null);
-        Box<TestTree> leaf2 = new TestTree(null);
-        Box<TestTree> node = new TestTree(new[] { leaf1, leaf2 });
-        Box<TestTree> root = new TestTree(new[] { node });
+        var leaf1 = TestTree.Create();
+        var leaf2 = TestTree.Create();
+        var node = TestTree.Create(new[] { leaf1, leaf2 });
+        var root = TestTree.Create(new[] { node });
 
         // Act
         var leaves = root.GetLeaves();
@@ -155,9 +155,21 @@ public class IHaveBoxedChildrenTests
 
     private struct TestTree : IHaveBoxedChildren<TestTree>
     {
-        public Box<TestTree>[] Children { get; }
+        public Box<TestTree>[] Children { get; private init; }
 
-        public TestTree(Box<TestTree>[]? children) => Children = children ?? Array.Empty<Box<TestTree>>();
-        public TestTree(TestTree child) => Children = new Box<TestTree>[]{ child };
+        public static Box<TestTree> Create(Box<TestTree>[]? children) => (Box<TestTree>) new TestTree()
+        {
+            Children = children ?? Array.Empty<Box<TestTree>>()
+        };
+
+        public static Box<TestTree> Create(Box<TestTree>? child) => (Box<TestTree>) new TestTree()
+        {
+            Children = child != null ? new[] { child } : Array.Empty<Box<TestTree>>()
+        };
+
+        public static Box<TestTree> Create() => (Box<TestTree>) new TestTree()
+        {
+            Children = Array.Empty<Box<TestTree>>()
+        };
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using NexusMods.Paths.Extensions;
 using NexusMods.Paths.HighPerformance.CommunityToolkit;
@@ -144,10 +145,15 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given sequence of keys, or null if not found.</returns>
-    public static TSelf? FindByKeyFromRoot<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
+    public static Box<TSelf>? FindByKeyFromRoot<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
-        => FindByKeyFromRoot(root.Item, keys);
+    {
+        if (keys.IsEmpty || !EqualityComparer<TKey>.Default.Equals(root.Item.Key, keys.DangerousGetReferenceAt(0)))
+            return null;
+
+        return keys.Length == 1 ? root : FindNode(root, keys.SliceFast(1));
+    }
 
     /// <summary>
     ///     Finds a node in the tree based on a given sequence of keys, starting the search from the root node.
@@ -157,15 +163,12 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given sequence of keys, or null if not found.</returns>
-    public static TSelf? FindByKeyFromRoot<TSelf, TKey>(this TSelf root, Span<TKey> keys)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static Box<TSelf>? FindByKeyFromRoot<TSelf, TKey>(this TSelf root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
-    {
-        if (keys.IsEmpty || !EqualityComparer<TKey>.Default.Equals(root.Key, keys.DangerousGetReferenceAt(0)))
-            return null;
-
-        return keys.Length == 1 ? root : FindNodeRecursive(root, keys.SliceFast(1));
-    }
+        => FindByKeyFromRoot((Box<TSelf>)root, keys);
 
     /// <summary>
     ///     Finds a node in the tree based on a given sequence of keys, starting the search from the child nodes.
@@ -175,10 +178,10 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given sequence of keys, or null if not found.</returns>
-    public static TSelf? FindByKeyFromChild<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
+    public static Box<TSelf>? FindByKeyFromChild<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
-        => FindByKeyFromChild(root.Item, keys);
+        => keys.Length == 0 ? null : FindNode(root, keys);
 
     /// <summary>
     ///     Finds a node in the tree based on a given sequence of keys, starting the search from the child nodes.
@@ -188,32 +191,26 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given sequence of keys, or null if not found.</returns>
-    public static TSelf? FindByKeyFromChild<TSelf, TKey>(this TSelf root, Span<TKey> keys)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static Box<TSelf>? FindByKeyFromChild<TSelf, TKey>(this TSelf root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
-        => keys.Length == 0 ? null : FindNodeRecursive(root, keys);
+        => FindByKeyFromChild((Box<TSelf>)root, keys);
 
-    /// <summary>
-    ///     Helper method to find a node by a sequence of keys.
-    /// </summary>
-    /// <param name="node">The current node being examined.</param>
-    /// <param name="keys">Span of keys representing the path/key segments to search.</param>
-    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
-    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
-    /// <returns>The node that matches the given sequence of keys, or null if not found.</returns>
-    private static TSelf? FindNodeRecursive<TSelf, TKey>(TSelf node, Span<TKey> keys)
+    private static Box<TSelf>? FindNode<TSelf, TKey>(Box<TSelf> node, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
     {
         foreach (var key in keys)
         {
             var found = false;
-            foreach (var child in node.Children)
+            foreach (var child in node.Item.Children)
             {
                 if (!EqualityComparer<TKey>.Default.Equals(child.Item.Key, key))
                     continue;
 
-                node = child.Item;
+                node = child;
                 found = true;
                 break;
             }
@@ -238,7 +235,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     ///     This operation is very slow as it has theoretical complexity of O(N^3), though in practice it's closer to O(N^2).
     ///     If possible, prefer using <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(Box{TSelf},System.Span{TKey})"/>
     /// </remarks>
-    public static List<TSelf> FindSubPathsByKeyFromChild<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
+    public static List<Box<TSelf>> FindSubPathsByKeyFromChild<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
         => FindSubPathsByKeyFromChild(root.Item, keys);
@@ -256,11 +253,11 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     ///     This operation is very slow as it has theoretical complexity of O(N^3), though in practice it's closer to O(N^2).
     ///     If possible, prefer using <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(Box{TSelf},System.Span{TKey})"/>
     /// </remarks>
-    public static List<TSelf> FindSubPathsByKeyFromChild<TSelf, TKey>(this TSelf node, Span<TKey> keys)
+    public static List<Box<TSelf>> FindSubPathsByKeyFromChild<TSelf, TKey>(this TSelf node, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
     {
-        var foundNodes = new List<TSelf>();
+        var foundNodes = new List<Box<TSelf>>();
         if (keys.Length <= 0)
             return foundNodes;
 
@@ -283,16 +280,23 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     ///     This operation is very slow as it has theoretical complexity of O(N^3), though in practice it's closer to O(N^2).
     ///     If possible, prefer using <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(Box{TSelf},System.Span{TKey})"/>
     /// </remarks>
-    public static List<TSelf> FindSubPathsByKeyFromRoot<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
+    public static List<Box<TSelf>> FindSubPathsByKeyFromRoot<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
-        => FindSubPathsByKeyFromRoot(root.Item, keys);
+    {
+        var foundNodes = new List<Box<TSelf>>();
+        if (keys.Length <= 0)
+            return foundNodes;
+
+        FindAllSubPathsByKeyRecursive(root, keys, foundNodes);
+        return foundNodes;
+    }
 
     /// <summary>
     ///     Finds all nodes in the tree that match a given sequence of keys,
     ///     including the root node in the search.
     /// </summary>
-    /// <param name="node">The current node being examined.</param>
+    /// <param name="root">The current node being examined.</param>
     /// <param name="keys">Span of keys representing the path/key segments to search.</param>
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
@@ -301,28 +305,23 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     ///     This operation is very slow as it has theoretical complexity of O(N^3), though in practice it's closer to O(N^2).
     ///     If possible, prefer using <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(Box{TSelf},System.Span{TKey})"/>
     /// </remarks>
-    public static List<TSelf> FindSubPathsByKeyFromRoot<TSelf, TKey>(this TSelf node, Span<TKey> keys)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static List<Box<TSelf>> FindSubPathsByKeyFromRoot<TSelf, TKey>(this TSelf root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
-    {
-        var foundNodes = new List<TSelf>();
-        if (keys.Length <= 0)
-            return foundNodes;
+        => FindSubPathsByKeyFromRoot((Box<TSelf>)root, keys);
 
-        FindAllSubPathsByKeyRecursive(node, keys, foundNodes);
-        return foundNodes;
-    }
-
-    private static void FindAllSubPathsByKeyRecursive<TSelf, TKey>(TSelf node, Span<TKey> keys, List<TSelf> foundNodes)
+    private static void FindAllSubPathsByKeyRecursive<TSelf, TKey>(Box<TSelf> node, Span<TKey> keys, List<Box<TSelf>> foundNodes)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
     {
         var result = FindByKeyFromRoot(node, keys);
         if (result != null)
-            foundNodes.Add(result.Value);
+            foundNodes.Add(result);
 
-        foreach (var child in node.Children)
-            FindAllSubPathsByKeyRecursive(child.Item, keys, foundNodes);
+        foreach (var child in node.Item.Children)
+            FindAllSubPathsByKeyRecursive(child, keys, foundNodes);
     }
 
     /// <summary>
@@ -336,10 +335,14 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
-    public static List<TSelf> FindSubPathsByKeyUpward<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
+    public static List<Box<TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
-        => root.Item.FindSubPathsByKeyUpward(keys);
+    {
+        var foundNodes = new List<Box<TSelf>>();
+        FindSubPathsByKeyUpward(root, keys, foundNodes);
+        return foundNodes;
+    }
 
     /// <summary>
     ///     Initiates a search from a given node and finds all descendant nodes that, when traced upwards, match a specified sequence of keys.
@@ -352,24 +355,24 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
-    public static List<TSelf> FindSubPathsByKeyUpward<TSelf, TKey>(this TSelf root, Span<TKey> keys)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static List<Box<TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this TSelf root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
     {
-        var foundNodes = new List<TSelf>();
-        FindSubPathsByKeyUpward(root, keys, foundNodes);
-        return foundNodes;
+        return FindSubPathsByKeyUpward((Box<TSelf>)root, keys);
     }
 
-    private static void FindSubPathsByKeyUpward<TSelf, TKey>(TSelf node, Span<TKey> keys, List<TSelf> foundNodes)
+    private static void FindSubPathsByKeyUpward<TSelf, TKey>(Box<TSelf> node, Span<TKey> keys, List<Box<TSelf>> foundNodes)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
     {
         if (node.FindByKeysUpward(keys) != null)
             foundNodes.Add(node);
 
-        foreach (var child in node.Children)
-            FindSubPathsByKeyUpward(child.Item, keys, foundNodes);
+        foreach (var child in node.Item.Children)
+            FindSubPathsByKeyUpward(child, keys, foundNodes);
     }
 }
 
@@ -499,10 +502,15 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given sequence of keys, or null if not found.</returns>
-    public static TSelf? FindByKeyFromRoot<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
+    public static Box<TSelf>? FindByKeyFromRoot<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
-        => FindByKeyFromRoot(root.Item, keys);
+    {
+        if (keys.IsEmpty || !EqualityComparer<TKey>.Default.Equals(root.Item.Key, keys.DangerousGetReferenceAt(0)))
+            return null;
+
+        return keys.Length == 1 ? root : FindNode(root, keys.SliceFast(1));
+    }
 
     /// <summary>
     ///     Finds a node in the tree based on a given sequence of keys, starting the search from the root node.
@@ -512,15 +520,12 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given sequence of keys, or null if not found.</returns>
-    public static TSelf? FindByKeyFromRoot<TSelf, TKey>(this TSelf root, Span<TKey> keys)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static Box<TSelf>? FindByKeyFromRoot<TSelf, TKey>(this TSelf root, Span<TKey> keys)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
-    {
-        if (keys.IsEmpty || !EqualityComparer<TKey>.Default.Equals(root.Key, keys.DangerousGetReferenceAt(0)))
-            return null;
-
-        return keys.Length == 1 ? root : FindNodeRecursive(root, keys.SliceFast(1));
-    }
+        => FindByKeyFromRoot((Box<TSelf>)root, keys);
 
     /// <summary>
     ///     Finds a node in the tree based on a given sequence of keys, starting the search from the child nodes.
@@ -530,10 +535,10 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given sequence of keys, or null if not found.</returns>
-    public static TSelf? FindByKeyFromChild<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
+    public static Box<TSelf>? FindByKeyFromChild<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
-        => FindByKeyFromChild(root.Item, keys);
+        => keys.Length == 0 ? null : FindNode(root, keys);
 
     /// <summary>
     ///     Finds a node in the tree based on a given sequence of keys, starting the search from the child nodes.
@@ -543,32 +548,26 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given sequence of keys, or null if not found.</returns>
-    public static TSelf? FindByKeyFromChild<TSelf, TKey>(this TSelf root, Span<TKey> keys)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static Box<TSelf>? FindByKeyFromChild<TSelf, TKey>(this TSelf root, Span<TKey> keys)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
-        => keys.Length == 0 ? null : FindNodeRecursive(root, keys);
+        => FindByKeyFromChild((Box<TSelf>)root, keys);
 
-    /// <summary>
-    ///     Helper method to find a node by a sequence of keys.
-    /// </summary>
-    /// <param name="node">The current node being examined.</param>
-    /// <param name="keys">Span of keys representing the path/key segments to search.</param>
-    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
-    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
-    /// <returns>The node that matches the given sequence of keys, or null if not found.</returns>
-    private static TSelf? FindNodeRecursive<TSelf, TKey>(TSelf node, Span<TKey> keys)
+    private static Box<TSelf>? FindNode<TSelf, TKey>(Box<TSelf> node, Span<TKey> keys)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
     {
         foreach (var key in keys)
         {
             var found = false;
-            foreach (var child in node.Children)
+            foreach (var child in node.Item.Children)
             {
                 if (!EqualityComparer<TKey>.Default.Equals(child.Item.Key, key))
                     continue;
 
-                node = child.Item;
+                node = child;
                 found = true;
                 break;
             }
@@ -593,7 +592,7 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     ///     This operation is very slow as it has theoretical complexity of O(N^3), though in practice it's closer to O(N^2).
     ///     If possible, prefer using <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(Box{TSelf},System.Span{TKey})"/>
     /// </remarks>
-    public static List<TSelf> FindSubPathsByKeyFromChild<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
+    public static List<Box<TSelf>> FindSubPathsByKeyFromChild<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
         => FindSubPathsByKeyFromChild(root.Item, keys);
@@ -611,11 +610,11 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     ///     This operation is very slow as it has theoretical complexity of O(N^3), though in practice it's closer to O(N^2).
     ///     If possible, prefer using <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(Box{TSelf},System.Span{TKey})"/>
     /// </remarks>
-    public static List<TSelf> FindSubPathsByKeyFromChild<TSelf, TKey>(this TSelf node, Span<TKey> keys)
+    public static List<Box<TSelf>> FindSubPathsByKeyFromChild<TSelf, TKey>(this TSelf node, Span<TKey> keys)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
     {
-        var foundNodes = new List<TSelf>();
+        var foundNodes = new List<Box<TSelf>>();
         if (keys.Length <= 0)
             return foundNodes;
 
@@ -638,16 +637,23 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     ///     This operation is very slow as it has theoretical complexity of O(N^3), though in practice it's closer to O(N^2).
     ///     If possible, prefer using <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(Box{TSelf},System.Span{TKey})"/>
     /// </remarks>
-    public static List<TSelf> FindSubPathsByKeyFromRoot<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
+    public static List<Box<TSelf>> FindSubPathsByKeyFromRoot<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
-        => FindSubPathsByKeyFromRoot(root.Item, keys);
+    {
+        var foundNodes = new List<Box<TSelf>>();
+        if (keys.Length <= 0)
+            return foundNodes;
+
+        FindSubPathsByKeyRecursive(root, keys, foundNodes);
+        return foundNodes;
+    }
 
     /// <summary>
     ///     Finds all nodes in the tree that match a given sequence of keys,
     ///     including the root node in the search.
     /// </summary>
-    /// <param name="node">The current node being examined.</param>
+    /// <param name="root">The current node being examined.</param>
     /// <param name="keys">Span of keys representing the path/key segments to search.</param>
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
@@ -656,28 +662,23 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     ///     This operation is very slow as it has theoretical complexity of O(N^3), though in practice it's closer to O(N^2).
     ///     If possible, prefer using <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(Box{TSelf},System.Span{TKey})"/>
     /// </remarks>
-    public static List<TSelf> FindSubPathsByKeyFromRoot<TSelf, TKey>(this TSelf node, Span<TKey> keys)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static List<Box<TSelf>> FindSubPathsByKeyFromRoot<TSelf, TKey>(this TSelf root, Span<TKey> keys)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
-    {
-        var foundNodes = new List<TSelf>();
-        if (keys.Length <= 0)
-            return foundNodes;
+        => FindSubPathsByKeyFromRoot((Box<TSelf>)root, keys);
 
-        FindSubPathsByKeyRecursive(node, keys, foundNodes);
-        return foundNodes;
-    }
-
-    private static void FindSubPathsByKeyRecursive<TSelf, TKey>(TSelf node, Span<TKey> keys, List<TSelf> foundNodes)
+    private static void FindSubPathsByKeyRecursive<TSelf, TKey>(Box<TSelf> node, Span<TKey> keys, List<Box<TSelf>> foundNodes)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
         where TKey : notnull
     {
         var result = FindByKeyFromRoot(node, keys);
         if (result != null)
-            foundNodes.Add(result.Value);
+            foundNodes.Add(result);
 
-        foreach (var child in node.Children)
-            FindSubPathsByKeyRecursive(child.Item, keys, foundNodes);
+        foreach (var child in node.Item.Children)
+            FindSubPathsByKeyRecursive(child, keys, foundNodes);
     }
 
     /// <summary>
@@ -691,10 +692,14 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
-    public static List<TSelf> FindSubPathsByKeyUpward<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
+    public static List<Box<TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
-        => root.Item.FindSubPathsByKeyUpward(keys);
+    {
+        var foundNodes = new List<Box<TSelf>>();
+        FindSubPathsByKeyUpward(root, keys, foundNodes);
+        return foundNodes;
+    }
 
     /// <summary>
     ///     Initiates a search from a given node and finds all descendant nodes that, when traced upwards, match a specified sequence of keys.
@@ -707,24 +712,22 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
-    public static List<TSelf> FindSubPathsByKeyUpward<TSelf, TKey>(this TSelf root, Span<TKey> keys)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static List<Box<TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this TSelf root, Span<TKey> keys)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
-    {
-        var foundNodes = new List<TSelf>();
-        FindSubPathsByKeyUpward(root, keys, foundNodes);
-        return foundNodes;
-    }
+        => FindSubPathsByKeyUpward((Box<TSelf>)root, keys);
 
-    private static void FindSubPathsByKeyUpward<TSelf, TKey>(TSelf node, Span<TKey> keys, List<TSelf> foundNodes)
+    private static void FindSubPathsByKeyUpward<TSelf, TKey>(Box<TSelf> node, Span<TKey> keys, List<Box<TSelf>> foundNodes)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
     {
         if (node.FindByKeysUpward(keys) != null)
             foundNodes.Add(node);
 
-        foreach (var child in node.Children)
-            FindSubPathsByKeyUpward(child.Item, keys, foundNodes);
+        foreach (var child in node.Item.Children)
+            FindSubPathsByKeyUpward(child, keys, foundNodes);
     }
 }
 
@@ -741,7 +744,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     /// <typeparam name="TSelf">The type of the child node.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <returns>An IEnumerable of all child keys of the current node.</returns>
-    public static IEnumerable<TKey> EnumerateKeysBfs<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item)
+    public static IEnumerable<TKey> EnumerateKeysBfs<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
         => item.Item.EnumerateKeysBfs<TSelf, TKey>();
@@ -776,7 +779,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     /// <typeparam name="TSelf">The type of the child node.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <returns>An IEnumerable of all child keys of the current node.</returns>
-    public static IEnumerable<TKey> EnumerateKeysDfs<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item)
+    public static IEnumerable<TKey> EnumerateKeysDfs<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
         => item.Item.EnumerateKeysDfs<TSelf, TKey>();
@@ -808,7 +811,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <returns>An array of all the keys of the children of this node.</returns>
-    public static TKey[] GetKeys<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> item)
+    public static TKey[] GetKeys<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull =>
         item.Item.GetKeys<TSelf, TKey>();
@@ -837,7 +840,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     /// <param name="item">The current node.</param>
     /// <param name="buffer">
     ///     The span to fill with keys.
-    ///     Should be at least as big as <see cref="IHaveBoxedChildrenWithKeyExtensions.CountChildren{TSelf,TKey}(NexusMods.Paths.Trees.Traits.ChildWithKeyBox{TKey,TSelf})"/>
+    ///     Should be at least as big as <see cref="IHaveBoxedChildrenWithKeyExtensions.CountChildren{TSelf,TKey}(KeyedBox{TKey,TSelf})"/>
     /// </param>
     /// <param name="index">The current index in the span.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -860,10 +863,15 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given path of keys, or null if not found.</returns>
-    public static TSelf? FindByKeyFromRoot<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> root, Span<TKey> keys)
+    public static KeyedBox<TKey, TSelf>? FindByKeyFromRoot<TSelf, TKey>(this KeyedBox<TKey, TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
-        => root.Item.FindByKeyFromRoot(keys);
+    {
+        if (keys.IsEmpty || !EqualityComparer<TKey>.Default.Equals(root.Item.Key, keys.DangerousGetReferenceAt(0)))
+            return null;
+
+        return keys.Length == 1 ? root : FindNode(root, keys.SliceFast(1));
+    }
 
     /// <summary>
     ///     Finds a node in the tree based on a given relative path of keys, starting the search from the root node.
@@ -873,15 +881,12 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given path of keys, or null if not found.</returns>
-    public static TSelf? FindByKeyFromRoot<TSelf, TKey>(this TSelf root, Span<TKey> keys)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static KeyedBox<TKey, TSelf>? FindByKeyFromRoot<TSelf, TKey>(this TSelf root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
-    {
-        if (keys.IsEmpty || !EqualityComparer<TKey>.Default.Equals(root.Key, keys.DangerousGetReferenceAt(0)))
-            return null;
-
-        return keys.Length == 1 ? root : FindNodeRecursive(root, keys.SliceFast(1));
-    }
+        => FindByKeyFromRoot((KeyedBox<TKey, TSelf>) root, keys);
 
     /// <summary>
     ///     Finds a node in the tree based on a given relative path of keys, starting the search from the child nodes.
@@ -891,10 +896,10 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given path of keys, or null if not found.</returns>
-    public static TSelf? FindByKeyFromChild<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> root, Span<TKey> keys)
+    public static KeyedBox<TKey, TSelf>? FindByKeyFromChild<TSelf, TKey>(this KeyedBox<TKey, TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
-        => FindByKeyFromChild(root.Item, keys);
+        => keys.Length == 0 ? null : FindNode(root, keys);
 
     /// <summary>
     ///     Finds a node in the tree based on a given relative path of keys, starting the search from the child nodes.
@@ -904,29 +909,23 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <returns>The node that matches the given path of keys, or null if not found.</returns>
-    public static TSelf? FindByKeyFromChild<TSelf, TKey>(this TSelf root, Span<TKey> keys)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static KeyedBox<TKey, TSelf>? FindByKeyFromChild<TSelf, TKey>(this TSelf root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
-        => keys.Length == 0 ? null : FindNodeRecursive(root, keys);
+        => FindByKeyFromChild((KeyedBox<TKey, TSelf>) root, keys);
 
-    /// <summary>
-    ///     Helper method to find a node by path/key segments represented as keys.
-    /// </summary>
-    /// <param name="node">The current node being examined.</param>
-    /// <param name="keys">Span of keys representing the path/key segments to search.</param>
-    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
-    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
-    /// <returns>The node that matches the given segment of the path, or null if not found.</returns>
-    private static TSelf? FindNodeRecursive<TSelf, TKey>(TSelf node, Span<TKey> keys) where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
+    private static KeyedBox<TKey, TSelf>? FindNode<TSelf, TKey>(KeyedBox<TKey, TSelf> node, Span<TKey> keys) where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
     {
         while (true)
         {
             var currentKey = keys.DangerousGetReferenceAt(0);
-            if (!node.Children.TryGetValue(currentKey, out var childBox))
+            if (!node.Item.Children.TryGetValue(currentKey, out var childBox))
                 return null;
 
-            node = childBox.Item;
+            node = childBox;
             if (keys.Length == 1)
                 return node;
 
@@ -946,7 +945,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     /// <remarks>
     ///     This operation has theoretical complexity of O(N^2), so worst case can be slow, though in practice it's closer to O(N).
     /// </remarks>
-    public static List<TSelf> FindSubPathsByKeyFromChild<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> root, Span<TKey> keys)
+    public static List<KeyedBox<TKey, TSelf>> FindSubPathsByKeyFromChild<TSelf, TKey>(this KeyedBox<TKey, TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
         => FindSubPathsByKeyFromChild(root.Item, keys);
@@ -963,11 +962,11 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     /// <remarks>
     ///     This operation has theoretical complexity of O(N^2), so worst case can be slow, though in practice it's closer to O(N).
     /// </remarks>
-    public static List<TSelf> FindSubPathsByKeyFromChild<TSelf, TKey>(this TSelf node, Span<TKey> keys)
+    public static List<KeyedBox<TKey, TSelf>> FindSubPathsByKeyFromChild<TSelf, TKey>(this TSelf node, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
     {
-        var foundNodes = new List<TSelf>();
+        var foundNodes = new List<KeyedBox<TKey, TSelf>>();
         if (keys.Length <= 0)
             return foundNodes;
 
@@ -989,16 +988,24 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     /// <remarks>
     ///     This operation has theoretical complexity of O(N^2), so worst case can be slow, though in practice it's closer to O(N).
     /// </remarks>
-    public static List<TSelf> FindSubPathsByKeyFromRoot<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> root, Span<TKey> keys)
+    public static List<KeyedBox<TKey, TSelf>> FindSubPathsByKeyFromRoot<TSelf, TKey>(this KeyedBox<TKey, TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
-        => FindSubPathsByKeyFromRoot(root.Item, keys);
+    {
+        var foundNodes = new List<KeyedBox<TKey, TSelf>>();
+        if (keys.Length <= 0)
+            return foundNodes;
+
+        FindAllSubPathsByKeyRecursive(root, keys, foundNodes);
+        return foundNodes;
+    }
+
 
     /// <summary>
     ///     Finds all nodes in the tree that match a given sequence of keys,
     ///     including the root node in the search.
     /// </summary>
-    /// <param name="node">The current node being examined.</param>
+    /// <param name="root">The current node being examined.</param>
     /// <param name="keys">Span of keys representing the path/key segments to search.</param>
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
@@ -1006,28 +1013,23 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     /// <remarks>
     ///     This operation has theoretical complexity of O(N^2), so worst case can be slow, though in practice it's closer to O(N).
     /// </remarks>
-    public static List<TSelf> FindSubPathsByKeyFromRoot<TSelf, TKey>(this TSelf node, Span<TKey> keys)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static List<KeyedBox<TKey, TSelf>> FindSubPathsByKeyFromRoot<TSelf, TKey>(this TSelf root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
-    {
-        var foundNodes = new List<TSelf>();
-        if (keys.Length <= 0)
-            return foundNodes;
+        => FindSubPathsByKeyFromRoot((KeyedBox<TKey, TSelf>) root, keys);
 
-        FindAllSubPathsByKeyRecursive(node, keys, foundNodes);
-        return foundNodes;
-    }
-
-    private static void FindAllSubPathsByKeyRecursive<TSelf, TKey>(TSelf node, Span<TKey> keys, List<TSelf> foundNodes)
+    private static void FindAllSubPathsByKeyRecursive<TSelf, TKey>(KeyedBox<TKey, TSelf> node, Span<TKey> keys, List<KeyedBox<TKey, TSelf>> foundNodes)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
     {
         var result = FindByKeyFromRoot(node, keys);
         if (result != null)
-            foundNodes.Add(result.Value);
+            foundNodes.Add(result);
 
-        foreach (var child in node.Children)
-            FindAllSubPathsByKeyRecursive(child.Value.Item, keys, foundNodes);
+        foreach (var child in node.Item.Children)
+            FindAllSubPathsByKeyRecursive(child.Value, keys, foundNodes);
     }
 
     /// <summary>
@@ -1041,10 +1043,14 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
-    public static List<TSelf> FindSubPathsByKeyUpward<TSelf, TKey>(this ChildWithKeyBox<TKey, TSelf> root, Span<TKey> keys)
+    public static List<KeyedBox<TKey, TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this KeyedBox<TKey, TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
-        => root.Item.FindSubPathsByKeyUpward(keys);
+    {
+        var foundNodes = new List<KeyedBox<TKey, TSelf>>();
+        FindSubPathsByKeyUpward(root, keys, foundNodes);
+        return foundNodes;
+    }
 
     /// <summary>
     ///     Initiates a search from a given node and finds all descendant nodes that, when traced upwards, match a specified sequence of keys.
@@ -1057,23 +1063,21 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
-    public static List<TSelf> FindSubPathsByKeyUpward<TSelf, TKey>(this TSelf root, Span<TKey> keys)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static List<KeyedBox<TKey, TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this TSelf root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
-    {
-        var foundNodes = new List<TSelf>();
-        FindSubPathsByKeyUpward(root, keys, foundNodes);
-        return foundNodes;
-    }
+        => FindSubPathsByKeyUpward((KeyedBox<TKey, TSelf>)root, keys);
 
-    private static void FindSubPathsByKeyUpward<TSelf, TKey>(TSelf node, Span<TKey> keys, List<TSelf> foundNodes)
+    private static void FindSubPathsByKeyUpward<TSelf, TKey>(KeyedBox<TKey, TSelf> node, Span<TKey> keys, List<KeyedBox<TKey, TSelf>> foundNodes)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
     {
         if (node.FindByKeysUpward(keys) != null)
             foundNodes.Add(node);
 
-        foreach (var child in node.Children)
-            FindSubPathsByKeyUpward(child.Value.Item, keys, foundNodes);
+        foreach (var child in node.Item.Children)
+            FindSubPathsByKeyUpward(child.Value, keys, foundNodes);
     }
 }

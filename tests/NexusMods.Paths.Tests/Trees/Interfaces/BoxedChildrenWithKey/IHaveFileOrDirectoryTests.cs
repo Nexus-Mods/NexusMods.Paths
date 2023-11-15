@@ -1,5 +1,6 @@
+using NexusMods.Paths.Trees;
 using NexusMods.Paths.Trees.Traits;
-using Dict = System.Collections.Generic.Dictionary<int, NexusMods.Paths.Trees.Traits.ChildWithKeyBox<int, NexusMods.Paths.Tests.Trees.Interfaces.BoxedChildrenWithKey.IHaveFileOrDirectoryTests.TestTree>>;
+using Dict = System.Collections.Generic.Dictionary<int, NexusMods.Paths.Trees.KeyedBox<int, NexusMods.Paths.Tests.Trees.Interfaces.BoxedChildrenWithKey.IHaveFileOrDirectoryTests.TestTree>>;
 
 namespace NexusMods.Paths.Tests.Trees.Interfaces.BoxedChildrenWithKey;
 
@@ -10,14 +11,14 @@ public class IHaveFileOrDirectoryTests
     public void CountFiles_ShouldReturnTotalFilesCount()
     {
         // Arrange
-        var leaf1 = new TestTree(new Dict(), true);
-        var leaf2 = new TestTree(new Dict(), true);
-        var directory = new TestTree(new Dict
+        var leaf1 = TestTree.Create(true);
+        var leaf2 = TestTree.Create(true);
+        var directory = TestTree.Create(false, new Dict
         {
             [1] = leaf1,
             [2] = leaf2
-        }, false);
-        ChildWithKeyBox<int, TestTree> root =  new TestTree(new Dict { [0] = directory }, false);
+        });
+        KeyedBox<int, TestTree> root =  TestTree.Create(false, new Dict { [0] = directory });
 
         // Act
         var fileCount = root.CountFiles();
@@ -30,11 +31,11 @@ public class IHaveFileOrDirectoryTests
     public void CountDirectories_ShouldReturnTotalDirectoriesCount()
     {
         // Arrange
-        var leaf1 = new TestTree(new Dict(), true);
-        var leaf2 = new TestTree(new Dict(), true);
-        var directory1 = new TestTree(new Dict { [1] = leaf1 }, false);
-        var directory2 = new TestTree(new Dict { [2] = leaf2 }, false);
-        ChildWithKeyBox<int, TestTree> root = new TestTree(new Dict { [0] = directory1, [1] = directory2 }, false);
+        var leaf1 = TestTree.Create(true);
+        var leaf2 = TestTree.Create(true);
+        var directory1 = TestTree.Create(false, new Dict { [1] = leaf1 });
+        var directory2 = TestTree.Create(false, new Dict { [2] = leaf2 });
+        KeyedBox<int, TestTree> root = TestTree.Create(false, new Dict { [0] = directory1, [1] = directory2 });
 
         // Act
         var directoryCount = root.CountDirectories();
@@ -45,13 +46,16 @@ public class IHaveFileOrDirectoryTests
 
     internal struct TestTree : IHaveBoxedChildrenWithKey<int, TestTree>, IHaveAFileOrDirectory
     {
-        public Dict Children { get; }
-        public bool IsFile { get; }
+        public Dict Children { get; private init; }
+        public bool IsFile { get; private init; }
 
-        public TestTree(Dict children, bool isFile)
+        public static KeyedBox<int, TestTree> Create(bool isFile, Dict? children = null)
         {
-            Children = children;
-            IsFile = isFile;
+            return (KeyedBox<int, TestTree>) new TestTree()
+            {
+                Children = children ?? new Dict(),
+                IsFile = isFile
+            };
         }
     }
 }

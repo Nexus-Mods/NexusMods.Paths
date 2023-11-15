@@ -11,11 +11,11 @@ public class IHaveKeyValueMixinTests
     public void GetKeyValues_ShouldReturnAllKeyValuesRecursively()
     {
         // Arrange
-        var grandChild1 = new TestTree(null, "Key3", 3);
-        var grandChild2 = new TestTree(null, "Key4", 4);
-        var child1 = new TestTree(grandChild1, "Key1", 1);
-        var child2 = new TestTree(grandChild2, "Key2", 2);
-        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { child1, child2 }, "RootKey", 0);
+        var grandChild1 = TestTree.Create(null, "Key3", 3);
+        var grandChild2 = TestTree.Create(null, "Key4", 4);
+        var child1 = TestTree.Create("Key1", 1, grandChild1);
+        var child2 = TestTree.Create("Key2", 2, grandChild2);
+        var root = TestTree.Create(new ObservableCollection<Box<TestTree>> { child1, child2 }, "RootKey");
 
         // Act
         var keyValuePairs = root.GetKeyValues<TestTree, string, int>();
@@ -33,11 +33,11 @@ public class IHaveKeyValueMixinTests
     public void ToDictionary_ShouldReturnAllKeyValuesRecursively()
     {
         // Arrange
-        var grandChild1 = new TestTree(null, "Key3", 3);
-        var grandChild2 = new TestTree(null, "Key4", 4);
-        var child1 = new TestTree(grandChild1, "Key1", 1);
-        var child2 = new TestTree(grandChild2, "Key2", 2);
-        Box<TestTree> root = new TestTree(new ObservableCollection<Box<TestTree>> { child1, child2 }, "RootKey", 0);
+        var grandChild1 = TestTree.Create(null, "Key3", 3);
+        var grandChild2 = TestTree.Create(null, "Key4", 4);
+        var child1 = TestTree.Create("Key1", 1, grandChild1);
+        var child2 = TestTree.Create("Key2", 2, grandChild2);
+        var root = TestTree.Create(new ObservableCollection<Box<TestTree>> { child1, child2 }, "RootKey");
 
         // Act
         var dictionary = root.ToDictionary<TestTree, string, int>();
@@ -52,22 +52,26 @@ public class IHaveKeyValueMixinTests
 
     private struct TestTree : IHaveObservableChildren<TestTree>, IHaveKey<string>, IHaveValue<int>
     {
-        public ObservableCollection<Box<TestTree>> Children { get; }
-        public string Key { get; }
-        public int Value { get; set; }
+        public ObservableCollection<Box<TestTree>> Children { get; private set; }
+        public string Key { get; private set; }
+        public int Value { get; private set; }
 
-        public TestTree(ObservableCollection<Box<TestTree>>? children, string key, int value = default)
+        public static Box<TestTree> Create(ObservableCollection<Box<TestTree>>? children, string key, int value = default)
         {
-            Children = children ?? new ObservableCollection<Box<TestTree>>();
-            Key = key;
-            Value = value;
+            var tree = (Box<TestTree>) new TestTree();
+            tree.Item.Key = key;
+            tree.Item.Value = value;
+            tree.Item.Children = children ?? new ObservableCollection<Box<TestTree>>();
+            return tree;
         }
 
-        public TestTree(TestTree child, string key, int value = default)
+        public static Box<TestTree> Create(string key, int value = default, Box<TestTree>? child = null)
         {
-            Children = new ObservableCollection<Box<TestTree>> { child };
-            Key = key;
-            Value = value;
+            var tree = (Box<TestTree>) new TestTree();
+            tree.Item.Key = key;
+            tree.Item.Value = value;
+            tree.Item.Children = child != null ? new ObservableCollection<Box<TestTree>> { child } : new ObservableCollection<Box<TestTree>>();
+            return tree;
         }
     }
 }

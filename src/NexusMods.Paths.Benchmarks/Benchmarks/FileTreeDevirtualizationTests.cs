@@ -3,6 +3,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using NexusMods.Paths.Benchmarks.Interfaces;
+using NexusMods.Paths.Trees;
 using NexusMods.Paths.Trees.Traits;
 
 namespace NexusMods.Paths.Benchmarks.Benchmarks;
@@ -30,7 +31,7 @@ public struct TestTree : IHaveBoxedChildrenWithKey<RelativePath, TestTree>, IHav
 {
     public TestTree() { }
 
-    public Dictionary<RelativePath, ChildWithKeyBox<RelativePath, TestTree>> Children { get; } = new();
+    public Dictionary<RelativePath, KeyedBox<RelativePath, TestTree>> Children { get; } = new();
     public ushort Depth { get; private set;  }
 
     /// <summary>
@@ -90,7 +91,7 @@ public struct TestTree : IHaveBoxedChildrenWithKey<RelativePath, TestTree>, IHav
         for (var x = 0; x < itemsPerNode; x++)
         {
             var path = new RelativePath($"Child_{x}");
-            Children[path] = new TestTree().GenerateChildren(depth - 1);
+            Children[path] = (KeyedBox<RelativePath, TestTree>) new TestTree().GenerateChildren(depth - 1);
             Depth = (ushort)x;
         }
 
