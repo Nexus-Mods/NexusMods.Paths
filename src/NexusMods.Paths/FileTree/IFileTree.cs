@@ -11,7 +11,6 @@ namespace NexusMods.Paths.FileTree;
 [PublicAPI]
 public interface IFileTree<TFileTree> where TFileTree : IFileTree<TFileTree>
 {
-
     /// <summary>
     /// The file name for this node.
     /// </summary>

@@ -68,6 +68,11 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     /// </summary>
     public RelativePath GetRootComponent => RelativePath.Empty;
 
+    /// <summary>
+    /// Returns the length of the <see cref="RelativePath"/>.
+    /// </summary>
+    public int Length => Path.Length;
+
     /// <inheritdoc/>
     public IEnumerable<RelativePath> Parts
     {
@@ -128,7 +133,6 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
 
     /// <inheritdoc />
     public bool IsRooted => false;
-
 
     /// <summary>
     /// Obtains the name of the first folder stored in this path.

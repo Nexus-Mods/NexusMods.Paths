@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
 namespace NexusMods.Paths.FileTree;
@@ -284,7 +283,6 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
                 yield return tuple;
             }
         }
-
     }
 
     /// <summary>
@@ -317,6 +315,7 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
                 if (parentNode.Children.TryGetValue(subPathName, out var existing))
                 {
                     // if we are at the last path, this is the file
+                    // duplicate file entry. e.g. conflict between folder+file name.
                     if (i == parentPaths.Length - 1)
                     {
                         throw new InvalidOperationException($"Duplicate path found for file: {subPath}");

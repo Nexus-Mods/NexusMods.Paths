@@ -48,3 +48,6 @@ plugins:
 
 nav:
   - Home: index.md
+  - Dynamic Trees:
+      - "Introduction": Trees/Introduction.md
+      - "How it Works": Trees/HowItWorks.md
