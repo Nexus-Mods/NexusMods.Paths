@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using NexusMods.Paths.Extensions;
 using NexusMods.Paths.Utilities;
+using Reloaded.Memory.Extensions;
 
 [assembly: InternalsVisibleTo("NexusMods.Paths.Tests")]
 namespace NexusMods.Paths;
@@ -327,8 +326,9 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
     /// <inheritdoc />
     public bool Equals(AbsolutePath other)
     {
-        return string.Equals(Directory, other.Directory, StringComparison.OrdinalIgnoreCase) &&
-               string.Equals(FileName, other.FileName, StringComparison.OrdinalIgnoreCase);
+        // Do not reorder, FileName is statistically more likely to mismatch than Directory - (Sewer)
+        return string.Equals(FileName, other.FileName, StringComparison.OrdinalIgnoreCase) &&
+               string.Equals(Directory, other.Directory, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <inheritdoc />
@@ -340,8 +340,10 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
     /// <inheritdoc />
     public override int GetHashCode()
     {
-        var a = string.GetHashCode(Directory, StringComparison.OrdinalIgnoreCase);
-        var b = string.GetHashCode(FileName, StringComparison.OrdinalIgnoreCase);
+        // A custom HashCode, based on FNV-1 with added Vectorization because the default one is very slow for our use in trees, dictionaries, etc.
+        // .NET does have a faster hashcode for strings, however it is not exposed (and is 5x slower than custom one anyways).
+        var a = Directory.GetHashCodeLowerFast();
+        var b = FileName.GetHashCodeLowerFast();
         return HashCode.Combine(a, b);
     }
     #endregion

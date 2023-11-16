@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using NexusMods.Paths.Extensions;
-using NexusMods.Paths.HighPerformance.CommunityToolkit;
+using static Reloaded.Memory.Extensions.SpanExtensions;
 
 namespace NexusMods.Paths.Trees.Traits;
 

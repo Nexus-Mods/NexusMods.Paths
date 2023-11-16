@@ -5,8 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using NexusMods.Paths.Extensions;
-using NexusMods.Paths.HighPerformance.CommunityToolkit;
+using Reloaded.Memory.Extensions;
 
 namespace NexusMods.Paths.Utilities;
 
@@ -148,7 +147,7 @@ public static class PathHelpers
             ? slice.ToString()
             : RemoveTrailingDirectorySeparator(slice).ToString();
     }
-    
+
     /// <summary>
     /// Replaces all directory separator characters with the
     /// native directory separator character of the passed OS.
@@ -160,7 +159,7 @@ public static class PathHelpers
     {
         DebugAssertIsSanitized(path, os);
         if (path.IsEmpty) return string.Empty;
-        
+
         if (os.IsUnix()) return path.ToString();
 
         var buffer = path.Length > 512

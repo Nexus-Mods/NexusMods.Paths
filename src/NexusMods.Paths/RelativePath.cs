@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using NexusMods.Paths.Extensions;
-using NexusMods.Paths.HighPerformance.CommunityToolkit;
 using NexusMods.Paths.Utilities;
+using Reloaded.Memory.Extensions;
 
 namespace NexusMods.Paths;
 
@@ -303,7 +301,9 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     [SkipLocalsInit]
     public override int GetHashCode()
     {
-        return Path.AsSpan().GetNonRandomizedHashCode32();
+        // A custom HashCode, based on FNV-1 with added Vectorization because the default one is very slow for our use in trees, dictionaries, etc.
+        // .NET does have a faster hashcode for strings, however it is not exposed (and is 5x slower than custom one anyways).
+        return Path.GetHashCodeLowerFast().GetHashCode();
     }
 
     #endregion

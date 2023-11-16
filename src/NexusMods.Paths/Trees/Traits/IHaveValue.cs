@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using NexusMods.Paths.HighPerformance.CommunityToolkit;
+using Reloaded.Memory.Extensions;
 
 namespace NexusMods.Paths.Trees.Traits;
 
