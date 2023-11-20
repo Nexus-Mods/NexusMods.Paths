@@ -291,6 +291,32 @@ public class AbsolutePathTests
         actual.Should().Be(expected);
     }
 
+    [Theory]
+    [InlineData(true, "/foo/bar/baz", "/FOO/BAR/BAZ", true)]
+    [InlineData(true, "/foo/bar/baz", "/foo/bar/baz", true)]
+    [InlineData(true, "/foo/bar/baz", "/foo/bar/bazz", false)]
+    [InlineData(false, "C:/foo/bar/baz", "C:/FOO/BAR/BAZ", true)]
+    [InlineData(false, "C:/foo/bar/baz", "C:/foo/bar/baz", true)]
+    [InlineData(false, "C:/foo/bar/baz", "C:/foo/bar/bazz", false)]
+    public void Test_Equals_CaseInsensitive(bool isUnix, string path1, string path2, bool expected)
+    {
+        var absolutePath1 = CreatePath(path1, isUnix);
+        var absolutePath2 = CreatePath(path2, isUnix);
+
+        absolutePath1.Equals(absolutePath2).Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData(true, "/foo/bar/baz", "/FOO/BAR/BAZ")]
+    [InlineData(false, "C:/foo/bar/baz", "C:/FOO/BAR/BAZ")]
+    public void Test_GetHashCode_CaseInsensitive(bool isUnix, string path1, string path2)
+    {
+        var absolutePath1 = CreatePath(path1, isUnix);
+        var absolutePath2 = CreatePath(path2, isUnix);
+
+        absolutePath1.GetHashCode().Should().Be(absolutePath2.GetHashCode());
+    }
+
     private static AbsolutePath CreatePath(string input, bool isUnix = true)
     {
         var os = CreateOSInformation(isUnix);
