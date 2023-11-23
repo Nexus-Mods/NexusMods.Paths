@@ -8,9 +8,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using NexusMods.Paths.Extensions;
-using NexusMods.Paths.HighPerformance.CommunityToolkit;
 using NexusMods.Paths.Utilities;
+using Reloaded.Memory.Extensions;
 
 namespace NexusMods.Paths;
 

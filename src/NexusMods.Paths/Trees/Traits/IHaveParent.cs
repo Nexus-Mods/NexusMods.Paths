@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using NexusMods.Paths.HighPerformance.CommunityToolkit;
+using Reloaded.Memory.Extensions;
 
 namespace NexusMods.Paths.Trees.Traits;
 

@@ -311,4 +311,29 @@ public class RelativePathTests
         var actualOutput = leftPath.RelativeTo(rightPath);
         actualOutput.Should().Be(expectedOutput);
     }
+
+    [Theory]
+    [InlineData("foo/bar/baz", "Foo/Bar/Baz", true)]
+    [InlineData("foo/bar/baz", "foo/bar/baZ", true)]
+    [InlineData("foo/bar/baz", "foo/bar/bazz", false)]
+    [InlineData("foo/bar", "bar/foo", false)]
+    public void Test_Equals_CaseInsensitive(string path1, string path2, bool expected)
+    {
+        var relativePath1 = new RelativePath(path1);
+        var relativePath2 = new RelativePath(path2);
+
+        relativePath1.Equals(relativePath2).Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("foo/bar/baz", "Foo/Bar/Baz")]
+    [InlineData("foo/bar/baz", "foo/bar/baZ")]
+    [InlineData("FOO/BAR/BAZ", "foo/bar/baz")]
+    public void Test_GetHashCode_CaseInsensitive(string path1, string path2)
+    {
+        var relativePath1 = new RelativePath(path1);
+        var relativePath2 = new RelativePath(path2);
+
+        relativePath1.GetHashCode().Should().Be(relativePath2.GetHashCode());
+    }
 }
