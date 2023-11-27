@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using JetBrains.Annotations;
 
@@ -295,4 +296,39 @@ public enum KnownPath
     /// <see cref="MyDocumentsDirectory"/> with <c>My Games</c>.
     /// </remarks>
     MyGamesDirectory,
+
+    /// <summary>
+    /// <c>$XDG_CONFIG_HOME</c> defines the base directory relative to which user-specific configuration files should be stored.
+    /// If <c>$XDG_CONFIG_HOME</c> is either not set or empty, a default equal to <c>$HOME/.config</c> should be used.
+    /// </summary>
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    XDG_CONFIG_HOME,
+
+    /// <summary>
+    /// <c>$XDG_CACHE_HOME</c> defines the base directory relative to which user-specific non-essential data files should be stored.
+    /// If <c>$XDG_CACHE_HOME</c> is either not set or empty, a default equal to <c>$HOME/.cache</c> should be used.
+    /// </summary>
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    XDG_CACHE_HOME,
+
+    /// <summary>
+    /// <c>$XDG_DATA_HOME</c> defines the base directory relative to which user-specific data files should be stored.
+    /// If <c>$XDG_DATA_HOME</c> is either not set or empty, a default equal to <c>$HOME/.local/share</c> should be used.
+    /// </summary>
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    XDG_DATA_HOME,
+
+    /// <summary>
+    /// <c>$XDG_STATE_HOME</c> defines the base directory relative to which user-specific state files should be stored.
+    /// If <c>$XDG_STATE_HOME</c> is either not set or empty, a default equal to <c>$HOME/.local/state</c> should be used.
+    /// </summary>
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    XDG_STATE_HOME,
+
+    /// <summary>
+    /// <c>$XDG_RUNTIME_DIR</c> defines the base directory relative to which user-specific non-essential runtime files and other file objects (such as sockets, named pipes, ...) should be stored.
+    /// The directory MUST be owned by the user, and he MUST be the only one having read and write access to it. Its Unix access mode MUST be 0700.
+    /// </summary>
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    XDG_RUNTIME_DIR,
 }
