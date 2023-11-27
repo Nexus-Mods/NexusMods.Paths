@@ -146,6 +146,12 @@ public abstract class BaseFileSystem : IFileSystem
             KnownPath.LocalApplicationDataDirectory => true,
             KnownPath.MyDocumentsDirectory => true,
             KnownPath.MyGamesDirectory => true,
+
+            KnownPath.XDG_CONFIG_HOME => OS.IsLinux,
+            KnownPath.XDG_CACHE_HOME => OS.IsLinux,
+            KnownPath.XDG_DATA_HOME => OS.IsLinux,
+            KnownPath.XDG_STATE_HOME => OS.IsLinux,
+            KnownPath.XDG_RUNTIME_DIR => OS.IsLinux,
         };
 
         bool IsWindowsOrMapped()
@@ -180,10 +186,24 @@ public abstract class BaseFileSystem : IFileSystem
             KnownPath.LocalApplicationDataDirectory => FromUnsanitizedFullPath(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)),
             KnownPath.MyDocumentsDirectory => FromUnsanitizedFullPath(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)),
             KnownPath.MyGamesDirectory => FromUnsanitizedDirectoryAndFileName(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games"),
+
+            KnownPath.XDG_CONFIG_HOME => GetXDGBaseDirectory($"{nameof(KnownPath.XDG_CONFIG_HOME)}", static fs => fs.GetKnownPath(KnownPath.HomeDirectory).Combine(".config")),
+            KnownPath.XDG_CACHE_HOME => GetXDGBaseDirectory($"{nameof(KnownPath.XDG_CACHE_HOME)}", static fs => fs.GetKnownPath(KnownPath.HomeDirectory).Combine(".cache")),
+            KnownPath.XDG_DATA_HOME => GetXDGBaseDirectory($"{nameof(KnownPath.XDG_DATA_HOME)}", static fs => fs.GetKnownPath(KnownPath.HomeDirectory).Combine(".local").Combine("share")),
+            KnownPath.XDG_STATE_HOME => GetXDGBaseDirectory($"{nameof(KnownPath.XDG_STATE_HOME)}", static fs => fs.GetKnownPath(KnownPath.HomeDirectory).Combine(".local").Combine("state")),
+            KnownPath.XDG_RUNTIME_DIR => GetXDGBaseDirectory($"{nameof(KnownPath.XDG_RUNTIME_DIR)}", static fs => fs.GetKnownPath(KnownPath.TempDirectory)),
         };
 
         Debug.Assert(path != default, $"{nameof(GetKnownPath)} returns 'default' for {nameof(KnownPath)} '{knownPath}'. You forgot to add a mapping for this {nameof(KnownPath)}!");
         return path;
+
+        AbsolutePath GetXDGBaseDirectory(string environmentVariable, Func<IFileSystem, AbsolutePath> defaultFunc)
+        {
+            if (!OS.IsLinux) throw OS.CreatePlatformNotSupportedException();
+
+            var value = Environment.GetEnvironmentVariable(environmentVariable, EnvironmentVariableTarget.Process);
+            return value is null ? defaultFunc(this) : FromUnsanitizedFullPath(value);
+        }
 
         AbsolutePath ThisOrDefault(string fullPath)
         {
@@ -233,8 +253,11 @@ public abstract class BaseFileSystem : IFileSystem
                 KnownPath.LocalApplicationDataDirectory => newHomeDirectory.Combine("AppData/Local"),
                 KnownPath.ApplicationDataDirectory => newHomeDirectory.Combine("AppData/Roaming"),
                 KnownPath.TempDirectory => newHomeDirectory.Combine("AppData/Local/Temp"),
+
+                _ => default
             };
 
+            if (newPath == default) continue;
             knownPathMappings[knownPath] = newPath;
         }
 
