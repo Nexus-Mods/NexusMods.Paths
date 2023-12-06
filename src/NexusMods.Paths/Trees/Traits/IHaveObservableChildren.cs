@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Reloaded.Memory.Extensions;
 
@@ -262,4 +263,15 @@ public static class IHaveObservableChildrenExtensions
                 GetLeavesUnsafe(child.Item, leavesSpan, ref index);
         }
     }
+
+    /// <summary>
+    ///     Retrieves the observable collection containing all the children of the current node.
+    /// </summary>
+    /// <param name="item">The boxed node whose children are to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node stored in this FileTree.</typeparam>
+    /// <returns>An observable collection of the direct children of the current node.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static ObservableCollection<Box<TSelf>> Children<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        => item.Item.Children;
 }

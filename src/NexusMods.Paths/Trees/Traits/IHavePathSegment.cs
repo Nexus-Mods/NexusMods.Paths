@@ -24,6 +24,30 @@ public interface IHavePathSegment
 public static class IHavePathSegmentExtensions
 {
     /// <summary>
+    ///     Retrieves the key of the node.
+    /// </summary>
+    /// <param name="item">The keyed boxed node whose key is to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <returns>The key of the node.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static RelativePath Key<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHavePathSegment
+        where TKey : notnull
+        => item.Item.Segment;
+
+    /// <summary>
+    ///     Retrieves the key of the node.
+    /// </summary>
+    /// <param name="item">The boxed node whose key is to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <returns>The key of the node.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static RelativePath Key<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHavePathSegment
+        => item.Item.Segment;
+
+    /// <summary>
     ///     Reconstructs the full path of the current node by walking up to the root to the tree.
     /// </summary>
     /// <param name="item">The node for which to reconstruct the file path from.</param>

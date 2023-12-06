@@ -552,20 +552,67 @@ public static class IHaveParentExtensionsForIHaveBoxedChildrenWithKey
 public static class IHaveParentExtensions
 {
     /// <summary>
-    ///      Returns true if the tree has a parent.
+    ///     Gets the parent of the given boxed item.
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasParent<TSelf>(this TSelf item)
+    /// <param name="item">The boxed item whose parent is to be retrieved.</param>
+    /// <returns>The parent of the item, or null if it is the root.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static Box<TSelf>? Parent<TSelf>(this Box<TSelf> item)
         where TSelf : struct, IHaveParent<TSelf>
-        => item.HasParent;
+        => item.Item.Parent;
 
     /// <summary>
-    ///      Returns true if this is the root of the tree.
+    ///     Checks if the given boxed item has a parent.
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsTreeRoot<TSelf>(this TSelf item)
+    /// <param name="item">The boxed item to check.</param>
+    /// <returns>True if the item has a parent; otherwise, false.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static bool HasParent<TSelf>(this Box<TSelf> item)
         where TSelf : struct, IHaveParent<TSelf>
-        => item.IsTreeRoot;
+        => item.Item.HasParent;
+
+    /// <summary>
+    ///     Checks if the given boxed item is the root of the tree.
+    /// </summary>
+    /// <param name="item">The boxed item to check.</param>
+    /// <returns>True if the item is the root of the tree; otherwise, false.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static bool IsTreeRoot<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveParent<TSelf>
+        => item.Item.IsTreeRoot;
+
+    /// <summary>
+    ///     Gets the parent of the given keyed boxed item.
+    /// </summary>
+    /// <param name="item">The keyed boxed item whose parent is to be retrieved.</param>
+    /// <returns>The parent of the item, or null if it is the root.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static Box<TSelf>? Parent<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveParent<TSelf>
+        where TKey : notnull
+        => item.Item.Parent;
+
+    /// <summary>
+    ///     Checks if the given keyed boxed item has a parent.
+    /// </summary>
+    /// <param name="item">The keyed boxed item to check.</param>
+    /// <returns>True if the item has a parent; otherwise, false.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static bool HasParent<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveParent<TSelf>
+        where TKey : notnull
+        => item.Item.HasParent;
+
+    /// <summary>
+    ///     Checks if the given keyed boxed item is the root of the tree.
+    /// </summary>
+    /// <param name="item">The keyed boxed item to check.</param>
+    /// <returns>True if the item is the root of the tree; otherwise, false.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static bool IsTreeRoot<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveParent<TSelf>
+        where TKey : notnull
+        => item.Item.IsTreeRoot;
 
     /// <summary>
     ///     Finds a node by traversing up the parent nodes, matching keys in reverse order.

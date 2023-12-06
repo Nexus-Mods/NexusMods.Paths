@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Reloaded.Memory.Extensions;
 
@@ -48,7 +49,7 @@ public static class IHaveBoxedChildrenWithKeyExtensions
         => item.Children.Count == 0;
 
     /// <summary>
-    /// Enumerates all child nodes of the current node in a depth-first manner.
+    ///     Enumerates all child nodes of the current node in a depth-first manner.
     /// </summary>
     /// <param name="item">The node whose children are to be enumerated.</param>
     /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
@@ -61,7 +62,7 @@ public static class IHaveBoxedChildrenWithKeyExtensions
         => item.Item.EnumerateChildrenDfs<TSelf, TKey>();
 
     /// <summary>
-    /// Enumerates all child nodes of the current node in a depth-first manner.
+    ///     Enumerates all child nodes of the current node in a depth-first manner.
     /// </summary>
     /// <param name="item">The node whose children are to be enumerated.</param>
     /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
@@ -83,7 +84,7 @@ public static class IHaveBoxedChildrenWithKeyExtensions
     }
 
     /// <summary>
-    /// Enumerates all child nodes of the current node in a breadth-first manner.
+    ///     Enumerates all child nodes of the current node in a breadth-first manner.
     /// </summary>
     /// <param name="item">The node whose children are to be enumerated.</param>
     /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
@@ -96,7 +97,7 @@ public static class IHaveBoxedChildrenWithKeyExtensions
         => item.Item.EnumerateChildrenBfs<TSelf, TKey>();
 
     /// <summary>
-    /// Enumerates all child nodes of the current node in a breadth-first manner.
+    ///     Enumerates all child nodes of the current node in a breadth-first manner.
     /// </summary>
     /// <param name="item">The node whose children are to be enumerated.</param>
     /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
@@ -300,4 +301,17 @@ public static class IHaveBoxedChildrenWithKeyExtensions
                 GetLeavesUnsafe(pair.Value.Item, leavesSpan, ref index);
         }
     }
+
+    /// <summary>
+    ///     Retrieves the dictionary containing all the keyed children of the current node.
+    /// </summary>
+    /// <param name="item">The keyed box containing the node whose children are to be retrieved.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <returns>A dictionary of the children keyed by TKey.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static Dictionary<TKey, KeyedBox<TKey, TSelf>> Children<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        => item.Item.Children;
 }

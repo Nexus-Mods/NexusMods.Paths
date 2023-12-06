@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace NexusMods.Paths.Trees.Traits;
 
 /// <summary>
@@ -10,4 +12,31 @@ public interface IHaveDepthInformation
     ///     So, in a FileTree `bar` in `/foo/bar/baz` will have a depth of 2 due to the `/` having a depth of 0.
     /// </summary>
     public ushort Depth { get; }
+}
+
+/// <summary>
+///     Trait methods for <see cref="IHaveObservableChildren{TSelf}" />.
+/// </summary>
+[ExcludeFromCodeCoverage] // Wrapper
+// ReSharper disable once InconsistentNaming
+public static class IHaveDepthInformationExtensions
+{
+    /// <summary>
+    ///     Retrieves the depth of the node in the tree structure.
+    /// </summary>
+    /// <param name="item">The boxed node whose depth is to be retrieved.</param>
+    /// <returns>The depth of the node.</returns>
+    public static ushort Depth<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveDepthInformation
+        => item.Item.Depth;
+
+    /// <summary>
+    ///     Retrieves the depth of the node in the tree structure.
+    /// </summary>
+    /// <param name="item">The keyed boxed node whose depth is to be retrieved.</param>
+    /// <returns>The depth of the node.</returns>
+    public static ushort Depth<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveDepthInformation
+        where TKey : notnull
+        => item.Item.Depth;
 }

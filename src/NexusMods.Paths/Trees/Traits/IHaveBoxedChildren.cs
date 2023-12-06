@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Reloaded.Memory.Extensions;
 
@@ -254,4 +255,15 @@ public static class IHaveBoxedChildrenExtensions
                 GetLeavesUnsafe(child.Item, leavesSpan, ref index);
         }
     }
+
+    /// <summary>
+    ///     Retrieves the direct children of the current node.
+    /// </summary>
+    /// <param name="item">The node whose children are to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An array of the direct children of the current node.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static Box<TSelf>[] Children<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+        => item.Item.Children;
 }

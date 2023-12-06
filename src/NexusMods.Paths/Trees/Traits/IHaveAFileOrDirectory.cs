@@ -280,15 +280,45 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
 /// <summary>
 ///     Trait methods for <see cref="IHaveAFileOrDirectory"/>.
 /// </summary>
+[ExcludeFromCodeCoverage] // Wrapper
 // ReSharper disable once InconsistentNaming
 public static class IHaveAFileOrDirectoryExtensions
 {
     /// <summary>
-    ///      Returns true if this item represents a directory.
+    ///     Checks if the item in the keyed box is a file.
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    [ExcludeFromCodeCoverage]
-    public static bool IsDirectory<TSelf>(this TSelf item)
-        where TSelf : struct, IHaveAFileOrDirectory =>
-        item.IsDirectory;
+    /// <param name="item">The keyed box containing the item to check.</param>
+    /// <returns>True if the item is a file; otherwise, false.</returns>
+    public static bool IsFile<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveAFileOrDirectory
+        where TKey : notnull
+        => item.Item.IsFile;
+
+    /// <summary>
+    ///     Checks if the item in the box is a file.
+    /// </summary>
+    /// <param name="item">The box containing the item to check.</param>
+    /// <returns>True if the item is a file; otherwise, false.</returns>
+    public static bool IsFile<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveAFileOrDirectory
+        => item.Item.IsFile;
+
+    /// <summary>
+    ///     Checks if the item in the keyed box is a directory.
+    /// </summary>
+    /// <param name="item">The keyed box containing the item to check.</param>
+    /// <returns>True if the item is a directory; otherwise, false.</returns>
+    public static bool IsDirectory<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveAFileOrDirectory
+        where TKey : notnull
+        => item.Item.IsDirectory;
+
+    /// <summary>
+    ///     Checks if the item in the box is a directory.
+    /// </summary>
+    /// <param name="item">The box containing the item to check.</param>
+    /// <returns>True if the item is a directory; otherwise, false.</returns>
+    public static bool IsDirectory<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveAFileOrDirectory
+        => item.Item.IsDirectory;
 }

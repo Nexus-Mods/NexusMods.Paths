@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Reloaded.Memory.Extensions;
 
 namespace NexusMods.Paths.Trees.Traits;
@@ -328,7 +329,7 @@ public static class IHaveValueExtensionsForIHaveBoxedChildrenWithValue
     }
 
     /// <summary>
-    /// Recursively returns all the values of the children of this node.
+    ///     Recursively returns all the values of the children of this node.
     /// </summary>
     /// <param name="item">The node whose child values to obtain.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
@@ -341,7 +342,7 @@ public static class IHaveValueExtensionsForIHaveBoxedChildrenWithValue
         => item.Item.GetValues<TKey, TSelf, TValue>();
 
     /// <summary>
-    /// Recursively returns all the values of the children of this node.
+    ///     Recursively returns all the values of the children of this node.
     /// </summary>
     /// <param name="item">The node whose child values to obtain.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
@@ -365,7 +366,7 @@ public static class IHaveValueExtensionsForIHaveBoxedChildrenWithValue
     /// <param name="item">The current node.</param>
     /// <param name="buffer">
     ///     The span to fill with values.
-    ///     Should be at least as big as <see cref="IHaveBoxedChildrenWithKeyExtensions.CountChildren{TSelf,TKey}(NexusMods.Paths.Trees.Traits.ChildWithKeyBox{TKey,TSelf})"/>
+    ///     Should be at least as big as <see cref="IHaveBoxedChildrenWithKeyExtensions.CountChildren{TSelf,TKey}(NexusMods.Paths.Trees.KeyedBox{TKey,TSelf})"/>
     /// </param>
     /// <param name="index">The current index in the array.</param>
     public static void GetValuesUnsafe<TKey, TSelf, TValue>(TSelf item, Span<TValue> buffer, ref int index)
@@ -378,4 +379,35 @@ public static class IHaveValueExtensionsForIHaveBoxedChildrenWithValue
             GetValuesUnsafe<TKey, TSelf, TValue>(pair.Value.Item, buffer, ref index);
         }
     }
+}
+
+/// <summary>
+///    Extensions for <see cref="IHaveValue{TValue}"/>
+/// </summary>
+[ExcludeFromCodeCoverage] // Wrapper
+// ReSharper disable once InconsistentNaming
+public static class IHaveValueExtensions
+{
+    /// <summary>
+    ///     Retrieves the value of the node.
+    /// </summary>
+    /// <param name="item">The keyed boxed node whose value is to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <returns>The value of the node.</returns>
+    public static TValue Value<TSelf, TValue>(this KeyedBox<TValue, TSelf> item)
+        where TSelf : struct, IHaveValue<TValue>
+        where TValue : notnull
+        => item.Item.Value;
+
+    /// <summary>
+    ///     Retrieves the value of the node.
+    /// </summary>
+    /// <param name="item">The boxed node whose value is to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <returns>The value of the node.</returns>
+    public static TValue Value<TSelf, TValue>(this Box<TSelf> item)
+        where TSelf : struct, IHaveValue<TValue>
+        => item.Item.Value;
 }
