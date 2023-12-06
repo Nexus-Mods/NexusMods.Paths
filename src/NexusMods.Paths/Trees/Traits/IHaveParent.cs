@@ -616,19 +616,21 @@ public static class IHaveParentExtensions
 
     /// <summary>
     ///     Finds a node by traversing up the parent nodes, matching keys in reverse order.
+    ///     Returns the node corresponding to last key in the span.
     /// </summary>
     /// <param name="node">The starting node for the search.</param>
     /// <param name="keys">The sequence of keys to match, in reverse order.</param>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <returns>The node that matches the sequence of keys from end to start, or null if no match is found.</returns>
-    public static TSelf? FindByKeysUpward<TSelf, TKey>(this Box<TSelf> node, Span<TKey> keys)
+    public static Box<TSelf>? FindByKeyUpward<TSelf, TKey>(this Box<TSelf> node, Span<TKey> keys)
         where TSelf : struct, IHaveParent<TSelf>, IHaveKey<TKey>
         where TKey : notnull
-        => node.Item.FindByKeysUpward(keys);
+        => keys.Length == 0 ? null : node.FindByKeysUpwardWithNonZeroKey(keys);
 
     /// <summary>
     ///     Finds a node by traversing up the parent nodes, matching keys in reverse order.
+    ///     Returns the node corresponding to last key in the span.
     /// </summary>
     /// <param name="node">The starting node for the search.</param>
     /// <param name="keys">The sequence of keys to match, in reverse order.</param>
@@ -636,46 +638,113 @@ public static class IHaveParentExtensions
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <returns>The node that matches the sequence of keys from end to start, or null if no match is found.</returns>
     [ExcludeFromCodeCoverage]
-    public static TSelf? FindByKeysUpward<TSelf, TKey>(this KeyedBox<TKey, TSelf> node, Span<TKey> keys)
+    public static Box<TSelf>? FindByKeyUpward<TSelf, TKey>(this KeyedBox<TKey, TSelf> node, Span<TKey> keys)
         where TSelf : struct, IHaveParent<TSelf>, IHaveKey<TKey>
         where TKey : notnull
-        => node.Item.FindByKeysUpward(keys);
+        => keys.Length == 0 ? null : node.FindByKeysUpwardWithNonZeroKey(keys);
 
     /// <summary>
     ///     Verifies the path of this node against a Span of keys (inverse FindByKey).
+    ///     Returns the node corresponding to last key in the span.
     /// </summary>
     /// <param name="node">The starting node for the search.</param>
     /// <param name="keys">The sequence of keys to match, in reverse order.</param>
     /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
     /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
     /// <returns>The node that matches the sequence of keys from end to start, or null if no match is found.</returns>
-    public static TSelf? FindByKeysUpward<TSelf, TKey>(this TSelf node, Span<TKey> keys)
+    [ExcludeFromCodeCoverage]
+    [Obsolete("Do not use this overload with key length <= 1. This overload also boxes. Use the overload with boxed TSelf instead.")]
+    public static Box<TSelf>? FindByKeyUpward<TSelf, TKey>(this TSelf node, Span<TKey> keys)
         where TSelf : struct, IHaveParent<TSelf>, IHaveKey<TKey>
         where TKey : notnull
-        => keys.Length == 0 ? null : node.FindByKeysUpwardWithNonZeroKey(keys);
+        => keys.Length <= 1 ? null : ((Box<TSelf>) node).FindByKeysUpwardWithNonZeroKey(keys); // for your own good, this returns null if key has 1 item.
 
-    internal static TSelf? FindByKeysUpwardWithNonZeroKey<TSelf, TKey>(this TSelf node, Span<TKey> keys)
+    internal static Box<TSelf>? FindByKeysUpwardWithNonZeroKey<TSelf, TKey>(this Box<TSelf> node, Span<TKey> keys)
         where TSelf : struct, IHaveParent<TSelf>, IHaveKey<TKey>
         where TKey : notnull
     {
         var keyIndex = keys.Length - 1;
-
-        // Traverse upwards until you either exhaust keys or have no parent (root node)
         var currentNode = node;
         while (keyIndex >= 0)
         {
-            if (!EqualityComparer<TKey>.Default.Equals(currentNode.Key, keys.DangerousGetReferenceAt(keyIndex)))
+            if (!EqualityComparer<TKey>.Default.Equals(currentNode.Item.Key, keys.DangerousGetReferenceAt(keyIndex)))
                 return null;
 
-            // Move to the parent node if not at the root
             keyIndex--;
-            if (currentNode.HasParent)
-                currentNode = currentNode.Parent!.Item;
+            if (currentNode.HasParent())
+                currentNode = currentNode.Parent()!;
             else
                 break;
         }
 
-        // Check if all keys have been matched
         return keyIndex < 0 ? node : null;
+    }
+
+    /// <summary>
+    ///     Verifies the path of this node against a Span of keys (inverse FindByKey).
+    ///     Returns the node corresponding to first key in the span.
+    /// </summary>
+    /// <param name="node">The starting node for the search.</param>
+    /// <param name="keys">The sequence of keys to match, in reverse order.</param>
+    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
+    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
+    /// <returns>The node that matches the sequence of keys from start to end, or null if no match is found.</returns>
+    [ExcludeFromCodeCoverage]
+    [Obsolete("Do not use this overload with key length <= 1. This overload also boxes. Use the overload with boxed TSelf instead.")]
+    public static Box<TSelf>? FindRootByKeyUpward<TSelf, TKey>(this TSelf node, Span<TKey> keys)
+        where TSelf : struct, IHaveParent<TSelf>, IHaveKey<TKey>
+        where TKey : notnull
+        => keys.Length <= 1 ? null : ((Box<TSelf>) node).FindRootByKeyUpward(keys); // for your own good, this returns null if key has 1 item.
+
+    /// <summary>
+    ///     Verifies the path of this node against a Span of keys (inverse FindByKey).
+    ///     Returns the node corresponding to first key in the span.
+    /// </summary>
+    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
+    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
+    /// <param name="node">The starting keyed boxed node for the search.</param>
+    /// <param name="keys">The sequence of keys to match, in reverse order.</param>
+    /// <returns>The node that matches the sequence of keys from start to end, or null if no match is found.</returns>
+    [ExcludeFromCodeCoverage]
+    public static Box<TSelf>? FindRootByKeyUpward<TKey, TSelf>(this KeyedBox<TKey, TSelf> node, Span<TKey> keys)
+        where TSelf : struct, IHaveParent<TSelf>, IHaveKey<TKey>
+        where TKey : notnull
+        => ((Box<TSelf>)node).FindRootByKeyUpward(keys);
+
+    /// <summary>
+    ///     Verifies the path of this node against a Span of keys (inverse FindByKey).
+    ///     Returns the node corresponding to first key in the span.
+    /// </summary>
+    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
+    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
+    /// <param name="node">The starting keyed boxed node for the search.</param>
+    /// <param name="keys">The sequence of keys to match, in reverse order.</param>
+    /// <returns>The node that matches the sequence of keys from start to end, or null if no match is found.</returns>
+    public static Box<TSelf>? FindRootByKeyUpward<TSelf, TKey>(this Box<TSelf> node, Span<TKey> keys)
+        where TSelf : struct, IHaveParent<TSelf>, IHaveKey<TKey>
+        where TKey : notnull
+    {
+        if (keys.IsEmpty)
+            return null;
+
+        var currentNode = node;
+        for (var x = keys.Length - 1; x >= 0; x--)
+        {
+            if (!EqualityComparer<TKey>.Default.Equals(currentNode!.Item.Key, keys[x]))
+                return null;
+
+            // If we've hit the root, return it.
+            if (x == 0)
+                return currentNode;
+
+            // Else navigate up.
+            if (currentNode.HasParent())
+                currentNode = currentNode.Parent();
+            else
+                return null;
+        }
+
+        // Unreachable.
+        return null;
     }
 }

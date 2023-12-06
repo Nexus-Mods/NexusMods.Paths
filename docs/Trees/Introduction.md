@@ -55,8 +55,8 @@ public struct TreeNode : IHaveBoxedChildrenWithKey<RelativePath, TreeNode>
 {
     public Dictionary<RelativePath, ChildrenWithKeyBox<RelativePath, TreeNode>> Children { get; }
 
-    // Create a Constructor. 
-    public static KeyedBox<int, TestTree> Create(Dictionary<int, KeyedBox<int, TestTree>>? children = null) 
+    // Create a Constructor.
+    public static KeyedBox<int, TestTree> Create(Dictionary<int, KeyedBox<int, TestTree>>? children = null)
         => (KeyedBox<int, TestTree>) new TestTree()
         {
             Children = children ?? new Dictionary<int, KeyedBox<int, TestTree>>()
@@ -68,16 +68,16 @@ public struct TreeNode : IHaveBoxedChildrenWithKey<RelativePath, TreeNode>
 
 !!! tip "Not Boxing the Root"
 
-    Depending on your use case, you can choose to not box the root, and store unboxed `TestTree` directly in a class.  
+    Depending on your use case, you can choose to not box the root, and store unboxed `TestTree` directly in a class.
     This saves a pointer dereference.
 
 !!! warning
 
-    Some methods (they are deliberately marked 'Obsolete') may also cause a box/heap allocation if called from unboxed item.  
+    Some methods (they are deliberately marked 'Obsolete') may also cause a box/heap allocation if called from unboxed item.
 
-If you don't box the root, you might sometimes need to specify the generic types manually on method calls (no auto inference).  
+If you don't box the root, you might sometimes need to specify the generic types manually on method calls (no auto inference).
 
-You can work around this by exporting helper methods for convenience (if desired).  
+You can work around this by exporting helper methods for convenience (if desired).
 
 ```csharp
 public struct TreeNode : IHaveBoxedChildrenWithKey<RelativePath, TreeNode>
@@ -85,7 +85,7 @@ public struct TreeNode : IHaveBoxedChildrenWithKey<RelativePath, TreeNode>
     // .. other code
 
     // [Optional] Re-export methods for convenience if you are working with non-boxed root.
-    
+
     /// <inheritdoc cref="IHaveBoxedChildrenWithKeyExtensions.CountChildren{TSelf,TKey}"/>
     public int CountChildren() => this.CountChildren<TreeNode, RelativePath>();
 
@@ -94,7 +94,7 @@ public struct TreeNode : IHaveBoxedChildrenWithKey<RelativePath, TreeNode>
 }
 ```
 
-### Adding Functionality 
+### Adding Functionality
 
 !!! info "In order to add functionality to your tree, simply implement a combination of the interfaces below."
 
@@ -126,6 +126,7 @@ Available Methods:
 | `FindSubPathsByKey`[2]       | Finds all nodes whose sub-path matches Span of keys.                          | `IHaveKey`                        |
 | `FindByKey`[2]               | Finds a given node in a tree using a Span of keys.                            | `IHaveKey`                        |
 | `FindByKeyUpward`            | Verifies the path to the node against a Span of keys (inverse FindByKey).     | `IHaveKey`, `IHaveParent`         |
+| `FindRootByKeyUpward`        | Verifies the path to the node against a Span of keys (optimized FindByKey).   | `IHaveKey`, `IHaveParent`         |
 | `FindByPath`[2]              | Finds a given node in a tree using a relative path.                           | `IHavePathSegment`                |
 | `GetChildrenRecursive`       | Retrieves all children of this node (flattened).                              |                                   |
 | `GetChildrenRecursiveUnsafe` | Retrieves all children of this node (no bound checks).                        |                                   |

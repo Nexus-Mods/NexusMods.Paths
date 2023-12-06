@@ -367,7 +367,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
     {
-        if (node.FindByKeysUpward(keys) != null)
+        if (node.FindByKeyUpward(keys) != null)
             foundNodes.Add(node);
 
         foreach (var child in node.Item.Children)
@@ -722,7 +722,7 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
     {
-        if (node.FindByKeysUpward(keys) != null)
+        if (node.FindByKeyUpward(keys) != null)
             foundNodes.Add(node);
 
         foreach (var child in node.Item.Children)
@@ -1073,7 +1073,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
     {
-        if (node.FindByKeysUpward(keys) != null)
+        if (node.FindByKeyUpward(keys) != null)
             foundNodes.Add(node);
 
         foreach (var child in node.Item.Children)
