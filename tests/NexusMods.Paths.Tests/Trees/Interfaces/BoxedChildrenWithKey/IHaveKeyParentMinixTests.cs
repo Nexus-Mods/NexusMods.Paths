@@ -53,7 +53,7 @@ public class IHaveKeyParentMixinTests
     {
         // Arrange
         var child = TestTree.Create(2);
-        KeyedBox<int, TestTree> root = TestTree.Create(1, new Dictionary<int, KeyedBox<int, TestTree>> { { 2, child } });
+        var root = TestTree.Create(1, new Dictionary<int, KeyedBox<int, TestTree>> { { 2, child } });
 
         // Act
         var foundNodes = root.FindSubPathsByKeyUpward(new[] { 99 });
@@ -67,10 +67,80 @@ public class IHaveKeyParentMixinTests
     {
         // Arrange
         var child = TestTree.Create(2);
-        KeyedBox<int, TestTree> root = TestTree.Create(child, 1);
+        var root = TestTree.Create(child, 1);
 
         // Act
         var foundNodes = root.FindSubPathsByKeyUpward(Array.Empty<int>());
+
+        // Assert
+        foundNodes.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void FindSubPathRootsByKeyUpward_WithNestedPath_ShouldReturnAllMatchingNodes()
+    {
+        // Arrange
+        var deepChild1 = TestTree.Create(5);
+        var grandChild1 = TestTree.Create(deepChild1, 4);
+        var child = TestTree.Create(3, new Dictionary<int, KeyedBox<int, TestTree>>
+        {
+            { 4, grandChild1 }
+        });
+        var root = TestTree.Create(child, 2);
+
+        // Act
+        var foundNodes = root.FindSubPathRootsByKeyUpward(new[] { 4, 5 });
+
+        // Assert
+        foundNodes.Count.Should().Be(1);
+        foundNodes.All(node => node.Item.Key == 4).Should().BeTrue();
+    }
+
+    [Fact]
+    public void FindSubPathRootsByKeyUpward_WithPartialMatchingPath_ShouldReturnPartialMatches()
+    {
+        // Arrange
+        var grandChild1 = TestTree.Create(4);
+        var grandChild2 = TestTree.Create(5);
+        var child1 = TestTree.Create(grandChild1, 2);
+        var child2 = TestTree.Create(grandChild2, 3);
+        var root = TestTree.Create(1, new Dictionary<int, KeyedBox<int, TestTree>>
+        {
+            { 2, child1 },
+            { 3, child2 }
+        });
+
+        // Act
+        var foundNodes = root.FindSubPathRootsByKeyUpward(new[] { 4 });
+
+        // Assert
+        foundNodes.Count.Should().Be(1);
+        foundNodes[0].Item.Key.Should().Be(4);
+    }
+
+    [Fact]
+    public void FindSubPathRootsByKeyUpward_WithNonExistingPath_ShouldReturnEmpty()
+    {
+        // Arrange
+        var child = TestTree.Create(2);
+        var root = TestTree.Create(1, new Dictionary<int, KeyedBox<int, TestTree>> { { 2, child } });
+
+        // Act
+        var foundNodes = root.FindSubPathRootsByKeyUpward(new[] { 99 });
+
+        // Assert
+        foundNodes.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void FindSubPathRootsByKeyUpward_WithEmptyPath_ShouldReturnEmpty()
+    {
+        // Arrange
+        var child = TestTree.Create(2);
+        var root = TestTree.Create(child, 1);
+
+        // Act
+        var foundNodes = root.FindSubPathRootsByKeyUpward(Array.Empty<int>());
 
         // Assert
         foundNodes.Should().BeEmpty();

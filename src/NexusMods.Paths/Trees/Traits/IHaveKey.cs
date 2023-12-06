@@ -334,6 +334,10 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathRootsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the leaves instead of the root)
+    /// </remarks>
     public static List<Box<TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
@@ -354,6 +358,10 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathRootsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the leaves instead of the root)
+    /// </remarks>
     [ExcludeFromCodeCoverage]
     [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
     public static List<Box<TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this TSelf root, Span<TKey> keys)
@@ -372,6 +380,67 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
 
         foreach (var child in node.Item.Children)
             FindSubPathsByKeyUpward(child, keys, foundNodes);
+    }
+
+    /// <summary>
+    ///     Searches for all nodes within a tree whose children match a specified sequence of keys.
+    ///     (Optimized <see cref="FindSubPathsByKeyFromRoot{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>)
+    /// </summary>
+    /// <param name="node">The root node of the tree, wrapped in a ChildBox.</param>
+    /// <param name="keys">The sequence of keys to be matched, starting from the leaf node and moving upwards.</param>
+    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
+    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
+    /// <returns>
+    ///     A list of roots where each root's path to the node matches the specified sequence of keys.
+    /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the root instead of the leaf)
+    /// </remarks>
+    public static List<Box<TSelf>> FindSubPathRootsByKeyUpward<TSelf, TKey>(this Box<TSelf> node, Span<TKey> keys)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+    {
+        var foundNodes = new List<Box<TSelf>>();
+        FindSubPathRootsByKeyUpward(node, keys, foundNodes);
+        return foundNodes;
+    }
+
+    /// <summary>
+    ///     Searches for all nodes within a tree whose children match a specified sequence of keys.
+    ///     (Optimized <see cref="FindSubPathsByKeyFromRoot{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>)
+    /// </summary>
+    /// <param name="node">The starting node for the search.</param>
+    /// <param name="keys">The sequence of keys to be matched, starting from each descendant node and moving upwards.</param>
+    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
+    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
+    /// <returns>
+    ///     A list of nodes where each node's path to the root (root being node at any depth)
+    ///     matches the specified sequence of keys.
+    /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the root instead of the leaf)
+    /// </remarks>
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static List<Box<TSelf>> FindSubPathRootsByKeyUpward<TSelf, TKey>(this TSelf node, Span<TKey> keys)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+    {
+        return FindSubPathsByKeyUpward((Box<TSelf>)node, keys);
+    }
+
+    private static void FindSubPathRootsByKeyUpward<TSelf, TKey>(Box<TSelf> node, Span<TKey> keys, List<Box<TSelf>> foundNodes)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+    {
+        var result = node.FindRootByKeyUpward(keys);
+        if (result != null)
+            foundNodes.Add(result);
+
+        foreach (var child in node.Item.Children)
+            FindSubPathRootsByKeyUpward(child, keys, foundNodes);
     }
 }
 
@@ -691,6 +760,10 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathRootsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the leaves instead of the root)
+    /// </remarks>
     public static List<Box<TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
@@ -711,6 +784,10 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathRootsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the leaves instead of the root)
+    /// </remarks>
     [ExcludeFromCodeCoverage]
     [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
     public static List<Box<TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this TSelf root, Span<TKey> keys)
@@ -727,6 +804,66 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
 
         foreach (var child in node.Item.Children)
             FindSubPathsByKeyUpward(child, keys, foundNodes);
+    }
+
+    /// <summary>
+    ///     Searches for all nodes within a tree whose children match a specified sequence of keys.
+    ///     (Optimized <see cref="FindSubPathsByKeyFromRoot{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>)
+    /// </summary>
+    /// <param name="root">The root node of the tree, wrapped in a ChildBox.</param>
+    /// <param name="keys">The sequence of keys to be matched, starting from the leaf node and moving upwards.</param>
+    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
+    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
+    /// <returns>
+    ///     A list of nodes where each node's path to the root (root being node at any depth)
+    ///     matches the specified sequence of keys.
+    /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the root instead of the leaf)
+    /// </remarks>
+    public static List<Box<TSelf>> FindSubPathRootsByKeyUpward<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+    {
+        var foundNodes = new List<Box<TSelf>>();
+        FindSubPathRootsByKeyUpward(root, keys, foundNodes);
+        return foundNodes;
+    }
+
+    /// <summary>
+    ///     Searches for all nodes within a tree whose children match a specified sequence of keys.
+    ///     (Optimized <see cref="FindSubPathsByKeyFromRoot{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>)
+    /// </summary>
+    /// <param name="root">The starting node for the search.</param>
+    /// <param name="keys">The sequence of keys to be matched, starting from each descendant node and moving upwards.</param>
+    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
+    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
+    /// <returns>
+    ///     A list of nodes where each node's path to the root (root being node at any depth)
+    ///     matches the specified sequence of keys.
+    /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the root instead of the leaf)
+    /// </remarks>
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static List<Box<TSelf>> FindSubPathRootsByKeyUpward<TSelf, TKey>(this TSelf root, Span<TKey> keys)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+        => FindSubPathRootsByKeyUpward((Box<TSelf>)root, keys);
+
+    private static void FindSubPathRootsByKeyUpward<TSelf, TKey>(Box<TSelf> node, Span<TKey> keys, List<Box<TSelf>> foundNodes)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+    {
+        var result = node.FindRootByKeyUpward(keys);
+        if (result != null)
+            foundNodes.Add(result);
+
+        foreach (var child in node.Item.Children)
+            FindSubPathRootsByKeyUpward(child, keys, foundNodes);
     }
 }
 
@@ -1042,6 +1179,10 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathRootsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.KeyedBox{TKey,TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the leaves instead of the root)
+    /// </remarks>
     public static List<KeyedBox<TKey, TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this KeyedBox<TKey, TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
@@ -1062,6 +1203,10 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathRootsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.KeyedBox{TKey,TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the leaves instead of the root)
+    /// </remarks>
     [ExcludeFromCodeCoverage]
     [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
     public static List<KeyedBox<TKey, TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this TSelf root, Span<TKey> keys)
@@ -1078,6 +1223,66 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
 
         foreach (var child in node.Item.Children)
             FindSubPathsByKeyUpward(child.Value, keys, foundNodes);
+    }
+
+    /// <summary>
+    ///     Searches for all nodes within a tree whose children match a specified sequence of keys.
+    ///     (Optimized <see cref="FindSubPathsByKeyFromRoot{TSelf,TKey}(NexusMods.Paths.Trees.KeyedBox{TKey,TSelf},System.Span{TKey})"/>)
+    /// </summary>
+    /// <param name="root">The root node of the tree, wrapped in a ChildBox.</param>
+    /// <param name="keys">The sequence of keys to be matched, starting from the leaf node and moving upwards.</param>
+    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
+    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
+    /// <returns>
+    ///     A list of nodes where each node's path to the root (root being node at any depth)
+    ///     matches the specified sequence of keys.
+    /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.KeyedBox{TKey,TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the root instead of the leaf)
+    /// </remarks>
+    public static List<Box<TSelf>> FindSubPathRootsByKeyUpward<TSelf, TKey>(this KeyedBox<TKey, TSelf> root, Span<TKey> keys)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+    {
+        var foundNodes = new List<Box<TSelf>>();
+        FindSubPathRootsByKeyUpward(root, keys, foundNodes);
+        return foundNodes;
+    }
+
+    /// <summary>
+    ///     Searches for all nodes within a tree whose children match a specified sequence of keys.
+    ///     (Optimized <see cref="FindSubPathsByKeyFromRoot{TSelf,TKey}(NexusMods.Paths.Trees.KeyedBox{TKey,TSelf},System.Span{TKey})t"/>)
+    /// </summary>
+    /// <param name="root">The starting node for the search.</param>
+    /// <param name="keys">The sequence of keys to be matched, starting from each descendant node and moving upwards.</param>
+    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
+    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
+    /// <returns>
+    ///     A list of nodes where each node's path to the root (root being node at any depth)
+    ///     matches the specified sequence of keys.
+    /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.KeyedBox{TKey,TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the root instead of the leaf)
+    /// </remarks>
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static List<Box<TSelf>> FindSubPathRootsByKeyUpward<TSelf, TKey>(this TSelf root, Span<TKey> keys)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+        => FindSubPathRootsByKeyUpward((KeyedBox<TKey, TSelf>)root, keys);
+
+    private static void FindSubPathRootsByKeyUpward<TSelf, TKey>(KeyedBox<TKey, TSelf> node, Span<TKey> keys, List<Box<TSelf>> foundNodes)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+    {
+        var result = node.FindRootByKeyUpward(keys);
+        if (result != null)
+            foundNodes.Add(result);
+
+        foreach (var child in node.Item.Children)
+            FindSubPathRootsByKeyUpward(child.Value, keys, foundNodes);
     }
 }
 
