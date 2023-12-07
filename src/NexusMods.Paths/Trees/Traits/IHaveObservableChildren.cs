@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using NexusMods.Paths.Trees.Traits.Interfaces;
 using Reloaded.Memory.Extensions;
 
 namespace NexusMods.Paths.Trees.Traits;
@@ -91,6 +92,79 @@ public static class IHaveObservableChildrenExtensions
         {
             yield return child;
             foreach (var grandChild in child.Item.EnumerateChildrenDfs())
+                yield return grandChild;
+        }
+    }
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a breadth-first manner that satisfy a given filter.
+    /// </summary>
+    /// <param name="item">The node, wrapped in a Box, whose children are to be enumerated.</param>
+    /// <param name="filter">The filter struct to be applied to each child node.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
+    /// <returns>An IEnumerable of all filtered child nodes of the current node.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static IEnumerable<Box<TSelf>> EnumerateChildrenFilteredBfs<TSelf, TFilter>(this Box<TSelf> item, TFilter filter)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TFilter : struct, IFilter<Box<TSelf>>
+        => item.Item.EnumerateChildrenFilteredBfs(filter);
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a breadth-first manner that satisfy a given filter.
+    /// </summary>
+    /// <param name="item">The node whose children are to be enumerated.</param>
+    /// <param name="filter">The filter struct to be applied to each child node.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
+    /// <returns>An IEnumerable of all filtered child nodes of the current node.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateChildrenFilteredBfs<TSelf, TFilter>(this TSelf item, TFilter filter)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TFilter : struct, IFilter<Box<TSelf>>
+    {
+        // Return the current item's immediate children first if they match the filter.
+        foreach (var child in item.Children)
+            if (filter.Match(child))
+                yield return child;
+
+        // Then return the filtered children of those children.
+        foreach (var child in item.Children)
+        foreach (var grandChild in child.Item.EnumerateChildrenFilteredBfs(filter))
+            yield return grandChild;
+    }
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a depth-first manner that satisfy a given filter.
+    /// </summary>
+    /// <param name="item">The node, wrapped in a Box, whose children are to be enumerated.</param>
+    /// <param name="filter">The filter struct to be applied to each child node.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
+    /// <returns>An IEnumerable of all filtered child nodes of the current node.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static IEnumerable<Box<TSelf>> EnumerateChildrenFilteredDfs<TSelf, TFilter>(this Box<TSelf> item, TFilter filter)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TFilter : struct, IFilter<Box<TSelf>>
+        => item.Item.EnumerateChildrenFilteredDfs(filter);
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a depth-first manner that satisfy a given filter.
+    /// </summary>
+    /// <param name="item">The node whose children are to be enumerated.</param>
+    /// <param name="filter">The filter struct to be applied to each child node.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
+    /// <returns>An IEnumerable of all filtered child nodes of the current node.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateChildrenFilteredDfs<TSelf, TFilter>(this TSelf item, TFilter filter)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TFilter : struct, IFilter<Box<TSelf>>
+    {
+        foreach (var child in item.Children)
+        {
+            if (filter.Match(child))
+                yield return child;
+
+            foreach (var grandChild in child.Item.EnumerateChildrenFilteredDfs(filter))
                 yield return grandChild;
         }
     }

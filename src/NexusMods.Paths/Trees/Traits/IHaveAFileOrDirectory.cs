@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using NexusMods.Paths.Trees.Traits.Interfaces;
 
 namespace NexusMods.Paths.Trees.Traits;
 
@@ -107,6 +109,102 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
             child.Value.Item.CountDirectoriesRecursive<TSelf, TKey>(ref accumulator);
         }
     }
+
+    /// <summary>
+    ///     Enumerates all file child nodes of the current node in a breadth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a breadth-first manner.</returns>
+    public static IEnumerable<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>> EnumerateFilesBfs<TSelf, TKey>(this TSelf item)
+        where TKey : notnull
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        => item.EnumerateChildrenFilteredBfs<TSelf, TKey, KeyedBoxFileFilter<TSelf, TKey>>(new KeyedBoxFileFilter<TSelf, TKey>());
+
+    /// <summary>
+    ///     Enumerates all file child nodes of the current node in a breadth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a breadth-first manner.</returns>
+    public static IEnumerable<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>> EnumerateFilesBfs<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+        where TKey : notnull
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        => item.Item.EnumerateFilesBfs<TSelf, TKey>();
+
+    /// <summary>
+    ///     Enumerates all directory child nodes of the current node in a breadth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose directory children are to be enumerated.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a breadth-first manner.</returns>
+    public static IEnumerable<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>> EnumerateDirectoriesBfs<TSelf, TKey>(this TSelf item)
+        where TKey : notnull
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        => item.EnumerateChildrenFilteredBfs<TSelf, TKey, KeyedBoxDirectoryFilter<TSelf, TKey>>(new KeyedBoxDirectoryFilter<TSelf, TKey>());
+
+    /// <summary>
+    ///     Enumerates all directory child nodes of the current node in a breadth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose directory children are to be enumerated.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a breadth-first manner.</returns>
+    public static IEnumerable<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>> EnumerateDirectoriesBfs<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+        where TKey : notnull
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        => item.Item.EnumerateDirectoriesBfs<TSelf, TKey>();
+
+    /// <summary>
+    ///     Enumerates all file child nodes of the current node in a depth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a depth-first manner.</returns>
+    public static IEnumerable<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>> EnumerateFilesDfs<TSelf, TKey>(this TSelf item)
+        where TKey : notnull
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        => item.EnumerateChildrenFilteredDfs<TSelf, TKey, KeyedBoxFileFilter<TSelf, TKey>>(new KeyedBoxFileFilter<TSelf, TKey>());
+
+    /// <summary>
+    ///     Enumerates all file child nodes of the current node in a depth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a depth-first manner.</returns>
+    public static IEnumerable<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>> EnumerateFilesDfs<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+        where TKey : notnull
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        => item.Item.EnumerateFilesDfs<TSelf, TKey>();
+
+    /// <summary>
+    ///     Enumerates all directory child nodes of the current node in a depth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose directory children are to be enumerated.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a depth-first manner.</returns>
+    public static IEnumerable<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>> EnumerateDirectoriesDfs<TSelf, TKey>(this TSelf item)
+        where TKey : notnull
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        => item.EnumerateChildrenFilteredDfs<TSelf, TKey, KeyedBoxDirectoryFilter<TSelf, TKey>>(new KeyedBoxDirectoryFilter<TSelf, TKey>());
+
+    /// <summary>
+    ///     Enumerates all directory child nodes of the current node in a depth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose directory children are to be enumerated.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a depth-first manner.</returns>
+    public static IEnumerable<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>> EnumerateDirectoriesDfs<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+        where TKey : notnull
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        => item.Item.EnumerateDirectoriesDfs<TSelf, TKey>();
 }
 
 /// <summary>
@@ -191,6 +289,86 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
             child.Item.CountDirectoriesRecursive(ref accumulator);
         }
     }
+
+    /// <summary>
+    ///     Enumerates all file child nodes of the current node in a breadth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a breadth-first manner.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateFilesBfs<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.EnumerateChildrenFilteredBfs(new BoxFileFilter<TSelf>());
+
+    /// <summary>
+    ///     Enumerates all file child nodes of the current node in a breadth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a breadth-first manner.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateFilesBfs<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.EnumerateFilesBfs();
+
+    /// <summary>
+    ///     Enumerates all directory child nodes of the current node in a breadth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose directory children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a breadth-first manner.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateDirectoriesBfs<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.EnumerateChildrenFilteredBfs(new BoxDirectoryFilter<TSelf>());
+
+    /// <summary>
+    ///     Enumerates all directory child nodes of the current node in a breadth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a depth-first manner.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateDirectoriesBfs<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.EnumerateDirectoriesBfs();
+
+    /// <summary>
+    ///     Enumerates all file child nodes of the current node in a depth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a depth-first manner.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateFilesDfs<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.EnumerateChildrenFilteredDfs(new BoxFileFilter<TSelf>());
+
+    /// <summary>
+    ///     Enumerates all file child nodes of the current node in a depth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a depth-first manner.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateFilesDfs<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.EnumerateFilesDfs();
+
+    /// <summary>
+    ///     Enumerates all directory child nodes of the current node in a depth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a depth-first manner.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateDirectoriesDfs<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.EnumerateChildrenFilteredDfs(new BoxDirectoryFilter<TSelf>());
+
+    /// <summary>
+    ///     Enumerates all directory child nodes of the current node in a depth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a depth-first manner.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateDirectoriesDfs<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.EnumerateDirectoriesDfs();
 }
 
 /// <summary>
@@ -275,6 +453,86 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
             child.Item.CountDirectoriesRecursive(ref accumulator);
         }
     }
+
+    /// <summary>
+    ///     Enumerates all file child nodes of the current node in a breadth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a breadth-first manner.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateFilesBfs<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.EnumerateChildrenFilteredBfs(new BoxFileFilter<TSelf>());
+
+    /// <summary>
+    ///     Enumerates all file child nodes of the current node in a breadth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a breadth-first manner.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateFilesBfs<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.EnumerateFilesBfs();
+
+    /// <summary>
+    ///     Enumerates all directory child nodes of the current node in a breadth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose directory children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a breadth-first manner.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateDirectoriesBfs<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.EnumerateChildrenFilteredBfs(new BoxDirectoryFilter<TSelf>());
+
+    /// <summary>
+    ///     Enumerates all directory child nodes of the current node in a breadth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a depth-first manner.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateDirectoriesBfs<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.EnumerateDirectoriesBfs();
+
+    /// <summary>
+    ///     Enumerates all file child nodes of the current node in a depth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a depth-first manner.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateFilesDfs<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.EnumerateChildrenFilteredDfs(new BoxFileFilter<TSelf>());
+
+    /// <summary>
+    ///     Enumerates all file child nodes of the current node in a depth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a depth-first manner.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateFilesDfs<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.EnumerateFilesDfs();
+
+    /// <summary>
+    ///     Enumerates all directory child nodes of the current node in a depth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a depth-first manner.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateDirectoriesDfs<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.EnumerateChildrenFilteredDfs(new BoxDirectoryFilter<TSelf>());
+
+    /// <summary>
+    ///     Enumerates all directory child nodes of the current node in a depth-first manner.
+    /// </summary>
+    /// <param name="item">The node whose file children are to be enumerated.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a depth-first manner.</returns>
+    public static IEnumerable<Box<TSelf>> EnumerateDirectoriesDfs<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.EnumerateDirectoriesDfs();
 }
 
 /// <summary>
@@ -322,3 +580,28 @@ public static class IHaveAFileOrDirectoryExtensions
         where TSelf : struct, IHaveAFileOrDirectory
         => item.Item.IsDirectory;
 }
+
+internal struct BoxFileFilter<TSelf> : IFilter<Box<TSelf>> where TSelf : struct, IHaveAFileOrDirectory
+{
+    public bool Match(Box<TSelf> item) => item.Item.IsFile;
+}
+
+internal struct BoxDirectoryFilter<TSelf> : IFilter<Box<TSelf>> where TSelf : struct, IHaveAFileOrDirectory
+{
+    public bool Match(Box<TSelf> item) => item.Item.IsDirectory;
+}
+
+internal struct KeyedBoxFileFilter<TSelf, TKey> : IFilter<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>>
+    where TSelf : struct, IHaveAFileOrDirectory
+    where TKey : notnull
+{
+    public bool Match(KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item) => item.Value.Item.IsFile;
+}
+
+internal struct KeyedBoxDirectoryFilter<TSelf, TKey> : IFilter<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>>
+    where TSelf : struct, IHaveAFileOrDirectory
+    where TKey : notnull
+{
+    public bool Match(KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item) => item.Value.Item.IsDirectory;
+}
+

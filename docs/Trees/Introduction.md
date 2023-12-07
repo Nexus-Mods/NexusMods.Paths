@@ -109,42 +109,48 @@ public struct TreeNode : IHaveBoxedChildrenWithKey<RelativePath, TreeNode>
 
 Available Methods:
 
-| Method                        | Description                                                                   | Required Traits                   |
-|-------------------------------|-------------------------------------------------------------------------------|-----------------------------------|
-| `CountChildren`               | Counts the total number of child nodes under this node.                       |                                   |
-| `CountDirectories`            | Counts directories under this node (directory).                               | `IHaveAFileOrDirectory`           |
-| `CountFiles`                  | Counts files under this node (directory).                                     | `IHaveAFileOrDirectory`           |
-| `CountLeaves`                 | Returns number of leaf nodes in this tree.                                    |                                   |
-| `EnumerateChildrenBfs`        | Enumerates children of this node Breadth First.                               |                                   |
-| `EnumerateChildrenDfs`        | Enumerates children of this node using Depth First.                           |                                   |
-| `EnumerateKeysBfs`            | Enumerates child keys of this node Breadth First.                             | `IHaveKey`                        |
-| `EnumerateKeysDfs`            | Enumerates child keys of this node using Depth First.                         | `IHaveKey`                        |
-| `EnumerateSiblings`[1]        | Enumerates (`IEnumerator`) over siblings of this node.                        | `IHaveParent`                     |
-| `EnumerateValuesBfs`          | Enumerates child values of this node Breadth First.                           | `IHaveValue`                      |
-| `EnumerateValuesDfs`          | Enumerates child values of this node using Depth First.                       | `IHaveValue`                      |
-| `FindSubPathRootsByKeyUpward` | Optimized variant of `FindSubPathsByKey` (returns roots).                     | `IHaveKey`, `IHaveParent`         |
-| `FindSubPathsByKeyUpward`     | Optimized variant of `FindSubPathsByKey` (returns leaves).                    | `IHaveKey`, `IHaveParent`         |
-| `FindSubPathsByKey`[2]        | Finds all nodes whose sub-path matches Span of keys.                          | `IHaveKey`                        |
-| `FindByKey`[2]                | Finds a given node in a tree using a Span of keys.                            | `IHaveKey`                        |
-| `FindByKeyUpward`             | Verifies the path to the node against a Span of keys (inverse FindByKey).     | `IHaveKey`, `IHaveParent`         |
-| `FindRootByKeyUpward`         | Verifies the path to the node against a Span of keys (optimized FindByKey).   | `IHaveKey`, `IHaveParent`         |
-| `FindByPath`[2]               | Finds a given node in a tree using a relative path.                           | `IHavePathSegment`                |
-| `GetChildrenRecursive`        | Retrieves all children of this node (flattened).                              |                                   |
-| `GetChildrenRecursiveUnsafe`  | Retrieves all children of this node (no bound checks).                        |                                   |
-| `GetKeys`                     | Retrieves all keys of the children of this node.                              | `IHaveKey`                        |
-| `GetKeysUnsafe`               | Retrieves all keys of the children of this node (no bound checks).            | `IHaveKey`                        |
-| `GetKeyValues`                | Retrieves all key-value pairs of the children of this node.                   | `IHaveKey`, `IHaveValue`          |
-| `GetKeyValuesUnsafe`          | Retrieves all key-value pairs of the children of this node (no bound checks). | `IHaveKey`, `IHaveValue`          |
-| `GetLeaves`                   | Retrieves all leaves of this tree.                                            |                                   |
-| `GetLeavesUnsafe`             | Retrieves all leaves of this tree (no bound checks).                          |                                   |
-| `GetSiblingCount`             | Returns the number of siblings this node has.                                 | `IHaveParent`                     |
-| `GetSiblings`[1]              | Returns all siblings of this node.                                            | `IHaveParent`                     |
-| `GetSiblingsUnsafe`[1]        | Returns all siblings of this node (no bound checks).                          | `IHaveParent`                     |
-| `GetValues`                   | Retrieves all values of the children of this node.                            | `IHaveValue`                      |
-| `GetValuesUnsafe`             | Retrieves all values of the children of this node (no bound checks).          | `IHaveValue`                      |
-| `IsLeaf`                      | Returns true if the node has no children.                                     |                                   |
-| `ReconstructPath`             | Reconstructs full path by walking to tree root.                               | `IHaveParent`, `IHavePathSegment` |
-| `ToDictionary`                | Populates a dictionary from the children of the tree node.                    | `IHaveKey`, `IHaveValue`          |
+| Method                         | Description                                                                   | Required Traits                   |
+|--------------------------------|-------------------------------------------------------------------------------|-----------------------------------|
+| `CountChildren`                | Counts the total number of child nodes under this node.                       |                                   |
+| `CountDirectories`             | Counts directories under this node (directory).                               | `IHaveAFileOrDirectory`           |
+| `CountFiles`                   | Counts files under this node (directory).                                     | `IHaveAFileOrDirectory`           |
+| `CountLeaves`                  | Returns number of leaf nodes in this tree.                                    |                                   |
+| `EnumerateChildrenBfs`         | Enumerates children of this node Breadth First.                               |                                   |
+| `EnumerateChildrenDfs`         | Enumerates children of this node using Depth First.                           |                                   |
+| `EnumerateChildrenFilteredBfs` | Enumerates children of this node with zero-cost filter (Breadth First).       |                                   |
+| `EnumerateChildrenFilteredDfs` | Enumerates children of this node with zero-cost filter (Depth First).         |                                   |
+| `EnumerateDirectoriesBfs`      | Enumerates all children that are directories (Breadth First).                 | `IHaveAFileOrDirectory`           |
+| `EnumerateDirectoriesDfs`      | Enumerates all children that are directories (Depth First).                   | `IHaveAFileOrDirectory`           |
+| `EnumerateFilesBfs`            | Enumerates all children that are files (Breadth First).                       | `IHaveAFileOrDirectory`           |
+| `EnumerateFilesDfs`            | Enumerates all children that are files (Depth First).                         | `IHaveAFileOrDirectory`           |
+| `EnumerateKeysBfs`             | Enumerates child keys of this node Breadth First.                             | `IHaveKey`                        |
+| `EnumerateKeysDfs`             | Enumerates child keys of this node using Depth First.                         | `IHaveKey`                        |
+| `EnumerateSiblings`[1]         | Enumerates (`IEnumerator`) over siblings of this node.                        | `IHaveParent`                     |
+| `EnumerateValuesBfs`           | Enumerates child values of this node Breadth First.                           | `IHaveValue`                      |
+| `EnumerateValuesDfs`           | Enumerates child values of this node using Depth First.                       | `IHaveValue`                      |
+| `FindSubPathRootsByKeyUpward`  | Optimized variant of `FindSubPathsByKey` (returns roots).                     | `IHaveKey`, `IHaveParent`         |
+| `FindSubPathsByKeyUpward`      | Optimized variant of `FindSubPathsByKey` (returns leaves).                    | `IHaveKey`, `IHaveParent`         |
+| `FindSubPathsByKey`[2]         | Finds all nodes whose sub-path matches Span of keys.                          | `IHaveKey`                        |
+| `FindByKey`[2]                 | Finds a given node in a tree using a Span of keys.                            | `IHaveKey`                        |
+| `FindByKeyUpward`              | Verifies the path to the node against a Span of keys (inverse FindByKey).     | `IHaveKey`, `IHaveParent`         |
+| `FindRootByKeyUpward`          | Verifies the path to the node against a Span of keys (optimized FindByKey).   | `IHaveKey`, `IHaveParent`         |
+| `FindByPath`[2]                | Finds a given node in a tree using a relative path.                           | `IHavePathSegment`                |
+| `GetChildrenRecursive`         | Retrieves all children of this node (flattened).                              |                                   |
+| `GetChildrenRecursiveUnsafe`   | Retrieves all children of this node (no bound checks).                        |                                   |
+| `GetKeys`                      | Retrieves all keys of the children of this node.                              | `IHaveKey`                        |
+| `GetKeysUnsafe`                | Retrieves all keys of the children of this node (no bound checks).            | `IHaveKey`                        |
+| `GetKeyValues`                 | Retrieves all key-value pairs of the children of this node.                   | `IHaveKey`, `IHaveValue`          |
+| `GetKeyValuesUnsafe`           | Retrieves all key-value pairs of the children of this node (no bound checks). | `IHaveKey`, `IHaveValue`          |
+| `GetLeaves`                    | Retrieves all leaves of this tree.                                            |                                   |
+| `GetLeavesUnsafe`              | Retrieves all leaves of this tree (no bound checks).                          |                                   |
+| `GetSiblingCount`              | Returns the number of siblings this node has.                                 | `IHaveParent`                     |
+| `GetSiblings`[1]               | Returns all siblings of this node.                                            | `IHaveParent`                     |
+| `GetSiblingsUnsafe`[1]         | Returns all siblings of this node (no bound checks).                          | `IHaveParent`                     |
+| `GetValues`                    | Retrieves all values of the children of this node.                            | `IHaveValue`                      |
+| `GetValuesUnsafe`              | Retrieves all values of the children of this node (no bound checks).          | `IHaveValue`                      |
+| `IsLeaf`                       | Returns true if the node has no children.                                     |                                   |
+| `ReconstructPath`              | Reconstructs full path by walking to tree root.                               | `IHaveParent`, `IHavePathSegment` |
+| `ToDictionary`                 | Populates a dictionary from the children of the tree node.                    | `IHaveKey`, `IHaveValue`          |
 
 [1] Siblings are determined on Value equality *when called from internal boxed struct*. This means, when called from struct, if all fields are the same on two nodes, they may be (incorrectly) assumed as same node.
 

@@ -38,6 +38,81 @@ public class IHaveAFileOrDirectoryTests
         directoryCount.Should().Be(1); // Only the root's child is a directory
     }
 
+    [Fact]
+    public void EnumerateFilesBfs_ShouldEnumerateAllFilesInBreadthFirstManner()
+    {
+        // Arrange
+        var leaf1 = TestTree.Create(true);
+        var leaf2 = TestTree.Create(true);
+        var directory = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { leaf1, leaf2 });
+        var root = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { directory });
+
+        // Act
+        var enumeratedFiles = root.EnumerateFilesBfs().ToList();
+
+        // Assert
+        enumeratedFiles.Count.Should().Be(2);
+        enumeratedFiles[0].Should().Be(leaf1);
+        enumeratedFiles[1].Should().Be(leaf2);
+    }
+
+    [Fact]
+    public void EnumerateDirectoriesBfs_ShouldEnumerateAllDirectoriesInBreadthFirstManner()
+    {
+        // Arrange
+        var leaf1 = TestTree.Create(true);
+        var directory1 = TestTree.Create(false, leaf1);
+        var directory2 = TestTree.Create(false);
+        var root = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { directory1, directory2 });
+
+        // Act
+        var enumeratedDirectories = root.EnumerateDirectoriesBfs().ToList();
+
+        // Assert
+        enumeratedDirectories.Count.Should().Be(2);
+        enumeratedDirectories[0].Should().Be(directory1);
+        enumeratedDirectories[1].Should().Be(directory2);
+    }
+
+    [Fact]
+    public void EnumerateFilesDfs_ShouldEnumerateAllFilesInDepthFirstManner()
+    {
+        // Arrange
+        var deepLeaf = TestTree.Create(true); // Deeper file
+        var shallowLeaf = TestTree.Create(true); // Shallow file
+        var subDirectory = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { deepLeaf });
+        var directory = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { subDirectory, shallowLeaf });
+        var root = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { directory });
+
+        // Act
+        var enumeratedFiles = root.EnumerateFilesDfs().ToList();
+
+        // Assert
+        enumeratedFiles.Count.Should().Be(2);
+        enumeratedFiles[0].Should().Be(deepLeaf); // Deeper file should come first
+        enumeratedFiles[1].Should().Be(shallowLeaf); // Followed by the shallow file
+    }
+
+    [Fact]
+    public void EnumerateDirectoriesDfs_ShouldEnumerateAllDirectoriesInDepthFirstManner()
+    {
+        // Arrange
+        var leafInDeepDirectory = TestTree.Create(true);
+        var deeperSubDirectory = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { leafInDeepDirectory }); // Nested deeper
+        var shallowDirectory = TestTree.Create(false); // Shallow directory
+        var deepDirectory = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { deeperSubDirectory }); // Contains deeperSubDirectory
+        var root = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { deepDirectory, shallowDirectory });
+
+        // Act
+        var enumeratedDirectories = root.EnumerateDirectoriesDfs().ToList();
+
+        // Assert
+        enumeratedDirectories.Count.Should().Be(3);
+        enumeratedDirectories[0].Should().Be(deepDirectory); // First, deepDirectory should come
+        enumeratedDirectories[1].Should().Be(deeperSubDirectory); // Then, deeperSubDirectory inside deepDirectory
+        enumeratedDirectories[2].Should().Be(shallowDirectory); // Finally, the shallowDirectory
+    }
+
     private struct TestTree : IHaveObservableChildren<TestTree>, IHaveAFileOrDirectory
     {
         public ObservableCollection<Box<TestTree>> Children { get; private init; }
