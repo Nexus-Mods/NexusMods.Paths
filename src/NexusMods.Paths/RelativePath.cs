@@ -72,42 +72,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     public int Length => Path.Length;
 
     /// <inheritdoc/>
-    public IEnumerable<RelativePath> Parts
-    {
-        get
-        {
-            // Double iteration because we can't have iterators and spans in the same method.
-            ReadOnlySpan<char> path = Path;
-
-            if (path.Length == 0)
-                return Array.Empty<RelativePath>();
-
-            // Find the number of parts.
-            var partCount = 0;
-            for (var idx = 0; idx < path.Length; idx++)
-                if (path.DangerousGetReferenceAt(idx) == PathHelpers.DirectorySeparatorChar)
-                    partCount++;
-
-            // Allocate the array and fill it.
-            var parts = new RelativePath[partCount + 1];
-
-            var prev = 0;
-            var partIdx = 0;
-            for (var idx = 0; idx < path.Length; idx++)
-            {
-                var ch = path.DangerousGetReferenceAt(idx);
-                if (ch != PathHelpers.DirectorySeparatorChar) continue;
-
-                parts[partIdx] = new RelativePath(new string(path.SliceFast(prev, idx - prev)));
-                partIdx += 1;
-                idx += 1;
-                prev = idx;
-            }
-
-            parts[partIdx] = new RelativePath(new string(path.SliceFast(prev)));
-            return parts;
-        }
-    }
+    public IEnumerable<RelativePath> Parts => GetParts();
 
     /// <inheritdoc/>
     public IEnumerable<RelativePath> GetAllParents()
@@ -206,6 +171,48 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     public bool StartsWith(ReadOnlySpan<char> other)
     {
         return Path.AsSpan().StartsWith(other, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    ///     Retrieves all of the individual parts that make up the path.
+    /// </summary>
+    /// <remarks>
+    ///     Prefer this over <see cref="Parts"/> as it returns the concrete underlying array type rather than an iterator.
+    /// </remarks>
+    public RelativePath[] GetParts()
+    {
+        // Get the path as a ReadOnlySpan<char> for efficient processing
+        ReadOnlySpan<char> path = Path;
+
+        // Return an empty array if the path is empty
+        if (path.Length == 0)
+            return Array.Empty<RelativePath>();
+
+        // Count the number of parts in the path based on the directory separator character
+        var partCount = path.Count(PathHelpers.DirectorySeparatorChar); // This operation is SIMD accelerated
+
+        // Allocate an array to hold the parts
+        var parts = GC.AllocateUninitializedArray<RelativePath>(partCount + 1);
+
+        // Variables to keep track of the current position and index within the parts array
+        var prev = 0;
+        var partIdx = 0;
+
+        int idx; // Current index in the path
+        // Loop through the path until no more separators are found
+        while ((idx = path.SliceFast(prev).IndexOf(PathHelpers.DirectorySeparatorChar)) != -1)
+        {
+            parts[partIdx++] = new RelativePath(new string(path.Slice(prev, idx)));
+
+            // Update the start position for the next part
+            prev += idx + 1;
+        }
+
+        // Handle the last part of the path (after the last separator)
+        parts[partIdx] = new RelativePath(new string(path.SliceFast(prev)));
+
+        // Return the array of parts
+        return parts;
     }
 
     /// <inheritdoc/>
