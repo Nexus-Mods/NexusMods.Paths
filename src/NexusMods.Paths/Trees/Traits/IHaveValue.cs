@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using NexusMods.Paths.Trees.Traits.Interfaces;
 using Reloaded.Memory.Extensions;
 
 namespace NexusMods.Paths.Trees.Traits;
@@ -105,14 +106,8 @@ public static class IHaveValueExtensionsForIHaveBoxedChildren
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An array of all the values of the children of this node.</returns>
     public static TValue[] GetValues<TSelf, TValue>(this TSelf item)
-        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveValue<TValue>
-    {
-        var totalValues = item.CountChildren(); // Ensure this method counts all descendants.
-        var values = GC.AllocateUninitializedArray<TValue>(totalValues);
-        var index = 0;
-        GetValuesUnsafe<TSelf, TValue>(item, values, ref index);
-        return values;
-    }
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveValue<TValue> =>
+        item.GetChildItems<TSelf, TValue, ValueSelector<TSelf, TValue>>(new ValueSelector<TSelf, TValue>());
 
     /// <summary>
     ///     Helper method to populate values recursively.
@@ -123,16 +118,10 @@ public static class IHaveValueExtensionsForIHaveBoxedChildren
     ///     Should be at least as big as <see cref="IHaveBoxedChildrenExtensions.CountChildren{TSelf}(Box{TSelf})"/>
     /// </param>
     /// <param name="index">The current index in the array.</param>
+    [ExcludeFromCodeCoverage]
     public static void GetValuesUnsafe<TSelf, TValue>(TSelf item, Span<TValue> buffer, ref int index)
-        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveValue<TValue>
-    {
-        // Populate breadth first. Improved cache locality helps here.
-        foreach (var child in item.Children)
-            buffer.DangerousGetReferenceAt(index++) = child.Item.Value;
-
-        foreach (var child in item.Children)
-            GetValuesUnsafe(child.Item, buffer, ref index);
-    }
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveValue<TValue> =>
+        item.GetChildItemsUnsafe(new ValueSelector<TSelf, TValue>(), buffer, ref index);
 }
 
 /// <summary>
@@ -207,13 +196,13 @@ public static class IHaveValueExtensionsForIHaveObservableChildren
     /// <summary>
     ///     Recursively returns all the values of the children of this node.
     /// </summary>
-    /// <param name="item">The node whose child values to obtain.</param>
+    /// <param name="item">The boxed node whose child values to obtain.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An array of all the values of the children of this node.</returns>
     public static TValue[] GetValues<TSelf, TValue>(this Box<TSelf> item)
-        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveValue<TValue> =>
-        item.Item.GetValues<TSelf, TValue>();
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveValue<TValue>
+        => item.Item.GetValues<TSelf, TValue>();
 
     /// <summary>
     ///     Recursively returns all the values of the children of this node.
@@ -223,14 +212,8 @@ public static class IHaveValueExtensionsForIHaveObservableChildren
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An array of all the values of the children of this node.</returns>
     public static TValue[] GetValues<TSelf, TValue>(this TSelf item)
-        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveValue<TValue>
-    {
-        var totalValues = item.CountChildren(); // Ensure this method counts all descendants.
-        var values = GC.AllocateUninitializedArray<TValue>(totalValues);
-        var index = 0;
-        GetValuesUnsafe<TSelf, TValue>(item, values, ref index);
-        return values;
-    }
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveValue<TValue> =>
+        item.GetChildItems<TSelf, TValue, ValueSelector<TSelf, TValue>>(new ValueSelector<TSelf, TValue>());
 
     /// <summary>
     ///     Helper method to populate values recursively.
@@ -238,26 +221,20 @@ public static class IHaveValueExtensionsForIHaveObservableChildren
     /// <param name="item">The current node.</param>
     /// <param name="buffer">
     ///     The span to fill with values.
-    ///     If calling on root node, should be at least as big as <see cref="IHaveObservableChildrenExtensions.CountChildren{TSelf}(Box{TSelf})"/>
+    ///     Should be at least as big as <see cref="IHaveBoxedChildrenExtensions.CountChildren{TSelf}(Box{TSelf})"/>
     /// </param>
     /// <param name="index">The current index in the array.</param>
-    private static void GetValuesUnsafe<TSelf, TValue>(TSelf item, Span<TValue> buffer, ref int index)
-        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveValue<TValue>
-    {
-        // Populate breadth first. Improved cache locality helps here.
-        foreach (var child in item.Children)
-            buffer.DangerousGetReferenceAt(index++) = child.Item.Value;
-
-        foreach (var child in item.Children)
-            GetValuesUnsafe(child.Item, buffer, ref index);
-    }
+    [ExcludeFromCodeCoverage]
+    public static void GetValuesUnsafe<TSelf, TValue>(TSelf item, Span<TValue> buffer, ref int index)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveValue<TValue> =>
+        item.GetChildItemsUnsafe(new ValueSelector<TSelf, TValue>(), buffer, ref index);
 }
 
 /// <summary>
 ///    Extensions for <see cref="IHaveBoxedChildrenWithKey{TValue,TSelf}"/>
 /// </summary>
 // ReSharper disable once InconsistentNaming
-public static class IHaveValueExtensionsForIHaveBoxedChildrenWithValue
+public static class IHaveValueExtensionsForIHaveBoxedChildrenWithKey
 {
     /// <summary>
     ///     Enumerates all values of the child nodes of the current node in a breadth-first manner.
@@ -331,12 +308,12 @@ public static class IHaveValueExtensionsForIHaveBoxedChildrenWithValue
     /// <summary>
     ///     Recursively returns all the values of the children of this node.
     /// </summary>
-    /// <param name="item">The node whose child values to obtain.</param>
-    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <param name="item">The boxed node with keyed children whose values to obtain.</param>
     /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An array of all the values of the children of this node.</returns>
-    public static TValue[] GetValues<TKey, TSelf, TValue>(this KeyedBox<TKey, TSelf> item)
+    public static TValue[] GetValues<TKey, TSelf, TValue>(this Box<TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveValue<TValue>
         where TKey : notnull
         => item.Item.GetValues<TKey, TSelf, TValue>();
@@ -344,41 +321,30 @@ public static class IHaveValueExtensionsForIHaveBoxedChildrenWithValue
     /// <summary>
     ///     Recursively returns all the values of the children of this node.
     /// </summary>
-    /// <param name="item">The node whose child values to obtain.</param>
-    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <param name="item">The node with keyed children whose values to obtain.</param>
     /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An array of all the values of the children of this node.</returns>
     public static TValue[] GetValues<TKey, TSelf, TValue>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveValue<TValue>
         where TKey : notnull
-    {
-        var totalValues = item.CountChildren<TSelf, TKey>(); // Ensure this method counts all descendants.
-        var values = GC.AllocateUninitializedArray<TValue>(totalValues);
-        var index = 0;
-        GetValuesUnsafe<TKey, TSelf, TValue>(item, values, ref index);
-        return values;
-    }
+        => item.GetChildItems<TKey, TSelf, TValue, ValueSelector<TKey, TSelf, TValue>>(new ValueSelector<TKey, TSelf, TValue>());
 
     /// <summary>
     ///     Helper method to populate values recursively.
     /// </summary>
-    /// <param name="item">The current node.</param>
+    /// <param name="item">The current node with keyed children.</param>
     /// <param name="buffer">
     ///     The span to fill with values.
-    ///     Should be at least as big as <see cref="IHaveBoxedChildrenWithKeyExtensions.CountChildren{TSelf,TKey}(NexusMods.Paths.Trees.KeyedBox{TKey,TSelf})"/>
+    ///     Should be at least as big as the count of children.
     /// </param>
     /// <param name="index">The current index in the array.</param>
+    [ExcludeFromCodeCoverage]
     public static void GetValuesUnsafe<TKey, TSelf, TValue>(TSelf item, Span<TValue> buffer, ref int index)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveValue<TValue>
         where TKey : notnull
-    {
-        foreach (var pair in item.Children)
-        {
-            buffer.DangerousGetReferenceAt(index++) = pair.Value.Item.Value;
-            GetValuesUnsafe<TKey, TSelf, TValue>(pair.Value.Item, buffer, ref index);
-        }
-    }
+        => item.GetChildItemsUnsafe<TKey, TSelf, TValue, ValueSelector<TKey, TSelf, TValue>>(new ValueSelector<TKey, TSelf, TValue>(), buffer, ref index);
 }
 
 /// <summary>
@@ -410,4 +376,17 @@ public static class IHaveValueExtensions
     public static TValue Value<TSelf, TValue>(this Box<TSelf> item)
         where TSelf : struct, IHaveValue<TValue>
         => item.Item.Value;
+}
+
+internal struct ValueSelector<TSelf, TValue> : ISelector<TSelf, TValue>
+    where TSelf : struct, IHaveValue<TValue>
+{
+    public TValue Select(TSelf item) => item.Value;
+}
+
+internal struct ValueSelector<TKey, TSelf, TValue> : ISelector<TSelf, TValue>
+    where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveValue<TValue>
+    where TKey : notnull
+{
+    public TValue Select(TSelf item) => item.Value;
 }

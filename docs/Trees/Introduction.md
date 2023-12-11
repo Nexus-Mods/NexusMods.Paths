@@ -135,6 +135,8 @@ Available Methods:
 | `FindByKeyUpward`              | Verifies the path to the node against a Span of keys (inverse FindByKey).     | `IHaveKey`, `IHaveParent`         |
 | `FindRootByKeyUpward`          | Verifies the path to the node against a Span of keys (optimized FindByKey).   | `IHaveKey`, `IHaveParent`         |
 | `FindByPath`[2]                | Finds a given node in a tree using a relative path.                           | `IHavePathSegment`                |
+| `GetChildItems`                | Retrieves a certain item from all children of this node.                      | `IHaveKey`                        |
+| `GetChildItemsUnsafe`          | Retrieves a certain item from all children of this node (no bound checks).    | `IHaveKey`                        |
 | `GetChildrenRecursive`         | Retrieves all children of this node (flattened).                              |                                   |
 | `GetChildrenRecursiveUnsafe`   | Retrieves all children of this node (no bound checks).                        |                                   |
 | `GetKeys`                      | Retrieves all keys of the children of this node.                              | `IHaveKey`                        |

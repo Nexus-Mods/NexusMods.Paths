@@ -31,7 +31,7 @@ public class IHaveKeyTests
         var grandChild2 = TestTree.Create(4);
         var child1 = TestTree.Create(new Dictionary<int, KeyedBox<int, TestTree>> { { 3, grandChild1 } }, 1);
         var child2 = TestTree.Create(new Dictionary<int, KeyedBox<int, TestTree>> { { 4, grandChild2 } }, 2);
-        KeyedBox<int, TestTree> root = TestTree.Create(new Dictionary<int, KeyedBox<int, TestTree>> { { 1, child1 }, { 2, child2 } });
+        var root = TestTree.Create(new Dictionary<int, KeyedBox<int, TestTree>> { { 1, child1 }, { 2, child2 } });
 
         // Act
         var keys = root.EnumerateKeysDfs().ToArray();
@@ -54,7 +54,7 @@ public class IHaveKeyTests
         var keys = root.GetKeys();
 
         // Assert
-        keys.Should().Equal(1, 3, 2, 4);
+        keys.Should().Equal(1, 2, 3, 4);
     }
 
     [Fact]

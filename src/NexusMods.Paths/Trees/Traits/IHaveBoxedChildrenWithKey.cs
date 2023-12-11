@@ -244,6 +244,67 @@ public static class IHaveBoxedChildrenWithKeyExtensions
     }
 
     /// <summary>
+    ///     Recursively returns all the child items of this node selected by the given selector.
+    /// </summary>
+    /// <param name="item">The boxed node with keyed children whose items to obtain.</param>
+    /// <param name="selector">The selector to determine which child items to return.</param>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TResult">The type of the result.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An array of all the selected child items of this node.</returns>
+    public static TResult[] GetChildItems<TKey, TSelf, TResult, TSelector>(this KeyedBox<TKey, TSelf> item, TSelector selector)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        where TSelector : struct, ISelector<TSelf, TResult>
+        => item.Item.GetChildItems<TKey, TSelf, TResult, TSelector>(selector);
+
+    /// <summary>
+    ///     Recursively returns all the child items of this node selected by the given selector.
+    /// </summary>
+    /// <param name="item">The node with keyed children whose items to obtain.</param>
+    /// <param name="selector">The selector to determine which child items to return.</param>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TResult">The type of the result.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An array of all the selected child items of this node.</returns>
+    public static TResult[] GetChildItems<TKey, TSelf, TResult, TSelector>(this TSelf item, TSelector selector)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        where TSelector : struct, ISelector<TSelf, TResult>
+    {
+        var totalValues = item.CountChildren<TSelf, TKey>();
+        var results = GC.AllocateUninitializedArray<TResult>(totalValues);
+        var index = 0;
+        GetChildItemsUnsafe<TKey, TSelf, TResult, TSelector>(item, selector, results, ref index);
+        return results;
+    }
+
+    /// <summary>
+    ///     Helper method to populate child items recursively.
+    /// </summary>
+    /// <param name="item">The current node with keyed children.</param>
+    /// <param name="selector">The selector to determine which child items to return.</param>
+    /// <param name="buffer">
+    ///     The span to fill with child items.
+    ///     Should be at least as big as the count of children.
+    /// </param>
+    /// <param name="index">The current index in the array.</param>
+    public static void GetChildItemsUnsafe<TKey, TSelf, TResult, TSelector>(this TSelf item, TSelector selector, Span<TResult> buffer, ref int index)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        where TSelector : struct, ISelector<TSelf, TResult>
+    {
+        // Populate breadth first. Improved cache locality helps here.
+        foreach (var childPair in item.Children)
+            buffer.DangerousGetReferenceAt(index++) = selector.Select(childPair.Value.Item);
+
+        foreach (var childPair in item.Children)
+            GetChildItemsUnsafe<TKey, TSelf, TResult, TSelector>(childPair.Value.Item, selector, buffer, ref index);
+    }
+
+    /// <summary>
     ///     Recursively returns all the children of this node.
     /// </summary>
     /// <param name="item">The node whose children to obtain.</param>

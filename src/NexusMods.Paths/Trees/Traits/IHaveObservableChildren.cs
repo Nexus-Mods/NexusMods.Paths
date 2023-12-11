@@ -203,6 +203,63 @@ public static class IHaveObservableChildrenExtensions
     }
 
     /// <summary>
+    ///     Recursively returns all the child items of this node selected by the given selector.
+    /// </summary>
+    /// <param name="item">The boxed node whose child items to obtain.</param>
+    /// <param name="selector">The selector to determine which child items to return.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TResult">The type of the result.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An array of all the selected child items of this node.</returns>
+    [ExcludeFromCodeCoverage]
+    public static TResult[] GetChildItems<TSelf, TResult, TSelector>(this Box<TSelf> item, TSelector selector)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TSelector : struct, ISelector<TSelf, TResult>
+        => item.Item.GetChildItems<TSelf, TResult, TSelector>(selector);
+
+    /// <summary>
+    ///     Recursively returns all the child items of this node selected by the given selector.
+    /// </summary>
+    /// <param name="item">The node whose child items to obtain.</param>
+    /// <param name="selector">The selector to determine which child items to return.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TResult">The type of the result.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An array of all the selected child items of this node.</returns>
+    public static TResult[] GetChildItems<TSelf, TResult, TSelector>(this TSelf item, TSelector selector)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TSelector : struct, ISelector<TSelf, TResult>
+    {
+        var totalValues = item.CountChildren(); // Ensure this method counts all descendants.
+        var results = GC.AllocateUninitializedArray<TResult>(totalValues);
+        var index = 0;
+        GetChildItemsUnsafe<TSelf, TResult, TSelector>(item, selector, results, ref index);
+        return results;
+    }
+
+    /// <summary>
+    ///     Helper method to populate child items recursively.
+    /// </summary>
+    /// <param name="item">The current node.</param>
+    /// <param name="selector">The selector to determine which child items to return.</param>
+    /// <param name="buffer">
+    ///     The span to fill with child items.
+    ///     Should be at least as big as <see cref="IHaveBoxedChildrenExtensions.CountChildren{TSelf}(Box{TSelf})"/>
+    /// </param>
+    /// <param name="index">The current index in the array.</param>
+    public static void GetChildItemsUnsafe<TSelf, TResult, TSelector>(this TSelf item, TSelector selector, Span<TResult> buffer, ref int index)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TSelector : struct, ISelector<TSelf, TResult>
+    {
+        // Populate breadth first. Improved cache locality helps here.
+        foreach (var child in item.Children)
+            buffer.DangerousGetReferenceAt(index++) = selector.Select(child.Item);
+
+        foreach (var child in item.Children)
+            GetChildItemsUnsafe(child.Item, selector, buffer, ref index);
+    }
+
+    /// <summary>
     ///     Recursively returns all the children of this node.
     /// </summary>
     /// <param name="item">The node whose children to obtain.</param>

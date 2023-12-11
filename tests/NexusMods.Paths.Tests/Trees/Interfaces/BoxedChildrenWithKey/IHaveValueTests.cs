@@ -14,7 +14,7 @@ public class IHaveValueTests
         var grandChild2 = TestTree.Create(4);
         var child1 = TestTree.Create(new Dictionary<int, KeyedBox<int, TestTree>> { { 3, grandChild1 } }, 1);
         var child2 = TestTree.Create(new Dictionary<int, KeyedBox<int, TestTree>> { { 4, grandChild2 } }, 2);
-        KeyedBox<int, TestTree> root = TestTree.Create(new Dictionary<int, KeyedBox<int, TestTree>> { { 1, child1 }, { 2, child2 } }, 0);
+        var root = TestTree.Create(new Dictionary<int, KeyedBox<int, TestTree>> { { 1, child1 }, { 2, child2 } }, 0);
 
         // Act
         var values = root.EnumerateValuesBfs<int, TestTree, int>().ToArray();
@@ -31,7 +31,7 @@ public class IHaveValueTests
         var grandChild2 = TestTree.Create(4);
         var child1 = TestTree.Create(grandChild1, 1);
         var child2 = TestTree.Create(grandChild2, 2);
-        KeyedBox<int, TestTree> root = TestTree.Create(new Dictionary<int, KeyedBox<int, TestTree>> { { 1, child1 }, { 2, child2 } }, 0);
+        var root = TestTree.Create(new Dictionary<int, KeyedBox<int, TestTree>> { { 1, child1 }, { 2, child2 } }, 0);
 
         // Act
         var values = root.EnumerateValuesDfs<int, TestTree, int>().ToArray();
@@ -48,13 +48,13 @@ public class IHaveValueTests
         var grandChild2 = TestTree.Create(4);
         var child1 = TestTree.Create(grandChild1, 1);
         var child2 = TestTree.Create(grandChild2, 2);
-        KeyedBox<int, TestTree> root = TestTree.Create(new Dictionary<int, KeyedBox<int, TestTree>> { { 1, child1 }, { 2, child2 } }, 0);
+        var root = TestTree.Create(new Dictionary<int, KeyedBox<int, TestTree>> { { 1, child1 }, { 2, child2 } }, 0);
 
         // Act
         var values = root.GetValues<int, TestTree, int>();
 
         // Assert
-        values.Should().Equal(1, 3, 2, 4);
+        values.Should().Equal(1, 2, 3, 4);
     }
 
     private struct TestTree : IHaveBoxedChildrenWithKey<int, TestTree>, IHaveValue<int>
