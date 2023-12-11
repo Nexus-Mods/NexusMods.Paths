@@ -111,7 +111,7 @@ Available Methods:
 
 | Method                         | Description                                                                   | Required Traits                   |
 |--------------------------------|-------------------------------------------------------------------------------|-----------------------------------|
-| `CountChildren`                | Counts the total number of child nodes under this node.                       |                                   |
+| `CountChildren`                | Counts the total number of child nodes under this node (w/ optional filter).  |                                   |
 | `CountDirectories`             | Counts directories under this node (directory).                               | `IHaveAFileOrDirectory`           |
 | `CountFiles`                   | Counts files under this node (directory).                                     | `IHaveAFileOrDirectory`           |
 | `CountLeaves`                  | Returns number of leaf nodes in this tree.                                    |                                   |

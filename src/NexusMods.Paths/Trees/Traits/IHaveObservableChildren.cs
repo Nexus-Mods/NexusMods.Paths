@@ -170,6 +170,51 @@ public static class IHaveObservableChildrenExtensions
     }
 
     /// <summary>
+    ///     Counts the number of children that match the given filter under this node.
+    /// </summary>
+    /// <param name="item">The node whose children are to be counted.</param>
+    /// <param name="filter">The filter to apply to each child.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter.</typeparam>
+    /// <returns>The total count of children that match the filter under this node.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CountChildren<TSelf, TFilter>(this Box<TSelf> item, TFilter filter)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TFilter : struct, IFilter<TSelf>
+        => item.Item.CountChildren(filter);
+
+    /// <summary>
+    ///     Counts the number of children that match the given filter under this node.
+    /// </summary>
+    /// <param name="item">The node whose children are to be counted.</param>
+    /// <param name="filter">The filter to apply to each child.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter.</typeparam>
+    /// <returns>The total count of children that match the filter under this node.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CountChildren<TSelf, TFilter>(this TSelf item, TFilter filter)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TFilter : struct, IFilter<TSelf>
+    {
+        var result = 0;
+        item.CountChildrenRecursive(ref result, filter);
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void CountChildrenRecursive<TSelf, TFilter>(this TSelf item, ref int accumulator, TFilter filter)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TFilter : struct, IFilter<TSelf>
+    {
+        foreach (var child in item.Children)
+        {
+            var matchesFilter = filter.Match(child.Item);
+            accumulator += Unsafe.As<bool, byte>(ref matchesFilter); // Branchless increment.
+            child.Item.CountChildrenRecursive(ref accumulator, filter);
+        }
+    }
+
+    /// <summary>
     ///     Counts the number of direct child nodes of the current node.
     /// </summary>
     /// <param name="item">The node whose children are to be counted.</param>
@@ -230,7 +275,7 @@ public static class IHaveObservableChildrenExtensions
         where TSelf : struct, IHaveObservableChildren<TSelf>
         where TSelector : struct, ISelector<TSelf, TResult>
     {
-        var totalValues = item.CountChildren(); // Ensure this method counts all descendants.
+        var totalValues = item.CountChildren();
         var results = GC.AllocateUninitializedArray<TResult>(totalValues);
         var index = 0;
         GetChildItemsUnsafe<TSelf, TResult, TSelector>(item, selector, results, ref index);

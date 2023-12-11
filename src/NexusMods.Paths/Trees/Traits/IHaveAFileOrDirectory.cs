@@ -37,8 +37,8 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountFiles<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
-        where TKey : notnull =>
-        item.Item.CountFiles<TSelf, TKey>();
+        where TKey : notnull
+        => item.Item.CountFiles<TSelf, TKey>();
 
     /// <summary>
     ///     Counts the number of files present under this node (directory).
@@ -51,23 +51,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
     public static int CountFiles<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
         where TKey : notnull
-    {
-        var result = 0;
-        item.CountFilesRecursive<TSelf, TKey>(ref result);
-        return result;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void CountFilesRecursive<TSelf, TKey>(this TSelf item, ref int accumulator)
-        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory where TKey : notnull
-    {
-        foreach (var child in item.Children)
-        {
-            var isDir = child.Value.Item.IsFile; // <= branchless increment.
-            accumulator += Unsafe.As<bool, byte>(ref isDir);
-            child.Value.Item.CountFilesRecursive<TSelf, TKey>(ref accumulator);
-        }
-    }
+        => item.CountChildren<TSelf, TKey, FileFilter<TSelf>>(new FileFilter<TSelf>());
 
     /// <summary>
     ///     Counts the number of directories present under this node (directory).
@@ -79,7 +63,8 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountDirectories<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
-        where TKey : notnull  => item.Item.CountDirectories<TSelf, TKey>();
+        where TKey : notnull
+        => item.Item.CountDirectories<TSelf, TKey>();
 
     /// <summary>
     ///     Counts the number of directories present under this node (directory).
@@ -92,23 +77,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
     public static int CountDirectories<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
         where TKey : notnull
-    {
-        var result = 0;
-        item.CountDirectoriesRecursive<TSelf, TKey>(ref result);
-        return result;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void CountDirectoriesRecursive<TSelf, TKey>(this TSelf item, ref int accumulator)
-        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory where TKey : notnull
-    {
-        foreach (var child in item.Children)
-        {
-            var isDir = child.Value.Item.IsDirectory; // <= branchless increment.
-            accumulator += Unsafe.As<bool, byte>(ref isDir);
-            child.Value.Item.CountDirectoriesRecursive<TSelf, TKey>(ref accumulator);
-        }
-    }
+        => item.CountChildren<TSelf, TKey, DirectoryFilter<TSelf>>(new DirectoryFilter<TSelf>());
 
     /// <summary>
     ///     Enumerates all file child nodes of the current node in a breadth-first manner.
@@ -221,8 +190,8 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
     /// <returns>The total file count under this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountFiles<TSelf>(this Box<TSelf> item)
-        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory =>
-        item.Item.CountFiles();
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.CountFiles();
 
     /// <summary>
     ///      Counts the number of files present under this node.
@@ -233,62 +202,29 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountFiles<TSelf>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
-    {
-        var result = 0;
-        item.CountFilesRecursive(ref result);
-        return result;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void CountFilesRecursive<TSelf>(this TSelf item, ref int accumulator)
-        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
-    {
-        foreach (var child in item.Children) // <= lowered to 'for loop' because array.
-        {
-            var isFile = child.Item.IsFile; // <= branchless increment.
-            accumulator += Unsafe.As<bool, byte>(ref isFile);
-            child.Item.CountFilesRecursive(ref accumulator);
-        }
-    }
+        => item.CountChildren(new FileFilter<TSelf>());
 
     /// <summary>
     ///      Counts the number of directories present under this node (directory).
     /// </summary>
-    /// <param name="item">The node (directory) whose interior file count is to be counted.</param>
+    /// <param name="item">The node (directory) whose interior directory count is to be counted.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>The total directory count under this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountDirectories<TSelf>(this Box<TSelf> item)
-        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory =>
-        item.Item.CountDirectories();
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.CountDirectories();
 
     /// <summary>
     ///      Counts the number of directories present under this node (directory).
     /// </summary>
-    /// <param name="item">The node (directory) whose interior file count is to be counted.</param>
+    /// <param name="item">The node (directory) whose interior directory count is to be counted.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>The total directory count under this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountDirectories<TSelf>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
-    {
-        var result = 0;
-        item.CountDirectoriesRecursive(ref result);
-        return result;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void CountDirectoriesRecursive<TSelf>(this TSelf item, ref int accumulator)
-        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
-    {
-        // Branchless increment.
-        foreach (var child in item.Children) // <= lowered to 'for loop' because array.
-        {
-            var isDir = child.Item.IsDirectory; // <= branchless increment.
-            accumulator += Unsafe.As<bool, byte>(ref isDir);
-            child.Item.CountDirectoriesRecursive(ref accumulator);
-        }
-    }
+        => item.CountChildren(new DirectoryFilter<TSelf>());
 
     /// <summary>
     ///     Enumerates all file child nodes of the current node in a breadth-first manner.
@@ -385,8 +321,8 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
     /// <returns>The total file count under this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountFiles<TSelf>(this Box<TSelf> item)
-        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory =>
-        item.Item.CountFiles();
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.CountFiles();
 
     /// <summary>
     ///      Counts the number of files present under this node.
@@ -397,62 +333,29 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountFiles<TSelf>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
-    {
-        var result = 0;
-        item.CountFilesRecursive(ref result);
-        return result;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void CountFilesRecursive<TSelf>(this TSelf item, ref int accumulator)
-        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
-    {
-        foreach (var child in item.Children) // <= lowered to 'for loop' because array.
-        {
-            var isFile = child.Item.IsFile; // <= branchless increment.
-            accumulator += Unsafe.As<bool, byte>(ref isFile);
-            child.Item.CountFilesRecursive(ref accumulator);
-        }
-    }
+        => item.CountChildren(new FileFilter<TSelf>());
 
     /// <summary>
     ///      Counts the number of directories present under this node (directory).
     /// </summary>
-    /// <param name="item">The node (directory) whose interior file count is to be counted.</param>
+    /// <param name="item">The node (directory) whose interior directory count is to be counted.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>The total directory count under this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountDirectories<TSelf>(this Box<TSelf> item)
-        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory =>
-        item.Item.CountDirectories();
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.CountDirectories();
 
     /// <summary>
     ///      Counts the number of directories present under this node (directory).
     /// </summary>
-    /// <param name="item">The node (directory) whose interior file count is to be counted.</param>
+    /// <param name="item">The node (directory) whose interior directory count is to be counted.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>The total directory count under this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountDirectories<TSelf>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
-    {
-        var result = 0;
-        item.CountDirectoriesRecursive(ref result);
-        return result;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void CountDirectoriesRecursive<TSelf>(this TSelf item, ref int accumulator)
-        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
-    {
-        // Branchless increment.
-        foreach (var child in item.Children) // <= lowered to 'for loop' because array.
-        {
-            var isDir = child.Item.IsDirectory; // <= branchless increment.
-            accumulator += Unsafe.As<bool, byte>(ref isDir);
-            child.Item.CountDirectoriesRecursive(ref accumulator);
-        }
-    }
+        => item.CountChildren(new DirectoryFilter<TSelf>());
 
     /// <summary>
     ///     Enumerates all file child nodes of the current node in a breadth-first manner.
@@ -605,3 +508,14 @@ internal struct KeyedBoxDirectoryFilter<TSelf, TKey> : IFilter<KeyValuePair<TKey
     public bool Match(KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item) => item.Value.Item.IsDirectory;
 }
 
+internal struct FileFilter<TSelf> : IFilter<TSelf>
+    where TSelf : struct, IHaveAFileOrDirectory
+{
+    public bool Match(TSelf item) => item.IsFile;
+}
+
+internal struct DirectoryFilter<TSelf> : IFilter<TSelf>
+    where TSelf : struct, IHaveAFileOrDirectory
+{
+    public bool Match(TSelf item) => item.IsDirectory;
+}

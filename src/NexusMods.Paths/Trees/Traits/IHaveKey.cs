@@ -1218,7 +1218,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
 
     /// <summary>
     ///     Searches for all nodes within a tree whose children match a specified sequence of keys.
-    ///     (Optimized <see cref="FindSubPathsByKeyFromRoot{TSelf,TKey}(NexusMods.Paths.Trees.KeyedBox{TKey,TSelf},System.Span{TKey})t"/>)
+    ///     (Optimized <see cref="FindSubPathsByKeyFromRoot{TSelf,TKey}(NexusMods.Paths.Trees.KeyedBox{TKey,TSelf},System.Span{TKey})"/>)
     /// </summary>
     /// <param name="root">The starting node for the search.</param>
     /// <param name="keys">The sequence of keys to be matched, starting from each descendant node and moving upwards.</param>
