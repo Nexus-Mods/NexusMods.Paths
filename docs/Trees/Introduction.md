@@ -171,7 +171,7 @@ Available Methods:
 !!! note "Modifiers are based on [Static Abstract](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/tutorials/static-virtual-interface-members) Interfaces."
 
 Modifiers are mostly used internally inside the library to provide specialized zero cost functionality without repeating code.
-For example, `GetFiles` method uses `IFilter` under the hood.
+For example, `GetFiles`, `GetDirectories` method(s) use `IFilter` under the hood.
 
 | Modifier    | Description                             |
 |-------------|-----------------------------------------|
