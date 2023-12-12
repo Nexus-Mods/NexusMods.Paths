@@ -1208,6 +1208,18 @@ public static class IHaveKeyExtensions
     /// <typeparam name="TSelf">The type of the child node.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <returns>The key of the node.</returns>
+    public static TKey Key<TSelf, TKey>(this KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item)
+        where TSelf : struct, IHaveKey<TKey>
+        where TKey : notnull
+        => item.Value.Item.Key;
+
+    /// <summary>
+    ///     Retrieves the key of the node.
+    /// </summary>
+    /// <param name="item">The keyed boxed node whose key is to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <returns>The key of the node.</returns>
     public static TKey Key<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveKey<TKey>
         where TKey : notnull

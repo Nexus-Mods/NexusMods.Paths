@@ -308,6 +308,20 @@ public static class IHaveValueExtensions
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <typeparam name="TKey">Type of key used.</typeparam>
     /// <returns>The value of the node.</returns>
+    public static TValue Value<TSelf, TKey, TValue>(this KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item)
+        where TSelf : struct, IHaveValue<TValue>
+        where TValue : notnull
+        where TKey : notnull
+        => item.Value.Item.Value;
+
+    /// <summary>
+    ///     Retrieves the value of the node.
+    /// </summary>
+    /// <param name="item">The keyed boxed node whose value is to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <typeparam name="TKey">Type of key used.</typeparam>
+    /// <returns>The value of the node.</returns>
     public static TValue Value<TSelf, TKey, TValue>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveValue<TValue>
         where TValue : notnull

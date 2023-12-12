@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace NexusMods.Paths.Trees.Traits;
@@ -39,4 +40,14 @@ public static class IHaveDepthInformationExtensions
         where TSelf : struct, IHaveDepthInformation
         where TKey : notnull
         => item.Item.Depth;
+
+    /// <summary>
+    ///     Retrieves the depth of the node in the tree structure.
+    /// </summary>
+    /// <param name="item">The keyed boxed node whose depth is to be retrieved.</param>
+    /// <returns>The depth of the node.</returns>
+    public static ushort Depth<TSelf, TKey>(this KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item)
+        where TSelf : struct, IHaveDepthInformation
+        where TKey : notnull
+        => item.Value.Item.Depth;
 }

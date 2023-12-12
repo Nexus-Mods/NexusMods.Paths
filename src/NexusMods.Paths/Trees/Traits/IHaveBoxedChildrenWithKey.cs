@@ -826,4 +826,17 @@ public static class IHaveBoxedChildrenWithKeyExtensions
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
         where TKey : notnull
         => item.Item.Children;
+
+    /// <summary>
+    ///     Retrieves the dictionary containing all the keyed children of the current node.
+    /// </summary>
+    /// <param name="item">The keyed box containing the node whose children are to be retrieved.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <returns>A dictionary of the children keyed by TKey.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static Dictionary<TKey, KeyedBox<TKey, TSelf>> Children<TSelf, TKey>(this KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        => item.Value.Item.Children;
 }

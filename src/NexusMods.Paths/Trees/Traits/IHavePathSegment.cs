@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using NexusMods.Paths.Extensions;
 using static Reloaded.Memory.Extensions.SpanExtensions;
@@ -24,26 +25,39 @@ public interface IHavePathSegment
 public static class IHavePathSegmentExtensions
 {
     /// <summary>
-    ///     Retrieves the key of the node.
+    ///     Retrieves the path segment of the node.
     /// </summary>
     /// <param name="item">The keyed boxed node whose key is to be retrieved.</param>
     /// <typeparam name="TSelf">The type of the child node.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <returns>The key of the node.</returns>
     [ExcludeFromCodeCoverage] // Wrapper
-    public static RelativePath Key<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+    public static RelativePath Segment<TSelf, TKey>(this KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item)
+        where TSelf : struct, IHavePathSegment
+        where TKey : notnull
+        => item.Value.Item.Segment;
+
+    /// <summary>
+    ///     Retrieves the path segment of the node.
+    /// </summary>
+    /// <param name="item">The keyed boxed node whose key is to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <returns>The key of the node.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static RelativePath Segment<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHavePathSegment
         where TKey : notnull
         => item.Item.Segment;
 
     /// <summary>
-    ///     Retrieves the key of the node.
+    ///     Retrieves the path segment of the node.
     /// </summary>
     /// <param name="item">The boxed node whose key is to be retrieved.</param>
     /// <typeparam name="TSelf">The type of the child node.</typeparam>
     /// <returns>The key of the node.</returns>
     [ExcludeFromCodeCoverage] // Wrapper
-    public static RelativePath Key<TSelf>(this Box<TSelf> item)
+    public static RelativePath Segment<TSelf>(this Box<TSelf> item)
         where TSelf : struct, IHavePathSegment
         => item.Item.Segment;
 
