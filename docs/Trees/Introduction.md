@@ -158,7 +158,17 @@ Available Methods:
 
 [2] Method has variants for including and excluding itself (the root).
 
-[3] `+F` means 'has filter'. `+S` means 'has selector'
+[Modifier](#modifiers-filters--selectors) reference:
+
+| Modifier | Description                         |
+|----------|-------------------------------------|
+| +F       | Has `IFilter`                       |
+| +S       | Has `ISelector`.                    |
+
+When modifiers are separate, i.e. `+F +S`, it means there's an overload with `IFilter`, overload with `ISelector`, but not both.
+
+When modifiers are combined, i.e. `+FS`, it means all possible permutations are available, in other words, there's also
+an overload which has `IFilter` AND `ISelector` together.
 
 !!! note "All methods require one of the container interfaces such as `IHaveBoxedChildren` to be implemented, thus they are omitted from the table."
 
@@ -179,11 +189,16 @@ For example, `GetFiles`, `GetDirectories` method(s) use `IFilter` under the hood
 | `ISelector` | Allows you to select a sub-item.        |
 
 Modifiers are intended to be used in 'flattening' operations throughout the library, i.e. those that convert
-the tree into linear sequences such as Enumerators and Spans/Arrays. They are intended to minimize the need to use
-LINQ on flattened results.
+the tree into linear sequences such as Enumerators and Spans/Arrays. They are intended to minimize the need to use LINQ
+on flattened results.
 
-With modifiers you get the exact same code as if the you were to manually hand craft the specialized code (i.e. you can't
-do it any better).
+With modifiers you get the exact same code as if the you were to manually hand craft the specialized code (you can't
+do it any better). This is because essentially, your modifier implementation gets inlined directly into hand crafted
+code at compile time.
+
+***Modifiers are not a replacement for LINQ***, they're there to maximize code reuse (mostly) internally and provide
+accelerated operations in cases where normally multiple Linq operations would be needed (e.g. `Filter+Select`), to achieve
+the zero overhead promise.
 
 !!! tip "Use [LinqGen](https://github.com/cathei/LinqGen) instead of regular LINQ on returned results if further operations are needed."
 
