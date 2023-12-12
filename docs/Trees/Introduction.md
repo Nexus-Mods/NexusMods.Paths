@@ -115,8 +115,8 @@ Available Methods:
 | `CountDirectories`              | Counts directories under this node (directory).                               | `IHaveAFileOrDirectory`           |
 | `CountFiles`                    | Counts files under this node (directory).                                     | `IHaveAFileOrDirectory`           |
 | `CountLeaves`                   | Returns number of leaf nodes in this tree.                                    |                                   |
-| `EnumerateChildrenBfs`+F        | Enumerates children of this node Breadth First.                               |                                   |
-| `EnumerateChildrenDfs`+F        | Enumerates children of this node using Depth First.                           |                                   |
+| `EnumerateChildrenBfs`+FS       | Enumerates children of this node Breadth First.                               |                                   |
+| `EnumerateChildrenDfs`+FS       | Enumerates children of this node using Depth First.                           |                                   |
 | `EnumerateDirectoriesBfs`       | Enumerates all children that are directories (Breadth First).                 | `IHaveAFileOrDirectory`           |
 | `EnumerateDirectoriesDfs`       | Enumerates all children that are directories (Depth First).                   | `IHaveAFileOrDirectory`           |
 | `EnumerateFilesBfs`             | Enumerates all children that are files (Breadth First).                       | `IHaveAFileOrDirectory`           |
@@ -160,10 +160,10 @@ Available Methods:
 
 [Modifier](#modifiers-filters--selectors) reference:
 
-| Modifier | Description                         |
-|----------|-------------------------------------|
-| +F       | Has `IFilter`                       |
-| +S       | Has `ISelector`.                    |
+| Modifier | Description     |
+|----------|-----------------|
+| +F       | Has `IFilter`   |
+| +S       | Has `ISelector` |
 
 When modifiers are separate, i.e. `+F +S`, it means there's an overload with `IFilter`, overload with `ISelector`, but not both.
 

@@ -17,7 +17,7 @@ public class IHaveValueTests
         var root = TestTree.Create(new Dictionary<int, KeyedBox<int, TestTree>> { { 1, child1 }, { 2, child2 } }, 0);
 
         // Act
-        var values = root.EnumerateValuesBfs<int, TestTree, int>().ToArray();
+        var values = root.EnumerateValuesBfs<TestTree, int, int>().ToArray();
 
         // Assert
         values.Should().Equal(1, 2, 3, 4); // Breadth-first order
@@ -34,7 +34,7 @@ public class IHaveValueTests
         var root = TestTree.Create(new Dictionary<int, KeyedBox<int, TestTree>> { { 1, child1 }, { 2, child2 } }, 0);
 
         // Act
-        var values = root.EnumerateValuesDfs<int, TestTree, int>().ToArray();
+        var values = root.EnumerateValuesDfs<TestTree, int, int>().ToArray();
 
         // Assert
         values.Should().Equal(1, 3, 2, 4); // Depth-first order

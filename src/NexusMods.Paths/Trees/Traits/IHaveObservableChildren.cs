@@ -104,10 +104,10 @@ public static class IHaveObservableChildrenExtensions
     /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
     /// <returns>An IEnumerable of all filtered child nodes of the current node.</returns>
     [ExcludeFromCodeCoverage] // Wrapper
-    public static IEnumerable<Box<TSelf>> EnumerateChildrenFilteredBfs<TSelf, TFilter>(this Box<TSelf> item)
+    public static IEnumerable<Box<TSelf>> EnumerateChildrenBfs<TSelf, TFilter>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>
         where TFilter : struct, IFilter<Box<TSelf>>
-        => item.Item.EnumerateChildrenFilteredBfs<TSelf, TFilter>();
+        => item.Item.EnumerateChildrenBfs<TSelf, TFilter>();
 
     /// <summary>
     ///     Enumerates all child nodes of the current node in a breadth-first manner that satisfy a given filter.
@@ -116,7 +116,7 @@ public static class IHaveObservableChildrenExtensions
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
     /// <returns>An IEnumerable of all filtered child nodes of the current node.</returns>
-    public static IEnumerable<Box<TSelf>> EnumerateChildrenFilteredBfs<TSelf, TFilter>(this TSelf item)
+    public static IEnumerable<Box<TSelf>> EnumerateChildrenBfs<TSelf, TFilter>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>
         where TFilter : struct, IFilter<Box<TSelf>>
     {
@@ -127,7 +127,7 @@ public static class IHaveObservableChildrenExtensions
 
         // Then return the filtered children of those children.
         foreach (var child in item.Children)
-        foreach (var grandChild in child.Item.EnumerateChildrenFilteredBfs<TSelf, TFilter>())
+        foreach (var grandChild in child.Item.EnumerateChildrenBfs<TSelf, TFilter>())
             yield return grandChild;
     }
 
@@ -139,10 +139,10 @@ public static class IHaveObservableChildrenExtensions
     /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
     /// <returns>An IEnumerable of all filtered child nodes of the current node.</returns>
     [ExcludeFromCodeCoverage] // Wrapper
-    public static IEnumerable<Box<TSelf>> EnumerateChildrenFilteredDfs<TSelf, TFilter>(this Box<TSelf> item)
+    public static IEnumerable<Box<TSelf>> EnumerateChildrenDfs<TSelf, TFilter>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>
         where TFilter : struct, IFilter<Box<TSelf>>
-        => item.Item.EnumerateChildrenFilteredDfs<TSelf, TFilter>();
+        => item.Item.EnumerateChildrenDfs<TSelf, TFilter>();
 
     /// <summary>
     ///     Enumerates all child nodes of the current node in a depth-first manner that satisfy a given filter.
@@ -151,7 +151,7 @@ public static class IHaveObservableChildrenExtensions
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
     /// <returns>An IEnumerable of all filtered child nodes of the current node.</returns>
-    public static IEnumerable<Box<TSelf>> EnumerateChildrenFilteredDfs<TSelf, TFilter>(this TSelf item)
+    public static IEnumerable<Box<TSelf>> EnumerateChildrenDfs<TSelf, TFilter>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>
         where TFilter : struct, IFilter<Box<TSelf>>
     {
@@ -160,7 +160,158 @@ public static class IHaveObservableChildrenExtensions
             if (TFilter.Match(child))
                 yield return child;
 
-            foreach (var grandChild in child.Item.EnumerateChildrenFilteredDfs<TSelf, TFilter>())
+            foreach (var grandChild in child.Item.EnumerateChildrenDfs<TSelf, TFilter>())
+                yield return grandChild;
+        }
+    }
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a breadth-first manner, transforming each child node using the provided selector.
+    /// </summary>
+    /// <param name="item">The node whose children are to be enumerated and transformed.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An IEnumerable of transformed child nodes of the current node.</returns>
+    public static IEnumerable<TResult> EnumerateChildrenBfs<TSelf, TResult, TSelector>(this Box<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TSelector : struct, ISelector<Box<TSelf>, TResult>
+        => item.Item.EnumerateChildrenBfs<TSelf, TResult, TSelector>();
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a breadth-first manner, transforming each child node using the provided selector.
+    /// </summary>
+    /// <param name="item">The node whose children are to be enumerated and transformed.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An IEnumerable of transformed child nodes of the current node.</returns>
+    public static IEnumerable<TResult> EnumerateChildrenBfs<TSelf, TResult, TSelector>(this TSelf item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TSelector : struct, ISelector<Box<TSelf>, TResult>
+    {
+        // Return the current item's immediate children first.
+        foreach (var child in item.Children)
+            yield return TSelector.Select(child);
+
+        // Then return the children of those children.
+        foreach (var child in item.Children)
+        foreach (var grandChild in child.Item.EnumerateChildrenBfs<TSelf, TResult, TSelector>())
+            yield return grandChild;
+    }
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a depth-first manner, transforming each child node using the provided selector.
+    /// </summary>
+    /// <param name="item">The node whose children are to be enumerated and transformed.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An IEnumerable of transformed child nodes of the current node.</returns>
+    public static IEnumerable<TResult> EnumerateChildrenDfs<TSelf, TResult, TSelector>(this Box<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TSelector : struct, ISelector<Box<TSelf>, TResult>
+        => item.Item.EnumerateChildrenDfs<TSelf, TResult, TSelector>();
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a depth-first manner, transforming each child node using the provided selector.
+    /// </summary>
+    /// <param name="item">The node whose children are to be enumerated and transformed.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An IEnumerable of transformed child nodes of the current node.</returns>
+    public static IEnumerable<TResult> EnumerateChildrenDfs<TSelf, TResult, TSelector>(this TSelf item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TSelector : struct, ISelector<Box<TSelf>, TResult>
+    {
+        foreach (var child in item.Children)
+        {
+            yield return TSelector.Select(child);
+            foreach (var grandChild in child.Item.EnumerateChildrenDfs<TSelf, TResult, TSelector>())
+                yield return grandChild;
+        }
+    }
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a breadth-first manner that satisfy a given filter,
+    ///     transforming each filtered child node using the provided selector.
+    /// </summary>
+    /// <param name="item">The node, wrapped in a Box, whose filtered children are to be enumerated and transformed.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
+    /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An IEnumerable of transformed and filtered child nodes of the current node.</returns>
+    public static IEnumerable<TResult> EnumerateChildrenBfs<TSelf, TResult, TFilter, TSelector>(this Box<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TFilter : struct, IFilter<Box<TSelf>>
+        where TSelector : struct, ISelector<Box<TSelf>, TResult>
+        => item.Item.EnumerateChildrenBfs<TSelf, TResult, TFilter, TSelector>();
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a breadth-first manner that satisfy a given filter,
+    ///     transforming each filtered child node using the provided selector.
+    /// </summary>
+    /// <param name="item">The node, wrapped in a Box, whose filtered children are to be enumerated and transformed.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
+    /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An IEnumerable of transformed and filtered child nodes of the current node.</returns>
+    public static IEnumerable<TResult> EnumerateChildrenBfs<TSelf, TResult, TFilter, TSelector>(this TSelf item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TFilter : struct, IFilter<Box<TSelf>>
+        where TSelector : struct, ISelector<Box<TSelf>, TResult>
+    {
+        // Return the current item's immediate children first.
+        foreach (var child in item.Children)
+            if (TFilter.Match(child))
+                yield return TSelector.Select(child);
+
+        // Then return the children of those children.
+        foreach (var child in item.Children)
+        foreach (var grandChild in child.Item.EnumerateChildrenBfs<TSelf, TResult, TFilter, TSelector>())
+            yield return grandChild;
+    }
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a depth-first manner that satisfy a given filter,
+    ///     transforming each filtered child node using the provided selector.
+    /// </summary>
+    /// <param name="item">The node, wrapped in a Box, whose filtered children are to be enumerated and transformed.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
+    /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An IEnumerable of transformed and filtered child nodes of the current node.</returns>
+    public static IEnumerable<TResult> EnumerateChildrenDfs<TSelf, TResult, TFilter, TSelector>(this Box<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TFilter : struct, IFilter<Box<TSelf>>
+        where TSelector : struct, ISelector<Box<TSelf>, TResult>
+        => item.Item.EnumerateChildrenDfs<TSelf, TResult, TFilter, TSelector>();
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a depth-first manner that satisfy a given filter,
+    ///     transforming each filtered child node using the provided selector.
+    /// </summary>
+    /// <param name="item">The node, wrapped in a Box, whose filtered children are to be enumerated and transformed.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
+    /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An IEnumerable of transformed and filtered child nodes of the current node.</returns>
+    public static IEnumerable<TResult> EnumerateChildrenDfs<TSelf, TResult, TFilter, TSelector>(this TSelf item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>
+        where TFilter : struct, IFilter<Box<TSelf>>
+        where TSelector : struct, ISelector<Box<TSelf>, TResult>
+    {
+        foreach (var child in item.Children)
+        {
+            if (TFilter.Match(child))
+                yield return TSelector.Select(child);
+
+            foreach (var grandChild in child.Item.EnumerateChildrenDfs<TSelf, TResult, TFilter, TSelector>())
                 yield return grandChild;
         }
     }
@@ -281,7 +432,7 @@ public static class IHaveObservableChildrenExtensions
     /// <param name="item">The current node.</param>
     /// <param name="buffer">
     ///     The span to fill with child items.
-    ///     Should be at least as big as <see cref="IHaveBoxedChildrenExtensions.CountChildren{TSelf}(Box{TSelf})"/>
+    ///     Should be at least as big as <see cref="IHaveObservableChildrenExtensions.CountChildren{TSelf}(Box{TSelf})"/>
     /// </param>
     /// <param name="index">The current index in the array.</param>
     public static void GetChildrenRecursiveUnsafe<TSelf, TResult, TSelector>(this TSelf item, Span<TResult> buffer, ref int index)

@@ -127,9 +127,7 @@ public static class IHaveBoxedChildrenWithKeyExtensions
         {
             yield return child;
             foreach (var grandChild in child.Value.Item.EnumerateChildrenDfs<TSelf, TKey>())
-            {
                 yield return grandChild;
-            }
         }
     }
 
@@ -213,14 +211,13 @@ public static class IHaveBoxedChildrenWithKeyExtensions
     ///     Enumerates all child nodes of the current node in a depth-first manner that satisfy a given filter.
     /// </summary>
     /// <param name="item">The node, wrapped in a KeyedBox, whose children are to be enumerated.</param>
-    /// <param name="filter">The filter struct to be applied to each child node.</param>
     /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
     /// <returns>An IEnumerable of all filtered child nodes of the current node.</returns>
     [ExcludeFromCodeCoverage] // Wrapper
     public static IEnumerable<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>> EnumerateChildrenDfs<TSelf, TKey, TFilter>(
-        this KeyedBox<TKey, TSelf> item, TFilter filter)
+        this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
         where TKey : notnull
         where TFilter : struct, IFilter<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>>
@@ -246,6 +243,179 @@ public static class IHaveBoxedChildrenWithKeyExtensions
                 yield return child;
 
             foreach (var grandChild in child.Value.Item.EnumerateChildrenDfs<TSelf, TKey, TFilter>())
+                yield return grandChild;
+        }
+    }
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a breadth-first manner, transforming each child node using the provided selector.
+    /// </summary>
+    /// <param name="item">The node whose children are to be enumerated and transformed.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An IEnumerable of transformed child nodes of the current node.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static IEnumerable<TResult> EnumerateChildrenBfs<TSelf, TKey, TResult, TSelector>(this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        where TSelector : struct, ISelector<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>, TResult>
+        => item.Item.EnumerateChildrenBfs<TSelf, TKey, TResult, TSelector>();
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a breadth-first manner, transforming each child node using the provided selector.
+    /// </summary>
+    /// <param name="item">The node whose children are to be enumerated and transformed.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An IEnumerable of transformed child nodes of the current node.</returns>
+    public static IEnumerable<TResult> EnumerateChildrenBfs<TSelf, TKey, TResult, TSelector>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        where TSelector : struct, ISelector<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>, TResult>
+    {
+        // Return the current item's immediate children first.
+        foreach (var child in item.Children)
+            yield return TSelector.Select(child);
+
+        // Then return the transformed children of those children.
+        foreach (var child in item.Children)
+        foreach (var grandChild in child.Value.Item.EnumerateChildrenBfs<TSelf, TKey, TResult, TSelector>())
+            yield return grandChild;
+    }
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a depth-first manner, transforming each child node using
+    ///     the provided selector.
+    /// </summary>
+    /// <param name="item">The node whose children are to be enumerated and transformed.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An IEnumerable of transformed child nodes of the current node.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static IEnumerable<TResult> EnumerateChildrenDfs<TSelf, TKey, TResult, TSelector>(
+        this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        where TSelector : struct, ISelector<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>, TResult>
+        => item.Item.EnumerateChildrenDfs<TSelf, TKey, TResult, TSelector>();
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a depth-first manner, transforming each child node using
+    ///     the provided selector.
+    /// </summary>
+    /// <param name="item">The node whose children are to be enumerated and transformed.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An IEnumerable of transformed child nodes of the current node.</returns>
+    public static IEnumerable<TResult> EnumerateChildrenDfs<TSelf, TKey, TResult, TSelector>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        where TSelector : struct, ISelector<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>, TResult>
+    {
+        foreach (var child in item.Children)
+        {
+            yield return TSelector.Select(child);
+            foreach (var grandChild in child.Value.Item.EnumerateChildrenDfs<TSelf, TKey, TResult, TSelector>())
+                yield return grandChild;
+        }
+    }
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a breadth-first manner that satisfy a given filter,
+    ///     transforming each filtered child node using the provided selector.
+    /// </summary>
+    /// <param name="item">The node whose filtered children are to be enumerated and transformed.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
+    /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An IEnumerable of transformed and filtered child nodes of the current node.</returns>
+    public static IEnumerable<TResult> EnumerateChildrenBfs<TSelf, TKey, TResult, TFilter, TSelector>(this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        where TFilter : struct, IFilter<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>>
+        where TSelector : struct, ISelector<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>, TResult>
+        => item.Item.EnumerateChildrenBfs<TSelf, TKey, TResult, TFilter, TSelector>();
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a breadth-first manner that satisfy a given filter,
+    ///     transforming each filtered child node using the provided selector.
+    /// </summary>
+    /// <param name="item">The node whose filtered children are to be enumerated and transformed.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
+    /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An IEnumerable of transformed and filtered child nodes of the current node.</returns>
+    public static IEnumerable<TResult> EnumerateChildrenBfs<TSelf, TKey, TResult, TFilter, TSelector>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        where TFilter : struct, IFilter<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>>
+        where TSelector : struct, ISelector<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>, TResult>
+    {
+        // Return the current item's immediate children first if they match the filter.
+        foreach (var child in item.Children)
+            if (TFilter.Match(child))
+                yield return TSelector.Select(child);
+
+        // Then return the transformed and filtered children of those children.
+        foreach (var child in item.Children)
+        foreach (var grandChild in child.Value.Item.EnumerateChildrenBfs<TSelf, TKey, TResult, TFilter, TSelector>())
+            yield return grandChild;
+    }
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a depth-first manner that satisfy a given filter,
+    ///     transforming each filtered child node using the provided selector.
+    /// </summary>
+    /// <param name="item">The node whose filtered children are to be enumerated and transformed.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
+    /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An IEnumerable of transformed and filtered child nodes of the current node.</returns>
+    public static IEnumerable<TResult> EnumerateChildrenDfs<TSelf, TKey, TResult, TFilter, TSelector>(
+        this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        where TFilter : struct, IFilter<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>>
+        where TSelector : struct, ISelector<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>, TResult>
+        => item.Item.EnumerateChildrenDfs<TSelf, TKey, TResult, TFilter, TSelector>();
+
+    /// <summary>
+    ///     Enumerates all child nodes of the current node in a depth-first manner that satisfy a given filter,
+    ///     transforming each filtered child node using the provided selector.
+    /// </summary>
+    /// <param name="item">The node whose filtered children are to be enumerated and transformed.</param>
+    /// <typeparam name="TKey">The type of key used to identify children.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
+    /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An IEnumerable of transformed and filtered child nodes of the current node.</returns>
+    public static IEnumerable<TResult> EnumerateChildrenDfs<TSelf, TKey, TResult, TFilter, TSelector>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
+        where TKey : notnull
+        where TFilter : struct, IFilter<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>>
+        where TSelector : struct, ISelector<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>, TResult>
+    {
+        foreach (var child in item.Children)
+        {
+            if (TFilter.Match(child))
+                yield return TSelector.Select(child);
+
+            foreach (var grandChild in child.Value.Item.EnumerateChildrenDfs<TSelf, TKey, TResult, TFilter, TSelector>())
                 yield return grandChild;
         }
     }

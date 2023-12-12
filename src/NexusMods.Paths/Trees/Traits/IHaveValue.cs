@@ -43,18 +43,7 @@ public static class IHaveValueExtensionsForIHaveBoxedChildren
     /// <returns>An IEnumerable of all child values of the current node.</returns>
     public static IEnumerable<TValue> EnumerateValuesBfs<TSelf, TValue>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveValue<TValue>
-    {
-        // First return all values of the immediate children
-        foreach (var child in item.Children)
-            yield return child.Item.Value;
-
-        // Then iterate over the immediate children and recursively enumerate their values
-        foreach (var child in item.Children)
-        {
-            foreach (var grandChildvalue in child.Item.EnumerateValuesBfs<TSelf, TValue>())
-                yield return grandChildvalue;
-        }
-    }
+        => item.EnumerateChildrenBfs<TSelf, TValue, BoxValueSelector<TSelf, TValue>>();
 
     /// <summary>
     ///     Enumerates all values of the child nodes of the current node in a depth-first manner.
@@ -76,15 +65,7 @@ public static class IHaveValueExtensionsForIHaveBoxedChildren
     /// <returns>An IEnumerable of all child values of the current node.</returns>
     public static IEnumerable<TValue> EnumerateValuesDfs<TSelf, TValue>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveValue<TValue>
-    {
-        // Enumerate the value of each child and then recursively enumerate the values of its children
-        foreach (var child in item.Children)
-        {
-            yield return child.Item.Value;
-            foreach (var grandChildvalue in child.Item.EnumerateValuesDfs<TSelf, TValue>())
-                yield return grandChildvalue;
-        }
-    }
+        => item.EnumerateChildrenDfs<TSelf, TValue, BoxValueSelector<TSelf, TValue>>();
 
     /// <summary>
     ///     Recursively returns all the values of the children of this node.
@@ -149,18 +130,7 @@ public static class IHaveValueExtensionsForIHaveObservableChildren
     /// <returns>An IEnumerable of all child values of the current node.</returns>
     public static IEnumerable<TValue> EnumerateValuesBfs<TSelf, TValue>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveValue<TValue>
-    {
-        // First return all values of the immediate children
-        foreach (var child in item.Children)
-            yield return child.Item.Value;
-
-        // Then iterate over the immediate children and recursively enumerate their values
-        foreach (var child in item.Children)
-        {
-            foreach (var grandChildvalue in child.Item.EnumerateValuesBfs<TSelf, TValue>())
-                yield return grandChildvalue;
-        }
-    }
+        => item.EnumerateChildrenBfs<TSelf, TValue, BoxValueSelector<TSelf, TValue>>();
 
     /// <summary>
     ///     Enumerates all values of the child nodes of the current node in a depth-first manner.
@@ -182,15 +152,7 @@ public static class IHaveValueExtensionsForIHaveObservableChildren
     /// <returns>An IEnumerable of all child values of the current node.</returns>
     public static IEnumerable<TValue> EnumerateValuesDfs<TSelf, TValue>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveValue<TValue>
-    {
-        // Enumerate the value of each child and then recursively enumerate the values of its children
-        foreach (var child in item.Children)
-        {
-            yield return child.Item.Value;
-            foreach (var grandChildvalue in child.Item.EnumerateValuesDfs<TSelf, TValue>())
-                yield return grandChildvalue;
-        }
-    }
+        => item.EnumerateChildrenDfs<TSelf, TValue, BoxValueSelector<TSelf, TValue>>();
 
     /// <summary>
     ///     Recursively returns all the values of the children of this node.
@@ -243,10 +205,10 @@ public static class IHaveValueExtensionsForIHaveBoxedChildrenWithKey
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <returns>An IEnumerable of all child values of the current node.</returns>
-    public static IEnumerable<TValue> EnumerateValuesBfs<TKey, TSelf, TValue>(this KeyedBox<TKey, TSelf> item)
-        where TSelf : struct, IHaveBoxedChildrenWithKey<TValue, TSelf>, IHaveValue<TValue>
+    public static IEnumerable<TValue> EnumerateValuesBfs<TSelf, TKey, TValue>(this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveValue<TValue>
         where TValue : notnull
-        where TKey : notnull => item.Item.EnumerateValuesBfs<TSelf, TValue>();
+        where TKey : notnull => item.Item.EnumerateValuesBfs<TSelf, TKey, TValue>();
 
     /// <summary>
     ///     Enumerates all values of the child nodes of the current node in a breadth-first manner.
@@ -254,22 +216,13 @@ public static class IHaveValueExtensionsForIHaveBoxedChildrenWithKey
     /// <param name="item">The node whose child values are to be enumerated.</param>
     /// <typeparam name="TSelf">The type of the child node.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <typeparam name="TKey">The type of key.</typeparam>
     /// <returns>An IEnumerable of all child values of the current node.</returns>
-    public static IEnumerable<TValue> EnumerateValuesBfs<TSelf, TValue>(this TSelf item)
-        where TSelf : struct, IHaveBoxedChildrenWithKey<TValue, TSelf>, IHaveValue<TValue>
+    public static IEnumerable<TValue> EnumerateValuesBfs<TSelf, TKey, TValue>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveValue<TValue>
         where TValue : notnull
-    {
-        // First return all values of the immediate children
-        foreach (var child in item.Children)
-            yield return child.Value.Item.Value;
-
-        // Then iterate over the immediate children and recursively enumerate their values
-        foreach (var child in item.Children)
-        {
-            foreach (var grandChildvalue in child.Value.Item.EnumerateValuesBfs<TSelf, TValue>())
-                yield return grandChildvalue;
-        }
-    }
+        where TKey : notnull
+        => item.EnumerateChildrenBfs<TSelf, TKey, TValue, KeyValueValueSelector<TSelf, TKey, TValue>>();
 
     /// <summary>
     ///     Enumerates all values of the child nodes of the current node in a depth-first manner.
@@ -279,10 +232,10 @@ public static class IHaveValueExtensionsForIHaveBoxedChildrenWithKey
     /// <typeparam name="TValue">The type of the value.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <returns>An IEnumerable of all child values of the current node.</returns>
-    public static IEnumerable<TValue> EnumerateValuesDfs<TKey, TSelf, TValue>(this KeyedBox<TKey, TSelf> item)
-        where TSelf : struct, IHaveBoxedChildrenWithKey<TValue, TSelf>, IHaveValue<TValue>
+    public static IEnumerable<TValue> EnumerateValuesDfs<TSelf, TKey, TValue>(this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveValue<TValue>
         where TValue : notnull
-        where TKey : notnull => item.Item.EnumerateValuesDfs<TSelf, TValue>();
+        where TKey : notnull => item.Item.EnumerateValuesDfs<TSelf, TKey, TValue>();
 
     /// <summary>
     ///     Enumerates all values of the child nodes of the current node in a depth-first manner.
@@ -290,19 +243,13 @@ public static class IHaveValueExtensionsForIHaveBoxedChildrenWithKey
     /// <param name="item">The node whose child values are to be enumerated.</param>
     /// <typeparam name="TSelf">The type of the child node.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <typeparam name="TKey">The type of key used.</typeparam>
     /// <returns>An IEnumerable of all child values of the current node.</returns>
-    public static IEnumerable<TValue> EnumerateValuesDfs<TSelf, TValue>(this TSelf item)
-        where TSelf : struct, IHaveBoxedChildrenWithKey<TValue, TSelf>, IHaveValue<TValue>
+    public static IEnumerable<TValue> EnumerateValuesDfs<TSelf, TKey, TValue>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveValue<TValue>
         where TValue : notnull
-    {
-        // Enumerate the value of each child and then recursively enumerate the values of its children
-        foreach (var child in item.Children)
-        {
-            yield return child.Value.Item.Value;
-            foreach (var grandChildvalue in child.Value.Item.EnumerateValuesDfs<TSelf, TValue>())
-                yield return grandChildvalue;
-        }
-    }
+        where TKey : notnull
+        => item.EnumerateChildrenDfs<TSelf, TKey, TValue, KeyValueValueSelector<TSelf, TKey, TValue>>();
 
     /// <summary>
     ///     Recursively returns all the values of the children of this node.
@@ -359,10 +306,12 @@ public static class IHaveValueExtensions
     /// <param name="item">The keyed boxed node whose value is to be retrieved.</param>
     /// <typeparam name="TSelf">The type of the child node.</typeparam>
     /// <typeparam name="TValue">The type of the value.</typeparam>
+    /// <typeparam name="TKey">Type of key used.</typeparam>
     /// <returns>The value of the node.</returns>
-    public static TValue Value<TSelf, TValue>(this KeyedBox<TValue, TSelf> item)
+    public static TValue Value<TSelf, TKey, TValue>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveValue<TValue>
         where TValue : notnull
+        where TKey : notnull
         => item.Item.Value;
 
     /// <summary>
@@ -375,6 +324,19 @@ public static class IHaveValueExtensions
     public static TValue Value<TSelf, TValue>(this Box<TSelf> item)
         where TSelf : struct, IHaveValue<TValue>
         => item.Item.Value;
+}
+
+internal struct BoxValueSelector<TSelf, TValue> : ISelector<Box<TSelf>, TValue>
+    where TSelf : struct, IHaveValue<TValue>
+{
+    public static TValue Select(Box<TSelf> item) => item.Item.Value;
+}
+
+internal struct KeyValueValueSelector<TSelf, TKey, TValue> : ISelector<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>, TValue>
+    where TSelf : struct, IHaveValue<TValue>
+    where TKey : notnull
+{
+    public static TValue Select(KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item) => item.Value.Item.Value;
 }
 
 internal struct ValueSelector<TSelf, TValue> : ISelector<TSelf, TValue>

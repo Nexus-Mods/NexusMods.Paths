@@ -558,7 +558,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
     /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a breadth-first manner.</returns>
     public static IEnumerable<Box<TSelf>> EnumerateFilesBfs<TSelf>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
-        => item.EnumerateChildrenFilteredBfs<TSelf, BoxFileFilter<TSelf>>();
+        => item.EnumerateChildrenBfs<TSelf, BoxFileFilter<TSelf>>();
 
     /// <summary>
     ///     Enumerates all file child nodes of the current node in a breadth-first manner.
@@ -578,7 +578,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
     /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a breadth-first manner.</returns>
     public static IEnumerable<Box<TSelf>> EnumerateDirectoriesBfs<TSelf>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
-        => item.EnumerateChildrenFilteredBfs<TSelf, BoxDirectoryFilter<TSelf>>();
+        => item.EnumerateChildrenBfs<TSelf, BoxDirectoryFilter<TSelf>>();
 
     /// <summary>
     ///     Enumerates all directory child nodes of the current node in a breadth-first manner.
@@ -598,7 +598,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
     /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a depth-first manner.</returns>
     public static IEnumerable<Box<TSelf>> EnumerateFilesDfs<TSelf>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
-        => item.EnumerateChildrenFilteredDfs<TSelf, BoxFileFilter<TSelf>>();
+        => item.EnumerateChildrenDfs<TSelf, BoxFileFilter<TSelf>>();
 
     /// <summary>
     ///     Enumerates all file child nodes of the current node in a depth-first manner.
@@ -618,7 +618,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
     /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a depth-first manner.</returns>
     public static IEnumerable<Box<TSelf>> EnumerateDirectoriesDfs<TSelf>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
-        => item.EnumerateChildrenFilteredDfs<TSelf, BoxDirectoryFilter<TSelf>>();
+        => item.EnumerateChildrenDfs<TSelf, BoxDirectoryFilter<TSelf>>();
 
     /// <summary>
     ///     Enumerates all directory child nodes of the current node in a depth-first manner.

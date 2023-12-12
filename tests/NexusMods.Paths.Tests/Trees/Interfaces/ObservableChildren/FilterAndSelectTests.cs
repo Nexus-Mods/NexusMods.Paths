@@ -45,6 +45,40 @@ public class FilterAndSelectTests
         buffer.Should().Equal(3, 4);
     }
 
+    [Fact]
+    public void EnumerateChildrenDfs_WithFilterAndSelector_ShouldReturnTransformedValues()
+    {
+        // Arrange
+        var grandChild1 = TestTree.Create(null, 4);
+        var grandChild2 = TestTree.Create(null, 5);
+        var child1 = TestTree.Create(new ObservableCollection<Box<TestTree>> { grandChild1 }, 3);
+        var child2 = TestTree.Create(new ObservableCollection<Box<TestTree>> { grandChild2 }, 2);
+        var root = TestTree.Create(new ObservableCollection<Box<TestTree>> { child1, child2 });
+
+        // Act
+        var transformedValues = root.EnumerateChildrenDfs<TestTree, int, ValueOverOneFilter<TestTree>, DoubleValueSelector<TestTree>>().ToList();
+
+        // Assert
+        transformedValues.Should().Equal(6, 8, 4, 10);
+    }
+
+    [Fact]
+    public void EnumerateChildrenBfs_WithFilterAndSelector_ShouldReturnTransformedValues()
+    {
+        // Arrange
+        var grandChild1 = TestTree.Create(null, 4);
+        var grandChild2 = TestTree.Create(null, 5);
+        var child1 = TestTree.Create(new ObservableCollection<Box<TestTree>> { grandChild1 }, 3);
+        var child2 = TestTree.Create(new ObservableCollection<Box<TestTree>> { grandChild2 }, 2);
+        var root = TestTree.Create(new ObservableCollection<Box<TestTree>> { child1, child2 });
+
+        // Act
+        var transformedValues = root.EnumerateChildrenBfs<TestTree, int, ValueOverOneFilter<TestTree>, DoubleValueSelector<TestTree>>().ToList();
+
+        // Assert
+        transformedValues.Should().Equal(6, 4, 8, 10);
+    }
+
     private struct TestTree : IHaveObservableChildren<TestTree>, IHaveValue<int>
     {
         public ObservableCollection<Box<TestTree>> Children { get; private init; }
@@ -68,5 +102,15 @@ public class FilterAndSelectTests
     private struct ValueSelector<TSelf, TValue> : ISelector<TSelf, TValue> where TSelf : struct, IHaveValue<TValue>
     {
         public static TValue Select(TSelf item) => item.Value;
+    }
+
+    private struct ValueOverOneFilter<TSelf> : IFilter<Box<TSelf>> where TSelf : struct, IHaveValue<int>
+    {
+        public static bool Match(Box<TSelf> item) => item.Item.Value > 1;
+    }
+
+    private struct DoubleValueSelector<TSelf> : ISelector<Box<TSelf>, int> where TSelf : struct, IHaveValue<int>
+    {
+        public static int Select(Box<TSelf> item) => item.Item.Value * 2;
     }
 }

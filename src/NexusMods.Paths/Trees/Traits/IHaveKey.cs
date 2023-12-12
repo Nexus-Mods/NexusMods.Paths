@@ -44,18 +44,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     /// <returns>An IEnumerable of all child keys of the current node.</returns>
     public static IEnumerable<TKey> EnumerateKeysBfs<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
-    {
-        // First return all keys of the immediate children
-        foreach (var child in item.Children)
-            yield return child.Item.Key;
-
-        // Then iterate over the immediate children and recursively enumerate their keys
-        foreach (var child in item.Children)
-        {
-            foreach (var grandChildKey in child.Item.EnumerateKeysBfs<TSelf, TKey>())
-                yield return grandChildKey;
-        }
-    }
+        => item.EnumerateChildrenBfs<TSelf, TKey, BoxKeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Enumerates all keys of the child nodes of the current node in a depth-first manner.
@@ -77,15 +66,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     /// <returns>An IEnumerable of all child keys of the current node.</returns>
     public static IEnumerable<TKey> EnumerateKeysDfs<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
-    {
-        // Enumerate the key of each child and then recursively enumerate the keys of its children
-        foreach (var child in item.Children)
-        {
-            yield return child.Item.Key;
-            foreach (var grandChildKey in child.Item.EnumerateKeysDfs<TSelf, TKey>())
-                yield return grandChildKey;
-        }
-    }
+        => item.EnumerateChildrenDfs<TSelf, TKey, BoxKeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Recursively returns all the keys of the children of this node.
@@ -458,18 +439,7 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     /// <returns>An IEnumerable of all child keys of the current node.</returns>
     public static IEnumerable<TKey> EnumerateKeysBfs<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
-    {
-        // First return all keys of the immediate children
-        foreach (var child in item.Children)
-            yield return child.Item.Key;
-
-        // Then iterate over the immediate children and recursively enumerate their keys
-        foreach (var child in item.Children)
-        {
-            foreach (var grandChildKey in child.Item.EnumerateKeysBfs<TSelf, TKey>())
-                yield return grandChildKey;
-        }
-    }
+        => item.EnumerateChildrenBfs<TSelf, TKey, BoxKeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Enumerates all keys of the child nodes of the current node in a depth-first manner.
@@ -491,15 +461,7 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     /// <returns>An IEnumerable of all child keys of the current node.</returns>
     public static IEnumerable<TKey> EnumerateKeysDfs<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
-    {
-        // Enumerate the key of each child and then recursively enumerate the keys of its children
-        foreach (var child in item.Children)
-        {
-            yield return child.Item.Key;
-            foreach (var grandChildKey in child.Item.EnumerateKeysDfs<TSelf, TKey>())
-                yield return grandChildKey;
-        }
-    }
+        => item.EnumerateChildrenDfs<TSelf, TKey, BoxKeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Recursively returns all the keys of the children of this node.
@@ -871,18 +833,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     public static IEnumerable<TKey> EnumerateKeysBfs<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
-    {
-        // First return all keys of the immediate children
-        foreach (var child in item.Children)
-            yield return child.Value.Item.Key;
-
-        // Then iterate over the immediate children and recursively enumerate their keys
-        foreach (var child in item.Children)
-        {
-            foreach (var grandChildKey in child.Value.Item.EnumerateKeysBfs<TSelf, TKey>())
-                yield return grandChildKey;
-        }
-    }
+        => item.EnumerateChildrenBfs<TSelf, TKey, TKey, KeyValueKeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Enumerates all keys of the child nodes of the current node in a depth-first manner.
@@ -906,15 +857,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     public static IEnumerable<TKey> EnumerateKeysDfs<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
-    {
-        // Enumerate the key of each child and then recursively enumerate the keys of its children
-        foreach (var child in item.Children)
-        {
-            yield return child.Value.Item.Key;
-            foreach (var grandChildKey in child.Value.Item.EnumerateKeysDfs<TSelf, TKey>())
-                yield return grandChildKey;
-        }
-    }
+        => item.EnumerateChildrenDfs<TSelf, TKey, TKey, KeyValueKeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Recursively returns all the keys of the children of this node.
@@ -923,7 +866,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>An array of all the keys of the children of this node.</returns>
-    public static TKey[] GetKeys<TKey, TSelf>(this KeyedBox<TKey, TSelf> item)
+    public static TKey[] GetKeys<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : struct =>
         item.GetChildrenRecursive<TSelf, TKey, TKey, KeySelector<TSelf, TKey>>();
@@ -936,7 +879,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>An array of all the keys of the children of this node.</returns>
     [ExcludeFromCodeCoverage]
-    public static TKey[] GetKeys<TKey, TSelf>(this TSelf item)
+    public static TKey[] GetKeys<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : struct =>
         item.GetChildrenRecursive<TSelf, TKey, TKey, KeySelector<TSelf, TKey>>();
@@ -951,7 +894,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     /// </param>
     /// <param name="index">The current index in the array.</param>
     [ExcludeFromCodeCoverage]
-    public static void GetKeysUnsafe<TKey, TSelf>(TSelf item, Span<TKey> buffer, ref int index)
+    public static void GetKeysUnsafe<TSelf, TKey>(TSelf item, Span<TKey> buffer, ref int index)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : struct, IHaveKey<TSelf> =>
         item.GetChildrenRecursiveUnsafe<TSelf, TKey, TKey, KeySelector<TSelf, TKey>>(buffer, ref index);
@@ -1280,6 +1223,19 @@ public static class IHaveKeyExtensions
     public static TKey Key<TSelf, TKey>(this Box<TSelf> item)
         where TSelf : struct, IHaveKey<TKey>
         => item.Item.Key;
+}
+
+internal struct BoxKeySelector<TSelf, TKey> : ISelector<Box<TSelf>, TKey>
+    where TSelf : struct, IHaveKey<TKey>
+{
+    public static TKey Select(Box<TSelf> item) => item.Item.Key;
+}
+
+internal struct KeyValueKeySelector<TSelf, TKey> : ISelector<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>, TKey>
+    where TSelf : struct, IHaveKey<TKey>
+    where TKey : notnull
+{
+    public static TKey Select(KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item) => item.Value.Key();
 }
 
 internal struct KeySelector<TSelf, TKey> : ISelector<TSelf, TKey>

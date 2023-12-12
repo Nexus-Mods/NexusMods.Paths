@@ -706,7 +706,7 @@ public static class IHaveParentExtensions
     /// <param name="keys">The sequence of keys to match, in reverse order.</param>
     /// <returns>The node that matches the sequence of keys from start to end, or null if no match is found.</returns>
     [ExcludeFromCodeCoverage]
-    public static Box<TSelf>? FindRootByKeyUpward<TKey, TSelf>(this KeyedBox<TKey, TSelf> node, Span<TKey> keys)
+    public static Box<TSelf>? FindRootByKeyUpward<TSelf, TKey>(this KeyedBox<TKey, TSelf> node, Span<TKey> keys)
         where TSelf : struct, IHaveParent<TSelf>, IHaveKey<TKey>
         where TKey : notnull
         => ((Box<TSelf>)node).FindRootByKeyUpward(keys);
