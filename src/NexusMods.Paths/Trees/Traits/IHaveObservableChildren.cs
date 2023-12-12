@@ -173,6 +173,7 @@ public static class IHaveObservableChildrenExtensions
     /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
     /// <typeparam name="TSelector">The type of the selector.</typeparam>
     /// <returns>An IEnumerable of transformed child nodes of the current node.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
     public static IEnumerable<TResult> EnumerateChildrenBfs<TSelf, TResult, TSelector>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>
         where TSelector : struct, ISelector<Box<TSelf>, TResult>
@@ -208,6 +209,7 @@ public static class IHaveObservableChildrenExtensions
     /// <typeparam name="TResult">The result type after applying the selector.</typeparam>
     /// <typeparam name="TSelector">The type of the selector.</typeparam>
     /// <returns>An IEnumerable of transformed child nodes of the current node.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
     public static IEnumerable<TResult> EnumerateChildrenDfs<TSelf, TResult, TSelector>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>
         where TSelector : struct, ISelector<Box<TSelf>, TResult>
