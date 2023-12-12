@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using NexusMods.Paths.Trees.Traits.Interfaces;
-using Reloaded.Memory.Extensions;
 
 namespace NexusMods.Paths.Trees.Traits;
 
@@ -107,7 +106,7 @@ public static class IHaveValueExtensionsForIHaveBoxedChildren
     /// <returns>An array of all the values of the children of this node.</returns>
     public static TValue[] GetValues<TSelf, TValue>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveValue<TValue> =>
-        item.GetChildItems<TSelf, TValue, ValueSelector<TSelf, TValue>>(new ValueSelector<TSelf, TValue>());
+        item.GetChildrenRecursive<TSelf, TValue, ValueSelector<TSelf, TValue>>();
 
     /// <summary>
     ///     Helper method to populate values recursively.
@@ -121,7 +120,7 @@ public static class IHaveValueExtensionsForIHaveBoxedChildren
     [ExcludeFromCodeCoverage]
     public static void GetValuesUnsafe<TSelf, TValue>(TSelf item, Span<TValue> buffer, ref int index)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveValue<TValue> =>
-        item.GetChildItemsUnsafe(new ValueSelector<TSelf, TValue>(), buffer, ref index);
+        item.GetChildrenRecursiveUnsafe<TSelf, TValue, ValueSelector<TSelf, TValue>>(buffer, ref index);
 }
 
 /// <summary>
@@ -213,7 +212,7 @@ public static class IHaveValueExtensionsForIHaveObservableChildren
     /// <returns>An array of all the values of the children of this node.</returns>
     public static TValue[] GetValues<TSelf, TValue>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveValue<TValue> =>
-        item.GetChildItems<TSelf, TValue, ValueSelector<TSelf, TValue>>(new ValueSelector<TSelf, TValue>());
+        item.GetChildrenRecursive<TSelf, TValue, ValueSelector<TSelf, TValue>>();
 
     /// <summary>
     ///     Helper method to populate values recursively.
@@ -227,7 +226,7 @@ public static class IHaveValueExtensionsForIHaveObservableChildren
     [ExcludeFromCodeCoverage]
     public static void GetValuesUnsafe<TSelf, TValue>(TSelf item, Span<TValue> buffer, ref int index)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveValue<TValue> =>
-        item.GetChildItemsUnsafe(new ValueSelector<TSelf, TValue>(), buffer, ref index);
+        item.GetChildrenRecursiveUnsafe<TSelf, TValue, ValueSelector<TSelf, TValue>>(buffer, ref index);
 }
 
 /// <summary>
@@ -329,7 +328,7 @@ public static class IHaveValueExtensionsForIHaveBoxedChildrenWithKey
     public static TValue[] GetValues<TKey, TSelf, TValue>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveValue<TValue>
         where TKey : notnull
-        => item.GetChildItems<TKey, TSelf, TValue, ValueSelector<TKey, TSelf, TValue>>(new ValueSelector<TKey, TSelf, TValue>());
+        => item.GetChildrenRecursive<TSelf, TKey, TValue, ValueSelector<TKey, TSelf, TValue>>();
 
     /// <summary>
     ///     Helper method to populate values recursively.
@@ -344,7 +343,7 @@ public static class IHaveValueExtensionsForIHaveBoxedChildrenWithKey
     public static void GetValuesUnsafe<TKey, TSelf, TValue>(TSelf item, Span<TValue> buffer, ref int index)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveValue<TValue>
         where TKey : notnull
-        => item.GetChildItemsUnsafe<TKey, TSelf, TValue, ValueSelector<TKey, TSelf, TValue>>(new ValueSelector<TKey, TSelf, TValue>(), buffer, ref index);
+        => item.GetChildrenRecursiveUnsafe<TSelf, TKey, TValue, ValueSelector<TKey, TSelf, TValue>>(buffer, ref index);
 }
 
 /// <summary>
@@ -381,12 +380,12 @@ public static class IHaveValueExtensions
 internal struct ValueSelector<TSelf, TValue> : ISelector<TSelf, TValue>
     where TSelf : struct, IHaveValue<TValue>
 {
-    public TValue Select(TSelf item) => item.Value;
+    public static TValue Select(TSelf item) => item.Value;
 }
 
 internal struct ValueSelector<TKey, TSelf, TValue> : ISelector<TSelf, TValue>
     where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveValue<TValue>
     where TKey : notnull
 {
-    public TValue Select(TSelf item) => item.Value;
+    public static TValue Select(TSelf item) => item.Value;
 }

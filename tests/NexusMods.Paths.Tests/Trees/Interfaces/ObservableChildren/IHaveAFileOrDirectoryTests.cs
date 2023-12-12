@@ -113,6 +113,78 @@ public class IHaveAFileOrDirectoryTests
         enumeratedDirectories[2].Should().Be(shallowDirectory); // Finally, the shallowDirectory
     }
 
+    [Fact]
+    public void GetFiles_ShouldReturnAllFiles()
+    {
+        // Arrange
+        var leaf1 = TestTree.Create(true);
+        var leaf2 = TestTree.Create(true);
+        var directory = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { leaf1, leaf2 });
+        var root = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { directory });
+
+        // Act
+        var files = root.GetFiles();
+
+        // Assert
+        files.Length.Should().Be(2);
+        files.Should().Contain(new[] { leaf1, leaf2 });
+    }
+
+    [Fact]
+    public void GetDirectories_ShouldReturnAllDirectories()
+    {
+        // Arrange
+        var leaf = TestTree.Create(true);
+        var directory = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { leaf });
+        var root = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { directory });
+
+        // Act
+        var directories = root.GetDirectories();
+
+        // Assert
+        directories.Length.Should().Be(1);
+        directories.Should().Contain(directory);
+    }
+
+    [Fact]
+    public void GetFilesUnsafe_ShouldReturnAllFiles()
+    {
+        // Arrange
+        var leaf1 = TestTree.Create(true);
+        var leaf2 = TestTree.Create(true);
+        var directory = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { leaf1, leaf2 });
+        var root = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { directory });
+
+        var filesSpan = new Box<TestTree>[2];
+        var index = 0;
+
+        // Act
+        root.GetFilesUnsafe(filesSpan, ref index);
+
+        // Assert
+        filesSpan.Length.Should().Be(2);
+        filesSpan.Should().Contain(new[] { leaf1, leaf2 });
+    }
+
+    [Fact]
+    public void GetDirectoriesUnsafe_ShouldReturnAllDirectories()
+    {
+        // Arrange
+        var leaf = TestTree.Create(true);
+        var directory = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { leaf });
+        var root = TestTree.Create(false, new ObservableCollection<Box<TestTree>> { directory });
+
+        var directoriesSpan = new Box<TestTree>[1];
+        var index = 0;
+
+        // Act
+        root.GetDirectoriesUnsafe(directoriesSpan, ref index);
+
+        // Assert
+        directoriesSpan.Length.Should().Be(1);
+        directoriesSpan.Should().Contain(directory);
+    }
+
     private struct TestTree : IHaveObservableChildren<TestTree>, IHaveAFileOrDirectory
     {
         public ObservableCollection<Box<TestTree>> Children { get; private init; }

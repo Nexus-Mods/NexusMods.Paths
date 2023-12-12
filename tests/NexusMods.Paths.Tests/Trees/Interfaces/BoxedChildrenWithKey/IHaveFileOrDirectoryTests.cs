@@ -119,6 +119,78 @@ public class IHaveFileOrDirectoryTests
         enumeratedDirectories.Select(kvp => kvp.Value).Should().Contain(shallowDirectory);
     }
 
+    [Fact]
+    public void GetFiles_ShouldReturnAllFiles()
+    {
+        // Arrange
+        var leaf1 = TestTree.Create(true);
+        var leaf2 = TestTree.Create(true);
+        var directory = TestTree.Create(false, new Dict { [1] = leaf1, [2] = leaf2 });
+        var root = TestTree.Create(false, new Dict { [0] = directory });
+
+        // Act
+        var files = root.GetFiles();
+
+        // Assert
+        files.Length.Should().Be(2);
+        files.Should().Contain(new[] { leaf1, leaf2 });
+    }
+
+    [Fact]
+    public void GetDirectories_ShouldReturnAllDirectories()
+    {
+        // Arrange
+        var leaf = TestTree.Create(true);
+        var directory = TestTree.Create(false, new Dict { [1] = leaf });
+        var root = TestTree.Create(false, new Dict { [0] = directory });
+
+        // Act
+        var directories = root.GetDirectories();
+
+        // Assert
+        directories.Length.Should().Be(1);
+        directories.Should().Contain(directory);
+    }
+
+    [Fact]
+    public void GetFilesUnsafe_ShouldReturnAllFiles()
+    {
+        // Arrange
+        var leaf1 = TestTree.Create(true);
+        var leaf2 = TestTree.Create(true);
+        var directory = TestTree.Create(false, new Dict { [1] = leaf1, [2] = leaf2 });
+        var root = TestTree.Create(false, new Dict { [0] = directory });
+
+        var filesSpan = new KeyedBox<int, TestTree>[2];
+        var index = 0;
+
+        // Act
+        root.GetFilesUnsafe(filesSpan, ref index);
+
+        // Assert
+        filesSpan.Length.Should().Be(2);
+        filesSpan.Should().Contain(new[] { leaf1, leaf2 });
+    }
+
+    [Fact]
+    public void GetDirectoriesUnsafe_ShouldReturnAllDirectories()
+    {
+        // Arrange
+        var leaf = TestTree.Create(true);
+        var directory = TestTree.Create(false, new Dict { [1] = leaf });
+        var root = TestTree.Create(false, new Dict { [0] = directory });
+
+        var directoriesSpan = new KeyedBox<int, TestTree>[1];
+        var index = 0;
+
+        // Act
+        root.GetDirectoriesUnsafe(directoriesSpan, ref index);
+
+        // Assert
+        directoriesSpan.Length.Should().Be(1);
+        directoriesSpan.Should().Contain(directory);
+    }
+
     internal struct TestTree : IHaveBoxedChildrenWithKey<int, TestTree>, IHaveAFileOrDirectory
     {
         public Dict Children { get; private init; }

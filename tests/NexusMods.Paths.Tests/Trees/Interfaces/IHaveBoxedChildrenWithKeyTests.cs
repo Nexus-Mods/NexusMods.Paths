@@ -107,7 +107,7 @@ public class IHaveBoxedChildrenWithKeyTests
         // Arrange
         var grandChild = TestTree.Create();
         var child = TestTree.Create(new() { [1] = grandChild });
-        KeyedBox<int, TestTree> root = TestTree.Create(new() { [0] = child });
+        var root = TestTree.Create(new() { [0] = child });
 
         // Act
         var count = root.CountChildren();

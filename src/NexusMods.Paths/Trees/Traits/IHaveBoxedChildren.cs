@@ -99,36 +99,34 @@ public static class IHaveBoxedChildrenExtensions
     ///     Enumerates all child nodes of the current node in a breadth-first manner that satisfy a given filter.
     /// </summary>
     /// <param name="item">The node, wrapped in a Box, whose children are to be enumerated.</param>
-    /// <param name="filter">The filter struct to be applied to each child node.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
     /// <returns>An IEnumerable of all filtered child nodes of the current node.</returns>
     [ExcludeFromCodeCoverage] // Wrapper
-    public static IEnumerable<Box<TSelf>> EnumerateChildrenFilteredBfs<TSelf, TFilter>(this Box<TSelf> item, TFilter filter)
+    public static IEnumerable<Box<TSelf>> EnumerateChildrenBfs<TSelf, TFilter>(this Box<TSelf> item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>
         where TFilter : struct, IFilter<Box<TSelf>>
-        => item.Item.EnumerateChildrenFilteredBfs(filter);
+        => item.Item.EnumerateChildrenBfs<TSelf, TFilter>();
 
     /// <summary>
     ///     Enumerates all child nodes of the current node in a breadth-first manner that satisfy a given filter.
     /// </summary>
     /// <param name="item">The node whose children are to be enumerated.</param>
-    /// <param name="filter">The filter struct to be applied to each child node.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
     /// <returns>An IEnumerable of all filtered child nodes of the current node.</returns>
-    public static IEnumerable<Box<TSelf>> EnumerateChildrenFilteredBfs<TSelf, TFilter>(this TSelf item, TFilter filter)
+    public static IEnumerable<Box<TSelf>> EnumerateChildrenBfs<TSelf, TFilter>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>
         where TFilter : struct, IFilter<Box<TSelf>>
     {
         // Return the current item's immediate children first if they match the filter.
         foreach (var child in item.Children)
-            if (filter.Match(child))
+            if (TFilter.Match(child))
                 yield return child;
 
         // Then return the filtered children of those children.
         foreach (var child in item.Children)
-        foreach (var grandChild in child.Item.EnumerateChildrenFilteredBfs(filter))
+        foreach (var grandChild in child.Item.EnumerateChildrenBfs<TSelf, TFilter>())
             yield return grandChild;
     }
 
@@ -136,34 +134,32 @@ public static class IHaveBoxedChildrenExtensions
     ///     Enumerates all child nodes of the current node in a depth-first manner that satisfy a given filter.
     /// </summary>
     /// <param name="item">The node, wrapped in a Box, whose children are to be enumerated.</param>
-    /// <param name="filter">The filter struct to be applied to each child node.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
     /// <returns>An IEnumerable of all filtered child nodes of the current node.</returns>
     [ExcludeFromCodeCoverage] // Wrapper
-    public static IEnumerable<Box<TSelf>> EnumerateChildrenFilteredDfs<TSelf, TFilter>(this Box<TSelf> item, TFilter filter)
+    public static IEnumerable<Box<TSelf>> EnumerateChildrenDfs<TSelf, TFilter>(this Box<TSelf> item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>
         where TFilter : struct, IFilter<Box<TSelf>>
-        => item.Item.EnumerateChildrenFilteredDfs(filter);
+        => item.Item.EnumerateChildrenDfs<TSelf, TFilter>();
 
     /// <summary>
     ///     Enumerates all child nodes of the current node in a depth-first manner that satisfy a given filter.
     /// </summary>
     /// <param name="item">The node whose children are to be enumerated.</param>
-    /// <param name="filter">The filter struct to be applied to each child node.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TFilter">The type of the filter struct.</typeparam>
     /// <returns>An IEnumerable of all filtered child nodes of the current node.</returns>
-    public static IEnumerable<Box<TSelf>> EnumerateChildrenFilteredDfs<TSelf, TFilter>(this TSelf item, TFilter filter)
+    public static IEnumerable<Box<TSelf>> EnumerateChildrenDfs<TSelf, TFilter>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>
         where TFilter : struct, IFilter<Box<TSelf>>
     {
         foreach (var child in item.Children)
         {
-            if (filter.Match(child))
+            if (TFilter.Match(child))
                 yield return child;
 
-            foreach (var grandChild in child.Item.EnumerateChildrenFilteredDfs(filter))
+            foreach (var grandChild in child.Item.EnumerateChildrenDfs<TSelf, TFilter>())
                 yield return grandChild;
         }
     }
@@ -172,45 +168,43 @@ public static class IHaveBoxedChildrenExtensions
     ///     Counts the number of children that match the given filter under this node.
     /// </summary>
     /// <param name="item">The node whose children are to be counted.</param>
-    /// <param name="filter">The filter to apply to each child.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TFilter">The type of the filter.</typeparam>
     /// <returns>The total count of children that match the filter under this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [ExcludeFromCodeCoverage]
-    public static int CountChildren<TSelf, TFilter>(this Box<TSelf> item, TFilter filter)
+    public static int CountChildren<TSelf, TFilter>(this Box<TSelf> item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>
         where TFilter : struct, IFilter<TSelf>
-        => item.Item.CountChildren(filter);
+        => item.Item.CountChildren<TSelf, TFilter>();
 
     /// <summary>
     ///     Counts the number of children that match the given filter under this node.
     /// </summary>
     /// <param name="item">The node whose children are to be counted.</param>
-    /// <param name="filter">The filter to apply to each child.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TFilter">The type of the filter.</typeparam>
     /// <returns>The total count of children that match the filter under this node.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CountChildren<TSelf, TFilter>(this TSelf item, TFilter filter)
+    public static int CountChildren<TSelf, TFilter>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>
         where TFilter : struct, IFilter<TSelf>
     {
         var result = 0;
-        item.CountChildrenRecursive(ref result, filter);
+        item.CountChildrenRecursive<TSelf, TFilter>(ref result);
         return result;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void CountChildrenRecursive<TSelf, TFilter>(this TSelf item, ref int accumulator, TFilter filter)
+    private static void CountChildrenRecursive<TSelf, TFilter>(this TSelf item, ref int accumulator)
         where TSelf : struct, IHaveBoxedChildren<TSelf>
         where TFilter : struct, IFilter<TSelf>
     {
         foreach (var child in item.Children)
         {
-            var matchesFilter = filter.Match(child.Item);
+            var matchesFilter = TFilter.Match(child.Item);
             accumulator += Unsafe.As<bool, byte>(ref matchesFilter); // Branchless increment.
-            child.Item.CountChildrenRecursive(ref accumulator, filter);
+            child.Item.CountChildrenRecursive<TSelf, TFilter>(ref accumulator);
         }
     }
 
@@ -251,34 +245,32 @@ public static class IHaveBoxedChildrenExtensions
     ///     Recursively returns all the child items of this node selected by the given selector.
     /// </summary>
     /// <param name="item">The boxed node whose child items to obtain.</param>
-    /// <param name="selector">The selector to determine which child items to return.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TResult">The type of the result.</typeparam>
     /// <typeparam name="TSelector">The type of the selector.</typeparam>
     /// <returns>An array of all the selected child items of this node.</returns>
     [ExcludeFromCodeCoverage]
-    public static TResult[] GetChildItems<TSelf, TResult, TSelector>(this Box<TSelf> item, TSelector selector)
+    public static TResult[] GetChildrenRecursive<TSelf, TResult, TSelector>(this Box<TSelf> item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>
         where TSelector : struct, ISelector<TSelf, TResult>
-        => item.Item.GetChildItems<TSelf, TResult, TSelector>(selector);
+        => item.Item.GetChildrenRecursive<TSelf, TResult, TSelector>();
 
     /// <summary>
     ///     Recursively returns all the child items of this node selected by the given selector.
     /// </summary>
     /// <param name="item">The node whose child items to obtain.</param>
-    /// <param name="selector">The selector to determine which child items to return.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TResult">The type of the result.</typeparam>
     /// <typeparam name="TSelector">The type of the selector.</typeparam>
     /// <returns>An array of all the selected child items of this node.</returns>
-    public static TResult[] GetChildItems<TSelf, TResult, TSelector>(this TSelf item, TSelector selector)
+    public static TResult[] GetChildrenRecursive<TSelf, TResult, TSelector>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>
         where TSelector : struct, ISelector<TSelf, TResult>
     {
-        var totalValues = item.CountChildren(); // Ensure this method counts all descendants.
+        var totalValues = item.CountChildren();
         var results = GC.AllocateUninitializedArray<TResult>(totalValues);
         var index = 0;
-        GetChildItemsUnsafe<TSelf, TResult, TSelector>(item, selector, results, ref index);
+        GetChildrenRecursiveUnsafe<TSelf, TResult, TSelector>(item, results, ref index);
         return results;
     }
 
@@ -286,22 +278,90 @@ public static class IHaveBoxedChildrenExtensions
     ///     Helper method to populate child items recursively.
     /// </summary>
     /// <param name="item">The current node.</param>
-    /// <param name="selector">The selector to determine which child items to return.</param>
     /// <param name="buffer">
     ///     The span to fill with child items.
     ///     Should be at least as big as <see cref="IHaveBoxedChildrenExtensions.CountChildren{TSelf}(Box{TSelf})"/>
     /// </param>
     /// <param name="index">The current index in the array.</param>
-    public static void GetChildItemsUnsafe<TSelf, TResult, TSelector>(this TSelf item, TSelector selector, Span<TResult> buffer, ref int index)
+    public static void GetChildrenRecursiveUnsafe<TSelf, TResult, TSelector>(this TSelf item, Span<TResult> buffer, ref int index)
         where TSelf : struct, IHaveBoxedChildren<TSelf>
         where TSelector : struct, ISelector<TSelf, TResult>
     {
         // Populate breadth first. Improved cache locality helps here.
         foreach (var child in item.Children)
-            buffer.DangerousGetReferenceAt(index++) = selector.Select(child.Item);
+            buffer.DangerousGetReferenceAt(index++) = TSelector.Select(child.Item);
 
         foreach (var child in item.Children)
-            GetChildItemsUnsafe(child.Item, selector, buffer, ref index);
+            GetChildrenRecursiveUnsafe<TSelf, TResult, TSelector>(child.Item, buffer, ref index);
+    }
+
+    /// <summary>
+    ///     Recursively returns all the child items of this node that match the given filter, transformed by the selector.
+    /// </summary>
+    /// <param name="item">The boxed node whose child items to obtain.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TResult">The type of the result.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An array of all the transformed child items of this node that match the filter.</returns>
+    public static TResult[] GetChildrenRecursive<TSelf, TResult, TFilter, TSelector>(this Box<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+        where TFilter : struct, IFilter<TSelf>
+        where TSelector : struct, ISelector<TSelf, TResult>
+        => item.Item.GetChildrenRecursive<TSelf, TResult, TFilter, TSelector>();
+
+    /// <summary>
+    /// Recursively returns all the child items of this node that match the given filter, transformed by the selector.
+    /// </summary>
+    /// <param name="item">The node whose child items to obtain.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TResult">The type of the result.</typeparam>
+    /// <typeparam name="TFilter">The type of the filter.</typeparam>
+    /// <typeparam name="TSelector">The type of the selector.</typeparam>
+    /// <returns>An array of all the transformed child items of this node that match the filter.</returns>
+    public static TResult[] GetChildrenRecursive<TSelf, TResult, TFilter, TSelector>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+        where TFilter : struct, IFilter<TSelf>
+        where TSelector : struct, ISelector<TSelf, TResult>
+    {
+        var totalChildren = item.CountChildren<TSelf, TFilter>();
+        var results = GC.AllocateUninitializedArray<TResult>(totalChildren);
+        var index = 0;
+        GetChildrenRecursiveUnsafe<TSelf, TResult, TFilter, TSelector>(item, results, ref index);
+        return results;
+    }
+
+    /// <summary>
+    ///     Helper method to populate transformed child items recursively, filtered by the given filter.
+    /// </summary>
+    /// <param name="item">The current node.</param>
+    /// <param name="buffer">The span to fill with transformed child items.</param>
+    /// <param name="index">The current index in the span.</param>
+    public static void GetChildrenRecursiveUnsafe<TSelf, TResult, TFilter, TSelector>(this Box<TSelf> item,
+        Span<TResult> buffer, ref int index)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+        where TFilter : struct, IFilter<TSelf>
+        where TSelector : struct, ISelector<TSelf, TResult>
+        => item.Item.GetChildrenRecursiveUnsafe<TSelf, TResult, TFilter, TSelector>(buffer, ref index);
+
+    /// <summary>
+    ///     Helper method to populate transformed child items recursively, filtered by the given filter.
+    /// </summary>
+    /// <param name="item">The current node.</param>
+    /// <param name="buffer">The span to fill with transformed child items.</param>
+    /// <param name="index">The current index in the span.</param>
+    public static void GetChildrenRecursiveUnsafe<TSelf, TResult, TFilter, TSelector>(this TSelf item, Span<TResult> buffer, ref int index)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+        where TFilter : struct, IFilter<TSelf>
+        where TSelector : struct, ISelector<TSelf, TResult>
+    {
+        foreach (var child in item.Children)
+        {
+            if (TFilter.Match(child.Item))
+                buffer.DangerousGetReferenceAt(index++) = TSelector.Select(child.Item);
+
+            GetChildrenRecursiveUnsafe<TSelf, TResult, TFilter, TSelector>(child.Item, buffer, ref index);
+        }
     }
 
     /// <summary>
@@ -348,6 +408,60 @@ public static class IHaveBoxedChildrenExtensions
 
         foreach (var child in item.Children)
             GetChildrenRecursiveUnsafe(child.Item, childrenSpan, ref index);
+    }
+
+    /// <summary>
+    ///     Recursively returns all the children of this node that match the given filter.
+    /// </summary>
+    /// <param name="item">The node whose children to obtain.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TFilter">Filter to apply that decides which children should be returned.</typeparam>
+    /// <returns>An array of all the children of this node that match the filter.</returns>
+    [ExcludeFromCodeCoverage]
+    public static Box<TSelf>[] GetChildrenRecursive<TSelf, TFilter>(this Box<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+        where TFilter : struct, IFilter<TSelf>
+        => item.Item.GetChildrenRecursive();
+
+    /// <summary>
+    ///     Recursively returns all the children of this node that match the given filter.
+    /// </summary>
+    /// <param name="item">The node whose children to obtain.</param>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <typeparam name="TFilter">Filter to apply that decides which children should be returned.</typeparam>
+    /// <returns>An array of all the children of this node that match the filter.</returns>
+    public static Box<TSelf>[] GetChildrenRecursive<TSelf, TFilter>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+        where TFilter : struct, IFilter<TSelf>
+    {
+        var totalChildren = item.CountChildren<TSelf, TFilter>();
+        var children = GC.AllocateUninitializedArray<Box<TSelf>>(totalChildren);
+        var index = 0;
+        GetChildrenRecursiveUnsafe<TSelf, TFilter>(item, children, ref index);
+        return children;
+    }
+
+    /// <summary>
+    ///     Recursively returns all the children of this node (unsafe / no bounds checks).
+    /// </summary>
+    /// <param name="item">The current node.</param>
+    /// <param name="childrenSpan">
+    ///     The span representing the array to fill with children.
+    ///     Should be at least as long as the value returned by <see cref="CountChildren{TSelf,TFilter}(NexusMods.Paths.Trees.Box{TSelf})"/>
+    /// </param>
+    /// <param name="index">The current index in the span.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void GetChildrenRecursiveUnsafe<TSelf, TFilter>(this TSelf item, Span<Box<TSelf>> childrenSpan, ref int index)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>
+        where TFilter : struct, IFilter<TSelf>
+    {
+        foreach (var child in item.Children)
+        {
+            if (TFilter.Match(child.Item))
+                childrenSpan.DangerousGetReferenceAt(index++) = child;
+
+            GetChildrenRecursiveUnsafe(child.Item, childrenSpan, ref index);
+        }
     }
 
     /// <summary>

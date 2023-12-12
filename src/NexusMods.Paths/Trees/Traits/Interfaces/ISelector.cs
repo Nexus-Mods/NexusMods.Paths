@@ -12,5 +12,5 @@ public interface ISelector<T, TResult>
     /// </summary>
     /// <param name="item">The parameter from which the item is to be returned.</param>
     /// <returns>The returned item from the method.</returns>
-    TResult Select(T item);
+    static abstract TResult Select(T item);
 }

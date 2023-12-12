@@ -135,7 +135,7 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildren
     ///     This is very slow, at O(N). If you need to use this with large trees, consider using the
     ///     dictionary variant based on <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" /> instead.
     /// </remarks>
-    [ExcludeFromCodeCoverage]
+    [ExcludeFromCodeCoverage] // Wrapper
     [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
     public static Box<TSelf>? FindByPathFromRoot<TSelf>(this TSelf root, RelativePath fullPath)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHavePathSegment

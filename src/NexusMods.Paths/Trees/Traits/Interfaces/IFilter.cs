@@ -11,6 +11,6 @@ public interface IFilter<T>
     /// </summary>
     /// <param name="item">The item to be checked.</param>
     /// <returns>True if the item should be returned, else false.</returns>
-    bool Match(T item);
+    static abstract bool Match(T item);
 }
 

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using NexusMods.Paths.Trees.Traits.Interfaces;
 using Reloaded.Memory.Extensions;
 
@@ -97,7 +96,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     /// <returns>An array of all the keys of the children of this node.</returns>
     public static TKey[] GetKeys<TSelf, TKey>(this Box<TSelf> item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey> =>
-        item.Item.GetChildItems<TSelf, TKey, KeySelector<TSelf, TKey>>(new KeySelector<TSelf, TKey>());
+        item.Item.GetChildrenRecursive<TSelf, TKey, KeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Recursively returns all the keys of the children of this node.
@@ -106,10 +105,10 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <returns>An array of all the keys of the children of this node.</returns>
-    [ExcludeFromCodeCoverage]
+    [ExcludeFromCodeCoverage] // Wrapper
     public static TKey[] GetKeys<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey> =>
-        item.GetChildItems<TSelf, TKey, KeySelector<TSelf, TKey>>(new KeySelector<TSelf, TKey>());
+        item.GetChildrenRecursive<TSelf, TKey, KeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Helper method to populate keys recursively.
@@ -123,7 +122,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     [ExcludeFromCodeCoverage]
     public static void GetKeysUnsafe<TSelf, TKey>(TSelf item, Span<TKey> buffer, ref int index)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey> =>
-        item.GetChildItemsUnsafe(new KeySelector<TSelf, TKey>(), buffer, ref index);
+        item.GetChildrenRecursiveUnsafe<TSelf, TKey, KeySelector<TSelf, TKey>>(buffer, ref index);
 
     /// <summary>
     ///     Finds a node in the tree based on a given sequence of keys, starting the search from the root node.
@@ -511,7 +510,7 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     /// <returns>An array of all the keys of the children of this node.</returns>
     public static TKey[] GetKeys<TSelf, TKey>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey> =>
-        item.Item.GetChildItems<TSelf, TKey, KeySelector<TSelf, TKey>>(new KeySelector<TSelf, TKey>());
+        item.Item.GetChildrenRecursive<TSelf, TKey, KeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Recursively returns all the keys of the children of this node.
@@ -523,7 +522,7 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     [ExcludeFromCodeCoverage]
     public static TKey[] GetKeys<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey> =>
-        item.GetChildItems<TSelf, TKey, KeySelector<TSelf, TKey>>(new KeySelector<TSelf, TKey>());
+        item.GetChildrenRecursive<TSelf, TKey, KeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Helper method to populate keys recursively.
@@ -537,7 +536,7 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     [ExcludeFromCodeCoverage]
     public static void GetKeysUnsafe<TSelf, TKey>(TSelf item, Span<TKey> buffer, ref int index)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey> =>
-        item.GetChildItemsUnsafe(new KeySelector<TSelf, TKey>(), buffer, ref index);
+        item.GetChildrenRecursiveUnsafe<TSelf, TKey, KeySelector<TSelf, TKey>>(buffer, ref index);
 
     /// <summary>
     ///     Finds a node in the tree based on a given sequence of keys, starting the search from the root node.
@@ -927,7 +926,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     public static TKey[] GetKeys<TKey, TSelf>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : struct =>
-        item.GetChildItems<TKey, TSelf, TKey, KeySelector<TSelf, TKey>>(new KeySelector<TSelf, TKey>());
+        item.GetChildrenRecursive<TSelf, TKey, TKey, KeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Recursively returns all the keys of the children of this node.
@@ -940,7 +939,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     public static TKey[] GetKeys<TKey, TSelf>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : struct =>
-        item.GetChildItems<TKey, TSelf, TKey, KeySelector<TSelf, TKey>>(new KeySelector<TSelf, TKey>());
+        item.GetChildrenRecursive<TSelf, TKey, TKey, KeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Helper method to populate keys recursively.
@@ -955,7 +954,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     public static void GetKeysUnsafe<TKey, TSelf>(TSelf item, Span<TKey> buffer, ref int index)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : struct, IHaveKey<TSelf> =>
-        item.GetChildItemsUnsafe<TKey, TSelf, TKey, KeySelector<TSelf, TKey>>(new KeySelector<TSelf, TKey>(), buffer, ref index);
+        item.GetChildrenRecursiveUnsafe<TSelf, TKey, TKey, KeySelector<TSelf, TKey>>(buffer, ref index);
 
     /// <summary>
     ///     Finds a node in the tree based on a given relative path of keys, starting the search from the root node.
@@ -1286,5 +1285,5 @@ public static class IHaveKeyExtensions
 internal struct KeySelector<TSelf, TKey> : ISelector<TSelf, TKey>
     where TSelf : struct, IHaveKey<TKey>
 {
-    public TKey Select(TSelf item) => item.Key;
+    public static TKey Select(TSelf item) => item.Key;
 }

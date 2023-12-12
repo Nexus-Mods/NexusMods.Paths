@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -51,7 +52,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
     public static int CountFiles<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
         where TKey : notnull
-        => item.CountChildren<TSelf, TKey, FileFilter<TSelf>>(new FileFilter<TSelf>());
+        => item.CountChildren<TSelf, TKey, FileFilter<TSelf>>();
 
     /// <summary>
     ///     Counts the number of directories present under this node (directory).
@@ -77,7 +78,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
     public static int CountDirectories<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
         where TKey : notnull
-        => item.CountChildren<TSelf, TKey, DirectoryFilter<TSelf>>(new DirectoryFilter<TSelf>());
+        => item.CountChildren<TSelf, TKey, DirectoryFilter<TSelf>>();
 
     /// <summary>
     ///     Enumerates all file child nodes of the current node in a breadth-first manner.
@@ -89,7 +90,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
     public static IEnumerable<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>> EnumerateFilesBfs<TSelf, TKey>(this TSelf item)
         where TKey : notnull
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
-        => item.EnumerateChildrenFilteredBfs<TSelf, TKey, KeyedBoxFileFilter<TSelf, TKey>>(new KeyedBoxFileFilter<TSelf, TKey>());
+        => item.EnumerateChildrenBfs<TSelf, TKey, KeyedBoxFileFilter<TSelf, TKey>>();
 
     /// <summary>
     ///     Enumerates all file child nodes of the current node in a breadth-first manner.
@@ -113,7 +114,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
     public static IEnumerable<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>> EnumerateDirectoriesBfs<TSelf, TKey>(this TSelf item)
         where TKey : notnull
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
-        => item.EnumerateChildrenFilteredBfs<TSelf, TKey, KeyedBoxDirectoryFilter<TSelf, TKey>>(new KeyedBoxDirectoryFilter<TSelf, TKey>());
+        => item.EnumerateChildrenBfs<TSelf, TKey, KeyedBoxDirectoryFilter<TSelf, TKey>>();
 
     /// <summary>
     ///     Enumerates all directory child nodes of the current node in a breadth-first manner.
@@ -137,7 +138,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
     public static IEnumerable<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>> EnumerateFilesDfs<TSelf, TKey>(this TSelf item)
         where TKey : notnull
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
-        => item.EnumerateChildrenFilteredDfs<TSelf, TKey, KeyedBoxFileFilter<TSelf, TKey>>(new KeyedBoxFileFilter<TSelf, TKey>());
+        => item.EnumerateChildrenDfs<TSelf, TKey, KeyedBoxFileFilter<TSelf, TKey>>();
 
     /// <summary>
     ///     Enumerates all file child nodes of the current node in a depth-first manner.
@@ -161,7 +162,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
     public static IEnumerable<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>> EnumerateDirectoriesDfs<TSelf, TKey>(this TSelf item)
         where TKey : notnull
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
-        => item.EnumerateChildrenFilteredDfs<TSelf, TKey, KeyedBoxDirectoryFilter<TSelf, TKey>>(new KeyedBoxDirectoryFilter<TSelf, TKey>());
+        => item.EnumerateChildrenDfs<TSelf, TKey, KeyedBoxDirectoryFilter<TSelf, TKey>>();
 
     /// <summary>
     ///     Enumerates all directory child nodes of the current node in a depth-first manner.
@@ -174,6 +175,94 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildrenWithKey
         where TKey : notnull
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
         => item.Item.EnumerateDirectoriesDfs<TSelf, TKey>();
+
+    /// <summary>
+    ///     Retrieves all directory-type children of this node, recursively.
+    /// </summary>
+    /// <param name="item">The boxed node whose directory-type children are to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <returns>An array of boxed children that are directories.</returns>
+    public static Box<TSelf>[] GetDirectories<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.GetDirectories();
+
+    /// <summary>
+    ///     Retrieves all directory-type children of this node, recursively.
+    /// </summary>
+    /// <param name="item">The boxed node whose directory-type children are to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <returns>An array of boxed children that are directories.</returns>
+    public static Box<TSelf>[] GetDirectories<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.GetChildrenRecursive<TSelf, DirectoryFilter<TSelf>>();
+
+    /// <summary>
+    ///     Recursively retrieves all directory-type children of this boxed node and populates them into the provided span.
+    ///     This is an unsafe method and does not perform bounds checks on the provided span.
+    /// </summary>
+    /// <param name="item">The boxed node whose directory-type children are to be retrieved.</param>
+    /// <param name="directoriesSpan">The span to be populated with the directory-type children.</param>
+    /// <param name="index">The current index in the span where the next child should be placed.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    public static void GetDirectoriesUnsafe<TSelf>(this Box<TSelf> item, Span<Box<TSelf>> directoriesSpan, ref int index)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.GetDirectoriesUnsafe(directoriesSpan, ref index);
+
+    /// <summary>
+    ///     Recursively retrieves all directory-type children of this node and populates them into the provided span.
+    ///     This is an unsafe method and does not perform bounds checks on the provided span.
+    /// </summary>
+    /// <param name="item">The node whose directory-type children are to be retrieved.</param>
+    /// <param name="directoriesSpan">The span to be populated with the directory-type children.</param>
+    /// <param name="index">The current index in the span where the next child should be placed.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    public static void GetDirectoriesUnsafe<TSelf>(this TSelf item, Span<Box<TSelf>> directoriesSpan, ref int index)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.GetChildrenRecursiveUnsafe<TSelf, DirectoryFilter<TSelf>>(directoriesSpan, ref index);
+
+    /// <summary>
+    ///     Retrieves all file-type children of this node, recursively.
+    /// </summary>
+    /// <param name="item">The boxed node whose file-type children are to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <returns>An array of boxed children that are files.</returns>
+    public static Box<TSelf>[] GetFiles<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.GetFiles();
+
+    /// <summary>
+    ///     Retrieves all file-type children of this node, recursively.
+    /// </summary>
+    /// <param name="item">The boxed node whose file-type children are to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <returns>An array of boxed children that are files.</returns>
+    public static Box<TSelf>[] GetFiles<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.GetChildrenRecursive<TSelf, FileFilter<TSelf>>();
+
+    /// <summary>
+    ///     Recursively retrieves all file-type children of this boxed node and populates them into the provided span.
+    ///     This is an unsafe method and does not perform bounds checks on the provided span.
+    /// </summary>
+    /// <param name="item">The boxed node whose file-type children are to be retrieved.</param>
+    /// <param name="filesSpan">The span to be populated with the file-type children.</param>
+    /// <param name="index">The current index in the span where the next child should be placed.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    public static void GetFilesUnsafe<TSelf>(this Box<TSelf> item, Span<Box<TSelf>> filesSpan, ref int index)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.GetFilesUnsafe(filesSpan, ref index);
+
+    /// <summary>
+    ///     Recursively retrieves all file-type children of this node and populates them into the provided span.
+    ///     This is an unsafe method and does not perform bounds checks on the provided span.
+    /// </summary>
+    /// <param name="item">The node whose file-type children are to be retrieved.</param>
+    /// <param name="filesSpan">The span to be populated with the file-type children.</param>
+    /// <param name="index">The current index in the span where the next child should be placed.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    public static void GetFilesUnsafe<TSelf>(this TSelf item, Span<Box<TSelf>> filesSpan, ref int index)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
+        => item.GetChildrenRecursiveUnsafe<TSelf, FileFilter<TSelf>>(filesSpan, ref index);
 }
 
 /// <summary>
@@ -202,7 +291,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountFiles<TSelf>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
-        => item.CountChildren(new FileFilter<TSelf>());
+        => item.CountChildren<TSelf, FileFilter<TSelf>>();
 
     /// <summary>
     ///      Counts the number of directories present under this node (directory).
@@ -224,7 +313,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountDirectories<TSelf>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
-        => item.CountChildren(new DirectoryFilter<TSelf>());
+        => item.CountChildren<TSelf, DirectoryFilter<TSelf>>();
 
     /// <summary>
     ///     Enumerates all file child nodes of the current node in a breadth-first manner.
@@ -234,7 +323,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
     /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a breadth-first manner.</returns>
     public static IEnumerable<Box<TSelf>> EnumerateFilesBfs<TSelf>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
-        => item.EnumerateChildrenFilteredBfs(new BoxFileFilter<TSelf>());
+        => item.EnumerateChildrenBfs<TSelf, BoxFileFilter<TSelf>>();
 
     /// <summary>
     ///     Enumerates all file child nodes of the current node in a breadth-first manner.
@@ -254,7 +343,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
     /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a breadth-first manner.</returns>
     public static IEnumerable<Box<TSelf>> EnumerateDirectoriesBfs<TSelf>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
-        => item.EnumerateChildrenFilteredBfs(new BoxDirectoryFilter<TSelf>());
+        => item.EnumerateChildrenBfs<TSelf, BoxDirectoryFilter<TSelf>>();
 
     /// <summary>
     ///     Enumerates all directory child nodes of the current node in a breadth-first manner.
@@ -274,7 +363,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
     /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a depth-first manner.</returns>
     public static IEnumerable<Box<TSelf>> EnumerateFilesDfs<TSelf>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
-        => item.EnumerateChildrenFilteredDfs(new BoxFileFilter<TSelf>());
+        => item.EnumerateChildrenDfs<TSelf, BoxFileFilter<TSelf>>();
 
     /// <summary>
     ///     Enumerates all file child nodes of the current node in a depth-first manner.
@@ -294,7 +383,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
     /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a depth-first manner.</returns>
     public static IEnumerable<Box<TSelf>> EnumerateDirectoriesDfs<TSelf>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
-        => item.EnumerateChildrenFilteredDfs(new BoxDirectoryFilter<TSelf>());
+        => item.EnumerateChildrenDfs<TSelf, BoxDirectoryFilter<TSelf>>();
 
     /// <summary>
     ///     Enumerates all directory child nodes of the current node in a depth-first manner.
@@ -305,6 +394,110 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveBoxedChildren
     public static IEnumerable<Box<TSelf>> EnumerateDirectoriesDfs<TSelf>(this Box<TSelf> item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveAFileOrDirectory
         => item.Item.EnumerateDirectoriesDfs();
+
+    /// <summary>
+    /// Retrieves all directory-type children of this node with keys, recursively.
+    /// </summary>
+    /// <param name="item">The keyed boxed node whose directory-type children are to be retrieved.</param>
+    /// <typeparam name="TKey">The type of key used in the tree.</typeparam>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <returns>An array of keyed boxed children that are directories.</returns>
+    public static KeyedBox<TKey, TSelf>[] GetDirectories<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        where TKey : notnull
+        => item.Item.GetDirectories<TSelf, TKey>();
+
+    /// <summary>
+    /// Retrieves all directory-type children of this node with keys, recursively.
+    /// </summary>
+    /// <param name="item">The keyed boxed node whose directory-type children are to be retrieved.</param>
+    /// <typeparam name="TKey">The type of key used in the tree.</typeparam>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <returns>An array of keyed boxed children that are directories.</returns>
+    public static KeyedBox<TKey, TSelf>[] GetDirectories<TSelf, TKey>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        where TKey : notnull
+        => item.GetChildrenRecursive<TSelf, TKey, DirectoryFilter<TSelf>>();
+
+    /// <summary>
+    ///     Recursively retrieves all directory-type children of this node with keys and populates them into the provided span.
+    ///     This is an unsafe method and does not perform bounds checks on the provided span.
+    /// </summary>
+    /// <param name="item">The node with keys whose directory-type children are to be retrieved.</param>
+    /// <param name="directoriesSpan">The span to be populated with the directory-type children.</param>
+    /// <param name="index">The current index in the span where the next child should be placed.</param>
+    /// <typeparam name="TKey">The type of key used in the tree.</typeparam>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    public static void GetDirectoriesUnsafe<TSelf, TKey>(this KeyedBox<TKey, TSelf> item, Span<KeyedBox<TKey, TSelf>> directoriesSpan, ref int index)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        where TKey : notnull
+        => item.Item.GetDirectoriesUnsafe(directoriesSpan, ref index);
+
+    /// <summary>
+    ///     Recursively retrieves all directory-type children of this node with keys and populates them into the provided span.
+    ///     This is an unsafe method and does not perform bounds checks on the provided span.
+    /// </summary>
+    /// <param name="item">The node with keys whose directory-type children are to be retrieved.</param>
+    /// <param name="directoriesSpan">The span to be populated with the directory-type children.</param>
+    /// <param name="index">The current index in the span where the next child should be placed.</param>
+    /// <typeparam name="TKey">The type of key used in the tree.</typeparam>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    public static void GetDirectoriesUnsafe<TSelf, TKey>(this TSelf item, Span<KeyedBox<TKey, TSelf>> directoriesSpan, ref int index)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        where TKey : notnull
+        => item.GetChildrenRecursiveUnsafe<TSelf, TKey, DirectoryFilter<TSelf>>(directoriesSpan, ref index);
+
+    /// <summary>
+    /// Retrieves all file-type children of this node with keys, recursively.
+    /// </summary>
+    /// <param name="item">The keyed boxed node whose file-type children are to be retrieved.</param>
+    /// <typeparam name="TKey">The type of key used in the tree.</typeparam>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <returns>An array of keyed boxed children that are files.</returns>
+    public static KeyedBox<TKey, TSelf>[] GetFiles<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        where TKey : notnull
+        => item.Item.GetFiles<TSelf, TKey>();
+
+    /// <summary>
+    /// Retrieves all file-type children of this node with keys, recursively.
+    /// </summary>
+    /// <param name="item">The keyed boxed node whose file-type children are to be retrieved.</param>
+    /// <typeparam name="TKey">The type of key used in the tree.</typeparam>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <returns>An array of keyed boxed children that are files.</returns>
+    public static KeyedBox<TKey, TSelf>[] GetFiles<TSelf, TKey>(this TSelf item)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        where TKey : notnull
+        => item.GetChildrenRecursive<TSelf, TKey, FileFilter<TSelf>>();
+
+    /// <summary>
+    ///     Recursively retrieves all file-type children of this node with keys and populates them into the provided span.
+    ///     This is an unsafe method and does not perform bounds checks on the provided span.
+    /// </summary>
+    /// <param name="item">The node with keys whose file-type children are to be retrieved.</param>
+    /// <param name="filesSpan">The span to be populated with the file-type children.</param>
+    /// <param name="index">The current index in the span where the next child should be placed.</param>
+    /// <typeparam name="TKey">The type of key used in the tree.</typeparam>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    public static void GetFilesUnsafe<TSelf, TKey>(this KeyedBox<TKey, TSelf> item, Span<KeyedBox<TKey, TSelf>> filesSpan, ref int index)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        where TKey : notnull
+        => item.Item.GetFilesUnsafe(filesSpan, ref index);
+
+    /// <summary>
+    ///     Recursively retrieves all file-type children of this node with keys and populates them into the provided span.
+    ///     This is an unsafe method and does not perform bounds checks on the provided span.
+    /// </summary>
+    /// <param name="item">The node with keys whose file-type children are to be retrieved.</param>
+    /// <param name="filesSpan">The span to be populated with the file-type children.</param>
+    /// <param name="index">The current index in the span where the next child should be placed.</param>
+    /// <typeparam name="TKey">The type of key used in the tree.</typeparam>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    public static void GetFilesUnsafe<TSelf, TKey>(this TSelf item, Span<KeyedBox<TKey, TSelf>> filesSpan, ref int index)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveAFileOrDirectory
+        where TKey : notnull
+        => item.GetChildrenRecursiveUnsafe<TSelf, TKey, FileFilter<TSelf>>(filesSpan, ref index);
 }
 
 /// <summary>
@@ -333,7 +526,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountFiles<TSelf>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
-        => item.CountChildren(new FileFilter<TSelf>());
+        => item.CountChildren<TSelf, FileFilter<TSelf>>();
 
     /// <summary>
     ///      Counts the number of directories present under this node (directory).
@@ -355,7 +548,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CountDirectories<TSelf>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
-        => item.CountChildren(new DirectoryFilter<TSelf>());
+        => item.CountChildren<TSelf, DirectoryFilter<TSelf>>();
 
     /// <summary>
     ///     Enumerates all file child nodes of the current node in a breadth-first manner.
@@ -365,7 +558,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
     /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a breadth-first manner.</returns>
     public static IEnumerable<Box<TSelf>> EnumerateFilesBfs<TSelf>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
-        => item.EnumerateChildrenFilteredBfs(new BoxFileFilter<TSelf>());
+        => item.EnumerateChildrenFilteredBfs<TSelf, BoxFileFilter<TSelf>>();
 
     /// <summary>
     ///     Enumerates all file child nodes of the current node in a breadth-first manner.
@@ -385,7 +578,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
     /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a breadth-first manner.</returns>
     public static IEnumerable<Box<TSelf>> EnumerateDirectoriesBfs<TSelf>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
-        => item.EnumerateChildrenFilteredBfs(new BoxDirectoryFilter<TSelf>());
+        => item.EnumerateChildrenFilteredBfs<TSelf, BoxDirectoryFilter<TSelf>>();
 
     /// <summary>
     ///     Enumerates all directory child nodes of the current node in a breadth-first manner.
@@ -405,7 +598,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
     /// <returns>An IEnumerable of all child nodes of the current node that are files, enumerated in a depth-first manner.</returns>
     public static IEnumerable<Box<TSelf>> EnumerateFilesDfs<TSelf>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
-        => item.EnumerateChildrenFilteredDfs(new BoxFileFilter<TSelf>());
+        => item.EnumerateChildrenFilteredDfs<TSelf, BoxFileFilter<TSelf>>();
 
     /// <summary>
     ///     Enumerates all file child nodes of the current node in a depth-first manner.
@@ -425,7 +618,7 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
     /// <returns>An IEnumerable of all child nodes of the current node that are directories, enumerated in a depth-first manner.</returns>
     public static IEnumerable<Box<TSelf>> EnumerateDirectoriesDfs<TSelf>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
-        => item.EnumerateChildrenFilteredDfs(new BoxDirectoryFilter<TSelf>());
+        => item.EnumerateChildrenFilteredDfs<TSelf, BoxDirectoryFilter<TSelf>>();
 
     /// <summary>
     ///     Enumerates all directory child nodes of the current node in a depth-first manner.
@@ -436,6 +629,94 @@ public static class IHaveAFileOrDirectoryExtensionsForIHaveObservableChildren
     public static IEnumerable<Box<TSelf>> EnumerateDirectoriesDfs<TSelf>(this Box<TSelf> item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
         => item.Item.EnumerateDirectoriesDfs();
+
+    /// <summary>
+    ///     Retrieves all directory-type children of this node, recursively.
+    /// </summary>
+    /// <param name="item">The boxed node whose directory-type children are to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <returns>An array of boxed children that are directories.</returns>
+    public static Box<TSelf>[] GetDirectories<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.GetDirectories();
+
+    /// <summary>
+    ///     Retrieves all directory-type children of this node, recursively.
+    /// </summary>
+    /// <param name="item">The boxed node whose directory-type children are to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <returns>An array of boxed children that are directories.</returns>
+    public static Box<TSelf>[] GetDirectories<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.GetChildrenRecursive<TSelf, DirectoryFilter<TSelf>>();
+
+    /// <summary>
+    ///     Recursively retrieves all directory-type children of this boxed node and populates them into the provided span.
+    ///     This is an unsafe method and does not perform bounds checks on the provided span.
+    /// </summary>
+    /// <param name="item">The boxed node whose directory-type children are to be retrieved.</param>
+    /// <param name="directoriesSpan">The span to be populated with the directory-type children.</param>
+    /// <param name="index">The current index in the span where the next child should be placed.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    public static void GetDirectoriesUnsafe<TSelf>(this Box<TSelf> item, Span<Box<TSelf>> directoriesSpan, ref int index)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.GetDirectoriesUnsafe(directoriesSpan, ref index);
+
+    /// <summary>
+    ///     Recursively retrieves all directory-type children of this node and populates them into the provided span.
+    ///     This is an unsafe method and does not perform bounds checks on the provided span.
+    /// </summary>
+    /// <param name="item">The node whose directory-type children are to be retrieved.</param>
+    /// <param name="directoriesSpan">The span to be populated with the directory-type children.</param>
+    /// <param name="index">The current index in the span where the next child should be placed.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    public static void GetDirectoriesUnsafe<TSelf>(this TSelf item, Span<Box<TSelf>> directoriesSpan, ref int index)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.GetChildrenRecursiveUnsafe<TSelf, DirectoryFilter<TSelf>>(directoriesSpan, ref index);
+
+    /// <summary>
+    ///     Retrieves all file-type children of this node, recursively.
+    /// </summary>
+    /// <param name="item">The boxed node whose file-type children are to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <returns>An array of boxed children that are files.</returns>
+    public static Box<TSelf>[] GetFiles<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.GetFiles();
+
+    /// <summary>
+    ///     Retrieves all file-type children of this node, recursively.
+    /// </summary>
+    /// <param name="item">The boxed node whose file-type children are to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <returns>An array of boxed children that are files.</returns>
+    public static Box<TSelf>[] GetFiles<TSelf>(this TSelf item)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.GetChildrenRecursive<TSelf, FileFilter<TSelf>>();
+
+    /// <summary>
+    ///     Recursively retrieves all file-type children of this boxed node and populates them into the provided span.
+    ///     This is an unsafe method and does not perform bounds checks on the provided span.
+    /// </summary>
+    /// <param name="item">The boxed node whose file-type children are to be retrieved.</param>
+    /// <param name="filesSpan">The span to be populated with the file-type children.</param>
+    /// <param name="index">The current index in the span where the next child should be placed.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    public static void GetFilesUnsafe<TSelf>(this Box<TSelf> item, Span<Box<TSelf>> filesSpan, ref int index)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.Item.GetFilesUnsafe(filesSpan, ref index);
+
+    /// <summary>
+    ///     Recursively retrieves all file-type children of this node and populates them into the provided span.
+    ///     This is an unsafe method and does not perform bounds checks on the provided span.
+    /// </summary>
+    /// <param name="item">The node whose file-type children are to be retrieved.</param>
+    /// <param name="filesSpan">The span to be populated with the file-type children.</param>
+    /// <param name="index">The current index in the span where the next child should be placed.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    public static void GetFilesUnsafe<TSelf>(this TSelf item, Span<Box<TSelf>> filesSpan, ref int index)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveAFileOrDirectory
+        => item.GetChildrenRecursiveUnsafe<TSelf, FileFilter<TSelf>>(filesSpan, ref index);
 }
 
 /// <summary>
@@ -486,36 +767,36 @@ public static class IHaveAFileOrDirectoryExtensions
 
 internal struct BoxFileFilter<TSelf> : IFilter<Box<TSelf>> where TSelf : struct, IHaveAFileOrDirectory
 {
-    public bool Match(Box<TSelf> item) => item.Item.IsFile;
+    public static bool Match(Box<TSelf> item) => item.Item.IsFile;
 }
 
 internal struct BoxDirectoryFilter<TSelf> : IFilter<Box<TSelf>> where TSelf : struct, IHaveAFileOrDirectory
 {
-    public bool Match(Box<TSelf> item) => item.Item.IsDirectory;
+    public static bool Match(Box<TSelf> item) => item.Item.IsDirectory;
 }
 
 internal struct KeyedBoxFileFilter<TSelf, TKey> : IFilter<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>>
     where TSelf : struct, IHaveAFileOrDirectory
     where TKey : notnull
 {
-    public bool Match(KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item) => item.Value.Item.IsFile;
+    public static bool Match(KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item) => item.Value.Item.IsFile;
 }
 
 internal struct KeyedBoxDirectoryFilter<TSelf, TKey> : IFilter<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>>
     where TSelf : struct, IHaveAFileOrDirectory
     where TKey : notnull
 {
-    public bool Match(KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item) => item.Value.Item.IsDirectory;
+    public static bool Match(KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item) => item.Value.Item.IsDirectory;
 }
 
 internal struct FileFilter<TSelf> : IFilter<TSelf>
     where TSelf : struct, IHaveAFileOrDirectory
 {
-    public bool Match(TSelf item) => item.IsFile;
+    public static bool Match(TSelf item) => item.IsFile;
 }
 
 internal struct DirectoryFilter<TSelf> : IFilter<TSelf>
     where TSelf : struct, IHaveAFileOrDirectory
 {
-    public bool Match(TSelf item) => item.IsDirectory;
+    public static bool Match(TSelf item) => item.IsDirectory;
 }
