@@ -14,6 +14,9 @@ namespace NexusMods.Paths.Trees;
 public class KeyedBox<TKey, TSelf> : Box<TSelf>, IEquatable<KeyedBox<TKey, TSelf>> where TSelf : struct
     where TKey : notnull
 {
+    // !! DO NOT ADD ANY FIELDS HERE !!
+    // BOX AND KEYEDBOX MUST HAVE SAME LAYOUT, DUE TO THIS BEING UNSAFE UPCASTED
+
     /// <summary />
     public static implicit operator TSelf(KeyedBox<TKey, TSelf> box) => box.Item;
 

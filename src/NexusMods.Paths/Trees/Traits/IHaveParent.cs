@@ -587,10 +587,10 @@ public static class IHaveParentExtensions
     /// <param name="item">The keyed boxed item whose parent is to be retrieved.</param>
     /// <returns>The parent of the item, or null if it is the root.</returns>
     [ExcludeFromCodeCoverage] // Wrapper
-    public static Box<TSelf>? Parent<TSelf, TKey>(this KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item)
+    public static KeyedBox<TKey, TSelf>? Parent<TSelf, TKey>(this KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item)
         where TSelf : struct, IHaveParent<TSelf>
         where TKey : notnull
-        => item.Value.Item.Parent;
+        => Unsafe.As<KeyedBox<TKey, TSelf>>(item.Value.Item.Parent);
 
     /// <summary>
     ///     Gets the parent of the given keyed boxed item.
@@ -598,10 +598,10 @@ public static class IHaveParentExtensions
     /// <param name="item">The keyed boxed item whose parent is to be retrieved.</param>
     /// <returns>The parent of the item, or null if it is the root.</returns>
     [ExcludeFromCodeCoverage] // Wrapper
-    public static Box<TSelf>? Parent<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+    public static KeyedBox<TKey, TSelf>? Parent<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveParent<TSelf>
         where TKey : notnull
-        => item.Item.Parent;
+        => Unsafe.As<KeyedBox<TKey, TSelf>>(item.Item.Parent);
 
     /// <summary>
     ///     Checks if the given keyed boxed item has a parent.
