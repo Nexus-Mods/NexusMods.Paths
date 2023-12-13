@@ -59,14 +59,20 @@ public static class IHaveBoxedChildrenExtensions
     /// <returns>An IEnumerable of all child nodes of the current node.</returns>
     public static IEnumerable<Box<TSelf>> EnumerateChildrenBfs<TSelf>(this TSelf item) where TSelf : struct, IHaveBoxedChildren<TSelf>
     {
-        // Return the current item's immediate children first.
-        foreach (var child in item.Children)
-            yield return child;
+        var queue = new Queue<Box<TSelf>>();
 
-        // Then return the children of those children.
+        // Enqueue all immediate children
         foreach (var child in item.Children)
-        foreach (var grandChild in child.Item.EnumerateChildrenBfs())
-            yield return grandChild;
+            queue.Enqueue(child);
+
+        while (queue.TryDequeue(out var current))
+        {
+            yield return current;
+
+            // Enqueue children of the current node
+            foreach (var grandChild in current.Item.Children)
+                queue.Enqueue(grandChild);
+        }
     }
 
     /// <summary>
@@ -119,15 +125,18 @@ public static class IHaveBoxedChildrenExtensions
         where TSelf : struct, IHaveBoxedChildren<TSelf>
         where TFilter : struct, IFilter<Box<TSelf>>
     {
-        // Return the current item's immediate children first if they match the filter.
+        var queue = new Queue<Box<TSelf>>();
         foreach (var child in item.Children)
-            if (TFilter.Match(child))
-                yield return child;
+            queue.Enqueue(child);
 
-        // Then return the filtered children of those children.
-        foreach (var child in item.Children)
-        foreach (var grandChild in child.Item.EnumerateChildrenBfs<TSelf, TFilter>())
-            yield return grandChild;
+        while (queue.TryDequeue(out var current))
+        {
+            if (TFilter.Match(current))
+                yield return current;
+
+            foreach (var grandChild in current.Item.Children)
+                queue.Enqueue(grandChild);
+        }
     }
 
     /// <summary>
@@ -190,14 +199,16 @@ public static class IHaveBoxedChildrenExtensions
         where TSelf : struct, IHaveBoxedChildren<TSelf>
         where TSelector : struct, ISelector<Box<TSelf>, TResult>
     {
-        // Return the current item's immediate children first.
+        var queue = new Queue<Box<TSelf>>();
         foreach (var child in item.Children)
-            yield return TSelector.Select(child);
+            queue.Enqueue(child);
 
-        // Then return the children of those children.
-        foreach (var child in item.Children)
-        foreach (var grandChild in child.Item.EnumerateChildrenBfs<TSelf, TResult, TSelector>())
-            yield return grandChild;
+        while (queue.TryDequeue(out var current))
+        {
+            yield return TSelector.Select(current);
+            foreach (var grandChild in current.Item.Children)
+                queue.Enqueue(grandChild);
+        }
     }
 
     /// <summary>
@@ -265,15 +276,18 @@ public static class IHaveBoxedChildrenExtensions
         where TFilter : struct, IFilter<Box<TSelf>>
         where TSelector : struct, ISelector<Box<TSelf>, TResult>
     {
-        // Return the current item's immediate children first.
+        var queue = new Queue<Box<TSelf>>();
         foreach (var child in item.Children)
-            if (TFilter.Match(child))
-                yield return TSelector.Select(child);
+            queue.Enqueue(child);
 
-        // Then return the children of those children.
-        foreach (var child in item.Children)
-        foreach (var grandChild in child.Item.EnumerateChildrenBfs<TSelf, TResult, TFilter, TSelector>())
-            yield return grandChild;
+        while (queue.TryDequeue(out var current))
+        {
+            if (TFilter.Match(current))
+                yield return TSelector.Select(current);
+
+            foreach (var grandChild in current.Item.Children)
+                queue.Enqueue(grandChild);
+        }
     }
 
     /// <summary>

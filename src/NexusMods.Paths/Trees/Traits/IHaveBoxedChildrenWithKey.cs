@@ -156,14 +156,16 @@ public static class IHaveBoxedChildrenWithKeyExtensions
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>
         where TKey : notnull
     {
-        // Return the current item's immediate children first.
+        var queue = new Queue<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>>();
         foreach (var child in item.Children)
-            yield return child;
+            queue.Enqueue(child);
 
-        // Then return the children of those children.
-        foreach (var child in item.Children)
-        foreach (var grandChild in child.Value.Item.EnumerateChildrenBfs<TSelf, TKey>())
-            yield return grandChild;
+        while (queue.TryDequeue(out var current))
+        {
+            yield return current;
+            foreach (var grandChild in current.Value.Item.Children)
+                queue.Enqueue(grandChild);
+        }
     }
 
     /// <summary>
@@ -196,15 +198,18 @@ public static class IHaveBoxedChildrenWithKeyExtensions
         where TKey : notnull
         where TFilter : struct, IFilter<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>>
     {
-        // Return the current item's immediate children first.
+        var queue = new Queue<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>>();
         foreach (var child in item.Children)
-            if (TFilter.Match(child))
-                yield return child;
+            queue.Enqueue(child);
 
-        // Then return the children of those children.
-        foreach (var child in item.Children)
-        foreach (var grandChild in child.Value.Item.EnumerateChildrenBfs<TSelf, TKey, TFilter>())
-            yield return grandChild;
+        while (queue.TryDequeue(out var current))
+        {
+            if (TFilter.Match(current))
+                yield return current;
+
+            foreach (var grandChild in current.Value.Item.Children)
+                queue.Enqueue(grandChild);
+        }
     }
 
     /// <summary>
@@ -277,14 +282,16 @@ public static class IHaveBoxedChildrenWithKeyExtensions
         where TKey : notnull
         where TSelector : struct, ISelector<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>, TResult>
     {
-        // Return the current item's immediate children first.
+        var queue = new Queue<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>>();
         foreach (var child in item.Children)
-            yield return TSelector.Select(child);
+            queue.Enqueue(child);
 
-        // Then return the transformed children of those children.
-        foreach (var child in item.Children)
-        foreach (var grandChild in child.Value.Item.EnumerateChildrenBfs<TSelf, TKey, TResult, TSelector>())
-            yield return grandChild;
+        while (queue.TryDequeue(out var current))
+        {
+            yield return TSelector.Select(current);
+            foreach (var grandChild in current.Value.Item.Children)
+                queue.Enqueue(grandChild);
+        }
     }
 
     /// <summary>
@@ -363,15 +370,18 @@ public static class IHaveBoxedChildrenWithKeyExtensions
         where TFilter : struct, IFilter<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>>
         where TSelector : struct, ISelector<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>, TResult>
     {
-        // Return the current item's immediate children first if they match the filter.
+        var queue = new Queue<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>>();
         foreach (var child in item.Children)
-            if (TFilter.Match(child))
-                yield return TSelector.Select(child);
+            queue.Enqueue(child);
 
-        // Then return the transformed and filtered children of those children.
-        foreach (var child in item.Children)
-        foreach (var grandChild in child.Value.Item.EnumerateChildrenBfs<TSelf, TKey, TResult, TFilter, TSelector>())
-            yield return grandChild;
+        while (queue.TryDequeue(out var current))
+        {
+            if (TFilter.Match(current))
+                yield return TSelector.Select(current);
+
+            foreach (var grandChild in current.Value.Item.Children)
+                queue.Enqueue(grandChild);
+        }
     }
 
     /// <summary>
