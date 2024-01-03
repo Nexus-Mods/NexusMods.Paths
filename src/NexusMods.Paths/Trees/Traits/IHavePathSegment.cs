@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using NexusMods.Paths.Extensions;
 using static Reloaded.Memory.Extensions.SpanExtensions;
 
@@ -77,7 +78,9 @@ public static class IHavePathSegmentExtensions
         while (currentItem.HasParent)
         {
             // Each parent adds its own segment length plus one for the separator.
-            pathLength += currentItem.Parent!.Item.Segment.Length + 1;
+            var len = currentItem.Parent!.Item.Segment.Length;
+            var isEmpty = len > 0; // this makes the separator not add to length if the segment is empty, in case of empty root.
+            pathLength += len + (Unsafe.As<bool, byte>(ref isEmpty) * 1);
             currentItem = currentItem.Parent.Item;
         }
 
@@ -93,7 +96,7 @@ public static class IHavePathSegmentExtensions
             segmentSpan.CopyTo(span.SliceFast(position));
 
             // Walk up the tree to build the path.
-            while (currentItem.HasParent)
+            while (currentItem.HasParent && currentItem.Parent!.Segment().Length > 0)
             {
                 // Add the path separator.
                 span.DangerousGetReferenceAt(--position) = '/';
