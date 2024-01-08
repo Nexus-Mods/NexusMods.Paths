@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using NexusMods.Paths.Extensions;
 using static Reloaded.Memory.Extensions.SpanExtensions;
 
@@ -24,6 +26,43 @@ public interface IHavePathSegment
 public static class IHavePathSegmentExtensions
 {
     /// <summary>
+    ///     Retrieves the path segment of the node.
+    /// </summary>
+    /// <param name="item">The keyed boxed node whose key is to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <returns>The key of the node.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static RelativePath Segment<TSelf, TKey>(this KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item)
+        where TSelf : struct, IHavePathSegment
+        where TKey : notnull
+        => item.Value.Item.Segment;
+
+    /// <summary>
+    ///     Retrieves the path segment of the node.
+    /// </summary>
+    /// <param name="item">The keyed boxed node whose key is to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <returns>The key of the node.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static RelativePath Segment<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHavePathSegment
+        where TKey : notnull
+        => item.Item.Segment;
+
+    /// <summary>
+    ///     Retrieves the path segment of the node.
+    /// </summary>
+    /// <param name="item">The boxed node whose key is to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <returns>The key of the node.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
+    public static RelativePath Segment<TSelf>(this Box<TSelf> item)
+        where TSelf : struct, IHavePathSegment
+        => item.Item.Segment;
+
+    /// <summary>
     ///     Reconstructs the full path of the current node by walking up to the root to the tree.
     /// </summary>
     /// <param name="item">The node for which to reconstruct the file path from.</param>
@@ -39,7 +78,9 @@ public static class IHavePathSegmentExtensions
         while (currentItem.HasParent)
         {
             // Each parent adds its own segment length plus one for the separator.
-            pathLength += currentItem.Parent!.Item.Segment.Length + 1;
+            var len = currentItem.Parent!.Item.Segment.Length;
+            var isEmpty = len > 0; // this makes the separator not add to length if the segment is empty, in case of empty root.
+            pathLength += len + (Unsafe.As<bool, byte>(ref isEmpty) * 1);
             currentItem = currentItem.Parent.Item;
         }
 
@@ -55,7 +96,7 @@ public static class IHavePathSegmentExtensions
             segmentSpan.CopyTo(span.SliceFast(position));
 
             // Walk up the tree to build the path.
-            while (currentItem.HasParent)
+            while (currentItem.HasParent && currentItem.Parent!.Segment().Length > 0)
             {
                 // Add the path separator.
                 span.DangerousGetReferenceAt(--position) = '/';
@@ -111,7 +152,7 @@ public static class IHavePathSegmentExtensionsForIHaveBoxedChildren
     ///     This is very slow, at O(N). If you need to use this with large trees, consider using the
     ///     dictionary variant based on <see cref="IHaveBoxedChildrenWithKey{TKey,TSelf}" /> instead.
     /// </remarks>
-    [ExcludeFromCodeCoverage]
+    [ExcludeFromCodeCoverage] // Wrapper
     [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
     public static Box<TSelf>? FindByPathFromRoot<TSelf>(this TSelf root, RelativePath fullPath)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHavePathSegment

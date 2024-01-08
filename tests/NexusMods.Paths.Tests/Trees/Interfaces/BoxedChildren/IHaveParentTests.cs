@@ -10,14 +10,14 @@ public class IHaveParentTests
     public void GetSiblings_WithNoParent_ReturnsHasNoParent()
     {
         var root = TestTree.Create();
-        root.Item.HasParent().Should().Be(false);
+        root.HasParent().Should().Be(false);
     }
 
     [Fact]
     public void GetSiblings_WithNoParent_ReturnsIsTreeRoot()
     {
         var root = TestTree.Create();
-        root.Item.IsTreeRoot().Should().Be(true);
+        root.IsTreeRoot().Should().Be(true);
     }
 
     [Fact]

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+using NexusMods.Paths.Trees.Traits.Interfaces;
 using Reloaded.Memory.Extensions;
 
 namespace NexusMods.Paths.Trees.Traits;
@@ -44,18 +44,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     /// <returns>An IEnumerable of all child keys of the current node.</returns>
     public static IEnumerable<TKey> EnumerateKeysBfs<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
-    {
-        // First return all keys of the immediate children
-        foreach (var child in item.Children)
-            yield return child.Item.Key;
-
-        // Then iterate over the immediate children and recursively enumerate their keys
-        foreach (var child in item.Children)
-        {
-            foreach (var grandChildKey in child.Item.EnumerateKeysBfs<TSelf, TKey>())
-                yield return grandChildKey;
-        }
-    }
+        => item.EnumerateChildrenBfs<TSelf, TKey, BoxKeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Enumerates all keys of the child nodes of the current node in a depth-first manner.
@@ -77,26 +66,18 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     /// <returns>An IEnumerable of all child keys of the current node.</returns>
     public static IEnumerable<TKey> EnumerateKeysDfs<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
-    {
-        // Enumerate the key of each child and then recursively enumerate the keys of its children
-        foreach (var child in item.Children)
-        {
-            yield return child.Item.Key;
-            foreach (var grandChildKey in child.Item.EnumerateKeysDfs<TSelf, TKey>())
-                yield return grandChildKey;
-        }
-    }
+        => item.EnumerateChildrenDfs<TSelf, TKey, BoxKeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Recursively returns all the keys of the children of this node.
     /// </summary>
-    /// <param name="item">The node whose child keys to obtain.</param>
+    /// <param name="item">The boxed node whose child keys to obtain.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <returns>An array of all the keys of the children of this node.</returns>
     public static TKey[] GetKeys<TSelf, TKey>(this Box<TSelf> item)
-        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
-        => item.Item.GetKeys<TSelf, TKey>();
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey> =>
+        item.Item.GetChildrenRecursive<TSelf, TKey, KeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Recursively returns all the keys of the children of this node.
@@ -105,15 +86,10 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <returns>An array of all the keys of the children of this node.</returns>
+    [ExcludeFromCodeCoverage] // Wrapper
     public static TKey[] GetKeys<TSelf, TKey>(this TSelf item)
-        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
-    {
-        var totalKeys = item.CountChildren(); // Ensure this method counts all descendants.
-        var keys = GC.AllocateUninitializedArray<TKey>(totalKeys);
-        var index = 0;
-        GetKeysUnsafe<TSelf, TKey>(item, keys, ref index);
-        return keys;
-    }
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey> =>
+        item.GetChildrenRecursive<TSelf, TKey, KeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Helper method to populate keys recursively.
@@ -124,17 +100,10 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     ///     Should be at least as big as <see cref="IHaveBoxedChildrenExtensions.CountChildren{TSelf}(Box{TSelf})"/>
     /// </param>
     /// <param name="index">The current index in the array.</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ExcludeFromCodeCoverage]
     public static void GetKeysUnsafe<TSelf, TKey>(TSelf item, Span<TKey> buffer, ref int index)
-        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>
-    {
-        // Populate breadth first. Improved cache locality helps here.
-        foreach (var child in item.Children)
-            buffer.DangerousGetReferenceAt(index++) = child.Item.Key;
-
-        foreach (var child in item.Children)
-            GetKeysUnsafe(child.Item, buffer, ref index);
-    }
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey> =>
+        item.GetChildrenRecursiveUnsafe<TSelf, TKey, KeySelector<TSelf, TKey>>(buffer, ref index);
 
     /// <summary>
     ///     Finds a node in the tree based on a given sequence of keys, starting the search from the root node.
@@ -334,6 +303,10 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathRootsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the leaves instead of the root)
+    /// </remarks>
     public static List<Box<TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
@@ -354,6 +327,10 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathRootsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the leaves instead of the root)
+    /// </remarks>
     [ExcludeFromCodeCoverage]
     [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
     public static List<Box<TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this TSelf root, Span<TKey> keys)
@@ -367,11 +344,72 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildren
         where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
     {
-        if (node.FindByKeysUpward(keys) != null)
+        if (node.FindByKeyUpward(keys) != null)
             foundNodes.Add(node);
 
         foreach (var child in node.Item.Children)
             FindSubPathsByKeyUpward(child, keys, foundNodes);
+    }
+
+    /// <summary>
+    ///     Searches for all nodes within a tree whose children match a specified sequence of keys.
+    ///     (Optimized <see cref="FindSubPathsByKeyFromRoot{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>)
+    /// </summary>
+    /// <param name="node">The root node of the tree, wrapped in a ChildBox.</param>
+    /// <param name="keys">The sequence of keys to be matched, starting from the leaf node and moving upwards.</param>
+    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
+    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
+    /// <returns>
+    ///     A list of roots where each root's path to the node matches the specified sequence of keys.
+    /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the root instead of the leaf)
+    /// </remarks>
+    public static List<Box<TSelf>> FindSubPathRootsByKeyUpward<TSelf, TKey>(this Box<TSelf> node, Span<TKey> keys)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+    {
+        var foundNodes = new List<Box<TSelf>>();
+        FindSubPathRootsByKeyUpward(node, keys, foundNodes);
+        return foundNodes;
+    }
+
+    /// <summary>
+    ///     Searches for all nodes within a tree whose children match a specified sequence of keys.
+    ///     (Optimized <see cref="FindSubPathsByKeyFromRoot{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>)
+    /// </summary>
+    /// <param name="node">The starting node for the search.</param>
+    /// <param name="keys">The sequence of keys to be matched, starting from each descendant node and moving upwards.</param>
+    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
+    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
+    /// <returns>
+    ///     A list of nodes where each node's path to the root (root being node at any depth)
+    ///     matches the specified sequence of keys.
+    /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the root instead of the leaf)
+    /// </remarks>
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static List<Box<TSelf>> FindSubPathRootsByKeyUpward<TSelf, TKey>(this TSelf node, Span<TKey> keys)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+    {
+        return FindSubPathsByKeyUpward((Box<TSelf>)node, keys);
+    }
+
+    private static void FindSubPathRootsByKeyUpward<TSelf, TKey>(Box<TSelf> node, Span<TKey> keys, List<Box<TSelf>> foundNodes)
+        where TSelf : struct, IHaveBoxedChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+    {
+        var result = node.FindRootByKeyUpward(keys);
+        if (result != null)
+            foundNodes.Add(result);
+
+        foreach (var child in node.Item.Children)
+            FindSubPathRootsByKeyUpward(child, keys, foundNodes);
     }
 }
 
@@ -401,18 +439,7 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     /// <returns>An IEnumerable of all child keys of the current node.</returns>
     public static IEnumerable<TKey> EnumerateKeysBfs<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
-    {
-        // First return all keys of the immediate children
-        foreach (var child in item.Children)
-            yield return child.Item.Key;
-
-        // Then iterate over the immediate children and recursively enumerate their keys
-        foreach (var child in item.Children)
-        {
-            foreach (var grandChildKey in child.Item.EnumerateKeysBfs<TSelf, TKey>())
-                yield return grandChildKey;
-        }
-    }
+        => item.EnumerateChildrenBfs<TSelf, TKey, BoxKeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Enumerates all keys of the child nodes of the current node in a depth-first manner.
@@ -434,26 +461,18 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     /// <returns>An IEnumerable of all child keys of the current node.</returns>
     public static IEnumerable<TKey> EnumerateKeysDfs<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
-    {
-        // Enumerate the key of each child and then recursively enumerate the keys of its children
-        foreach (var child in item.Children)
-        {
-            yield return child.Item.Key;
-            foreach (var grandChildKey in child.Item.EnumerateKeysDfs<TSelf, TKey>())
-                yield return grandChildKey;
-        }
-    }
+        => item.EnumerateChildrenDfs<TSelf, TKey, BoxKeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Recursively returns all the keys of the children of this node.
     /// </summary>
-    /// <param name="item">The node whose child keys to obtain.</param>
+    /// <param name="item">The boxed node whose child keys to obtain.</param>
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <returns>An array of all the keys of the children of this node.</returns>
     public static TKey[] GetKeys<TSelf, TKey>(this Box<TSelf> item)
-        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
-        => item.Item.GetKeys<TSelf, TKey>();
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey> =>
+        item.Item.GetChildrenRecursive<TSelf, TKey, KeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Recursively returns all the keys of the children of this node.
@@ -462,15 +481,10 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <typeparam name="TKey">The type of the key.</typeparam>
     /// <returns>An array of all the keys of the children of this node.</returns>
+    [ExcludeFromCodeCoverage]
     public static TKey[] GetKeys<TSelf, TKey>(this TSelf item)
-        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
-    {
-        var totalKeys = item.CountChildren(); // Ensure this method counts all descendants.
-        var keys = GC.AllocateUninitializedArray<TKey>(totalKeys);
-        var index = 0;
-        GetKeysUnsafe<TSelf, TKey>(item, keys, ref index);
-        return keys;
-    }
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey> =>
+        item.GetChildrenRecursive<TSelf, TKey, KeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Helper method to populate keys recursively.
@@ -478,20 +492,13 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     /// <param name="item">The current node.</param>
     /// <param name="buffer">
     ///     The span to fill with keys.
-    ///     If calling on root node, should be at least as big as <see cref="IHaveObservableChildrenExtensions.CountChildren{TSelf}(Box{TSelf})"/>
+    ///     Should be at least as big as <see cref="IHaveBoxedChildrenExtensions.CountChildren{TSelf}(Box{TSelf})"/>
     /// </param>
     /// <param name="index">The current index in the array.</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [ExcludeFromCodeCoverage]
     public static void GetKeysUnsafe<TSelf, TKey>(TSelf item, Span<TKey> buffer, ref int index)
-        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>
-    {
-        // Populate breadth first. Improved cache locality helps here.
-        foreach (var child in item.Children)
-            buffer.DangerousGetReferenceAt(index++) = child.Item.Key;
-
-        foreach (var child in item.Children)
-            GetKeysUnsafe(child.Item, buffer, ref index);
-    }
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey> =>
+        item.GetChildrenRecursiveUnsafe<TSelf, TKey, KeySelector<TSelf, TKey>>(buffer, ref index);
 
     /// <summary>
     ///     Finds a node in the tree based on a given sequence of keys, starting the search from the root node.
@@ -691,6 +698,10 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathRootsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the leaves instead of the root)
+    /// </remarks>
     public static List<Box<TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
@@ -711,6 +722,10 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathRootsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the leaves instead of the root)
+    /// </remarks>
     [ExcludeFromCodeCoverage]
     [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
     public static List<Box<TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this TSelf root, Span<TKey> keys)
@@ -722,11 +737,71 @@ public static class IHaveKeyExtensionsForIHaveObservableChildren
         where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
     {
-        if (node.FindByKeysUpward(keys) != null)
+        if (node.FindByKeyUpward(keys) != null)
             foundNodes.Add(node);
 
         foreach (var child in node.Item.Children)
             FindSubPathsByKeyUpward(child, keys, foundNodes);
+    }
+
+    /// <summary>
+    ///     Searches for all nodes within a tree whose children match a specified sequence of keys.
+    ///     (Optimized <see cref="FindSubPathsByKeyFromRoot{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>)
+    /// </summary>
+    /// <param name="root">The root node of the tree, wrapped in a ChildBox.</param>
+    /// <param name="keys">The sequence of keys to be matched, starting from the leaf node and moving upwards.</param>
+    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
+    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
+    /// <returns>
+    ///     A list of nodes where each node's path to the root (root being node at any depth)
+    ///     matches the specified sequence of keys.
+    /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the root instead of the leaf)
+    /// </remarks>
+    public static List<Box<TSelf>> FindSubPathRootsByKeyUpward<TSelf, TKey>(this Box<TSelf> root, Span<TKey> keys)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+    {
+        var foundNodes = new List<Box<TSelf>>();
+        FindSubPathRootsByKeyUpward(root, keys, foundNodes);
+        return foundNodes;
+    }
+
+    /// <summary>
+    ///     Searches for all nodes within a tree whose children match a specified sequence of keys.
+    ///     (Optimized <see cref="FindSubPathsByKeyFromRoot{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>)
+    /// </summary>
+    /// <param name="root">The starting node for the search.</param>
+    /// <param name="keys">The sequence of keys to be matched, starting from each descendant node and moving upwards.</param>
+    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
+    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
+    /// <returns>
+    ///     A list of nodes where each node's path to the root (root being node at any depth)
+    ///     matches the specified sequence of keys.
+    /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.Box{TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the root instead of the leaf)
+    /// </remarks>
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static List<Box<TSelf>> FindSubPathRootsByKeyUpward<TSelf, TKey>(this TSelf root, Span<TKey> keys)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+        => FindSubPathRootsByKeyUpward((Box<TSelf>)root, keys);
+
+    private static void FindSubPathRootsByKeyUpward<TSelf, TKey>(Box<TSelf> node, Span<TKey> keys, List<Box<TSelf>> foundNodes)
+        where TSelf : struct, IHaveObservableChildren<TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+    {
+        var result = node.FindRootByKeyUpward(keys);
+        if (result != null)
+            foundNodes.Add(result);
+
+        foreach (var child in node.Item.Children)
+            FindSubPathRootsByKeyUpward(child, keys, foundNodes);
     }
 }
 
@@ -758,18 +833,7 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     public static IEnumerable<TKey> EnumerateKeysBfs<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
-    {
-        // First return all keys of the immediate children
-        foreach (var child in item.Children)
-            yield return child.Value.Item.Key;
-
-        // Then iterate over the immediate children and recursively enumerate their keys
-        foreach (var child in item.Children)
-        {
-            foreach (var grandChildKey in child.Value.Item.EnumerateKeysBfs<TSelf, TKey>())
-                yield return grandChildKey;
-        }
-    }
+        => item.EnumerateChildrenBfs<TSelf, TKey, TKey, KeyValueKeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Enumerates all keys of the child nodes of the current node in a depth-first manner.
@@ -793,66 +857,47 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     public static IEnumerable<TKey> EnumerateKeysDfs<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
         where TKey : notnull
-    {
-        // Enumerate the key of each child and then recursively enumerate the keys of its children
-        foreach (var child in item.Children)
-        {
-            yield return child.Value.Item.Key;
-            foreach (var grandChildKey in child.Value.Item.EnumerateKeysDfs<TSelf, TKey>())
-                yield return grandChildKey;
-        }
-    }
+        => item.EnumerateChildrenDfs<TSelf, TKey, TKey, KeyValueKeySelector<TSelf, TKey>>();
 
     /// <summary>
-    ///     Returns all the keys of the children of this node (using recursion).
+    ///     Recursively returns all the keys of the children of this node.
     /// </summary>
-    /// <param name="item">The node whose child keys to obtain.</param>
-    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <param name="item">The boxed node with keyed children whose keys to obtain.</param>
     /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>An array of all the keys of the children of this node.</returns>
     public static TKey[] GetKeys<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
-        where TKey : notnull =>
-        item.Item.GetKeys<TSelf, TKey>();
+        where TKey : struct =>
+        item.GetChildrenRecursive<TSelf, TKey, TKey, KeySelector<TSelf, TKey>>();
 
     /// <summary>
-    ///     Returns all the keys of the children of this node (using recursion).
+    ///     Recursively returns all the keys of the children of this node.
     /// </summary>
-    /// <param name="item">The node whose child keys to obtain.</param>
-    /// <typeparam name="TSelf">The type of child node.</typeparam>
+    /// <param name="item">The node with keyed children whose keys to obtain.</param>
     /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <typeparam name="TSelf">The type of child node.</typeparam>
     /// <returns>An array of all the keys of the children of this node.</returns>
+    [ExcludeFromCodeCoverage]
     public static TKey[] GetKeys<TSelf, TKey>(this TSelf item)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
-        where TKey : notnull
-    {
-        var totalChildren = item.CountChildren<TSelf, TKey>(); // Ensure CountChildren counts all descendants.
-        var keys = GC.AllocateUninitializedArray<TKey>(totalChildren);
-        var index = 0;
-        GetKeysUnsafe<TSelf, TKey>(item, keys, ref index);
-        return keys;
-    }
+        where TKey : struct =>
+        item.GetChildrenRecursive<TSelf, TKey, TKey, KeySelector<TSelf, TKey>>();
 
     /// <summary>
     ///     Helper method to populate keys recursively.
     /// </summary>
-    /// <param name="item">The current node.</param>
+    /// <param name="item">The current node with keyed children.</param>
     /// <param name="buffer">
     ///     The span to fill with keys.
-    ///     Should be at least as big as <see cref="IHaveBoxedChildrenWithKeyExtensions.CountChildren{TSelf,TKey}(KeyedBox{TKey,TSelf})"/>
+    ///     Should be at least as big as the count of children.
     /// </param>
-    /// <param name="index">The current index in the span.</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    /// <param name="index">The current index in the array.</param>
+    [ExcludeFromCodeCoverage]
     public static void GetKeysUnsafe<TSelf, TKey>(TSelf item, Span<TKey> buffer, ref int index)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>
-        where TKey : notnull
-    {
-        foreach (var pair in item.Children)
-        {
-            buffer.DangerousGetReferenceAt(index++) = pair.Key;
-            GetKeysUnsafe(pair.Value.Item, buffer, ref index);
-        }
-    }
+        where TKey : struct, IHaveKey<TSelf> =>
+        item.GetChildrenRecursiveUnsafe<TSelf, TKey, TKey, KeySelector<TSelf, TKey>>(buffer, ref index);
 
     /// <summary>
     ///     Finds a node in the tree based on a given relative path of keys, starting the search from the root node.
@@ -1042,6 +1087,10 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathRootsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.KeyedBox{TKey,TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the leaves instead of the root)
+    /// </remarks>
     public static List<KeyedBox<TKey, TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this KeyedBox<TKey, TSelf> root, Span<TKey> keys)
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
@@ -1062,6 +1111,10 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
     ///     A list of nodes where each node's path to the root (root being node at any depth)
     ///     matches the specified sequence of keys.
     /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathRootsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.KeyedBox{TKey,TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the leaves instead of the root)
+    /// </remarks>
     [ExcludeFromCodeCoverage]
     [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
     public static List<KeyedBox<TKey, TSelf>> FindSubPathsByKeyUpward<TSelf, TKey>(this TSelf root, Span<TKey> keys)
@@ -1073,10 +1126,132 @@ public static class IHaveKeyExtensionsForIHaveBoxedChildrenWithKey
         where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
         where TKey : notnull
     {
-        if (node.FindByKeysUpward(keys) != null)
+        if (node.FindByKeyUpward(keys) != null)
             foundNodes.Add(node);
 
         foreach (var child in node.Item.Children)
             FindSubPathsByKeyUpward(child.Value, keys, foundNodes);
     }
+
+    /// <summary>
+    ///     Searches for all nodes within a tree whose children match a specified sequence of keys.
+    ///     (Optimized <see cref="FindSubPathsByKeyFromRoot{TSelf,TKey}(NexusMods.Paths.Trees.KeyedBox{TKey,TSelf},System.Span{TKey})"/>)
+    /// </summary>
+    /// <param name="root">The root node of the tree, wrapped in a ChildBox.</param>
+    /// <param name="keys">The sequence of keys to be matched, starting from the leaf node and moving upwards.</param>
+    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
+    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
+    /// <returns>
+    ///     A list of nodes where each node's path to the root (root being node at any depth)
+    ///     matches the specified sequence of keys.
+    /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.KeyedBox{TKey,TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the root instead of the leaf)
+    /// </remarks>
+    public static List<Box<TSelf>> FindSubPathRootsByKeyUpward<TSelf, TKey>(this KeyedBox<TKey, TSelf> root, Span<TKey> keys)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+    {
+        var foundNodes = new List<Box<TSelf>>();
+        FindSubPathRootsByKeyUpward(root, keys, foundNodes);
+        return foundNodes;
+    }
+
+    /// <summary>
+    ///     Searches for all nodes within a tree whose children match a specified sequence of keys.
+    ///     (Optimized <see cref="FindSubPathsByKeyFromRoot{TSelf,TKey}(NexusMods.Paths.Trees.KeyedBox{TKey,TSelf},System.Span{TKey})"/>)
+    /// </summary>
+    /// <param name="root">The starting node for the search.</param>
+    /// <param name="keys">The sequence of keys to be matched, starting from each descendant node and moving upwards.</param>
+    /// <typeparam name="TSelf">The type of the node in the tree.</typeparam>
+    /// <typeparam name="TKey">The type of the key used in the tree.</typeparam>
+    /// <returns>
+    ///     A list of nodes where each node's path to the root (root being node at any depth)
+    ///     matches the specified sequence of keys.
+    /// </returns>
+    /// <remarks>
+    ///     This is same as <see cref="FindSubPathsByKeyUpward{TSelf,TKey}(NexusMods.Paths.Trees.KeyedBox{TKey,TSelf},System.Span{TKey})"/>
+    ///     but returns the node from the other end. (Returns the root instead of the leaf)
+    /// </remarks>
+    [ExcludeFromCodeCoverage]
+    [Obsolete("This method causes temporary boxing of object. Do not use unless you have no other way to access this item. Use this method via Box<TSelf> instead.")]
+    public static List<Box<TSelf>> FindSubPathRootsByKeyUpward<TSelf, TKey>(this TSelf root, Span<TKey> keys)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+        => FindSubPathRootsByKeyUpward((KeyedBox<TKey, TSelf>)root, keys);
+
+    private static void FindSubPathRootsByKeyUpward<TSelf, TKey>(KeyedBox<TKey, TSelf> node, Span<TKey> keys, List<Box<TSelf>> foundNodes)
+        where TSelf : struct, IHaveBoxedChildrenWithKey<TKey, TSelf>, IHaveKey<TKey>, IHaveParent<TSelf>
+        where TKey : notnull
+    {
+        var result = node.FindRootByKeyUpward(keys);
+        if (result != null)
+            foundNodes.Add(result);
+
+        foreach (var child in node.Item.Children)
+            FindSubPathRootsByKeyUpward(child.Value, keys, foundNodes);
+    }
+}
+
+/// <summary>
+///    Extensions for <see cref="IHaveKey{TKey}"/>
+/// </summary>
+[ExcludeFromCodeCoverage] // Wrappers
+// ReSharper disable once InconsistentNaming
+public static class IHaveKeyExtensions
+{
+    /// <summary>
+    ///     Retrieves the key of the node.
+    /// </summary>
+    /// <param name="item">The keyed boxed node whose key is to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <returns>The key of the node.</returns>
+    public static TKey Key<TSelf, TKey>(this KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item)
+        where TSelf : struct, IHaveKey<TKey>
+        where TKey : notnull
+        => item.Value.Item.Key;
+
+    /// <summary>
+    ///     Retrieves the key of the node.
+    /// </summary>
+    /// <param name="item">The keyed boxed node whose key is to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <returns>The key of the node.</returns>
+    public static TKey Key<TSelf, TKey>(this KeyedBox<TKey, TSelf> item)
+        where TSelf : struct, IHaveKey<TKey>
+        where TKey : notnull
+        => item.Item.Key;
+
+    /// <summary>
+    ///     Retrieves the key of the node.
+    /// </summary>
+    /// <param name="item">The boxed node whose key is to be retrieved.</param>
+    /// <typeparam name="TSelf">The type of the child node.</typeparam>
+    /// <typeparam name="TKey">The type of the key.</typeparam>
+    /// <returns>The key of the node.</returns>
+    public static TKey Key<TSelf, TKey>(this Box<TSelf> item)
+        where TSelf : struct, IHaveKey<TKey>
+        => item.Item.Key;
+}
+
+internal struct BoxKeySelector<TSelf, TKey> : ISelector<Box<TSelf>, TKey>
+    where TSelf : struct, IHaveKey<TKey>
+{
+    public static TKey Select(Box<TSelf> item) => item.Item.Key;
+}
+
+internal struct KeyValueKeySelector<TSelf, TKey> : ISelector<KeyValuePair<TKey, KeyedBox<TKey, TSelf>>, TKey>
+    where TSelf : struct, IHaveKey<TKey>
+    where TKey : notnull
+{
+    public static TKey Select(KeyValuePair<TKey, KeyedBox<TKey, TSelf>> item) => item.Value.Key();
+}
+
+internal struct KeySelector<TSelf, TKey> : ISelector<TSelf, TKey>
+    where TSelf : struct, IHaveKey<TKey>
+{
+    public static TKey Select(TSelf item) => item.Key;
 }
