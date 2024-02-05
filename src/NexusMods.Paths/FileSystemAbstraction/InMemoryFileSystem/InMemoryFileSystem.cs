@@ -306,6 +306,7 @@ public partial class InMemoryFileSystem : BaseFileSystem
         _files.Remove(path);
     }
 
+
     /// <inheritdoc/>
     protected override void InternalDeleteDirectory(AbsolutePath path, bool recursive)
     {
@@ -323,7 +324,7 @@ public partial class InMemoryFileSystem : BaseFileSystem
             foreach (var kv in directory.Directories)
             {
                 var (_, subDirectory) = kv;
-                InternalDeleteDirectory(subDirectory.Path, true);
+                InternalDeleteDirectoryRecursive(subDirectory.Path);
             }
         }
         else
@@ -333,8 +334,34 @@ public partial class InMemoryFileSystem : BaseFileSystem
 
         }
 
+        var parentDirectory = directory.ParentDirectory;
+        parentDirectory.Directories.Remove(path.RelativeTo(parentDirectory.Path));
         _directories.Remove(path);
     }
+
+    private void InternalDeleteDirectoryRecursive(AbsolutePath path)
+    {
+        // Don't throw if the directory doesn't exist
+        if (!_directories.TryGetValue(path, out var directory))
+            return;
+
+        foreach (var kv in directory.Files)
+        {
+            var (_, file) = kv;
+            _files.Remove(file.Path);
+        }
+
+        foreach (var kv in directory.Directories)
+        {
+            var (_, subDirectory) = kv;
+            InternalDeleteDirectoryRecursive(subDirectory.Path);
+        }
+
+        // Don't remove this from parent.Directories since parent is iterating over it
+        
+        _directories.Remove(path);
+    }
+
 
     /// <inheritdoc/>
     protected override void InternalMoveFile(AbsolutePath source, AbsolutePath dest, bool overwrite)
