@@ -136,8 +136,19 @@ public readonly struct TemporaryPath : IDisposable, IAsyncDisposable
 
     private void Dispose_Impl()
     {
-        if (_deleteOnDispose && _fileSystem.FileExists(Path))
+        if (!_deleteOnDispose)
+            return;
+
+        if (_fileSystem.FileExists(Path))
+        {
             _fileSystem.DeleteFile(Path);
+            return;
+        }
+
+        if (_fileSystem.DirectoryExists(Path))
+        {
+            _fileSystem.DeleteDirectory(Path, recursive: true);
+        }
     }
 
     /// <inheritdoc />
