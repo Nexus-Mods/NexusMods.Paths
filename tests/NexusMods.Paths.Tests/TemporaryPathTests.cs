@@ -59,9 +59,5 @@ public class TemporaryPathTests
         fs.FileExists(childFileB).Should().BeFalse();
         fs.DirectoryExists(childFolder).Should().BeFalse();
         fs.DirectoryExists(tempDirPath).Should().BeFalse();
-
-        // InMemoryFileSystem throws if created stuff is no longer there when cleaning up
-
-
     }
 }

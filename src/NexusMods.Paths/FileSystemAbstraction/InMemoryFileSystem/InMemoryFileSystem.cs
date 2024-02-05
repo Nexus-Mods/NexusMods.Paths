@@ -357,6 +357,8 @@ public partial class InMemoryFileSystem : BaseFileSystem
             InternalDeleteDirectoryRecursive(subDirectory.Path);
         }
 
+        // Don't remove this from parent.Directories since parent is iterating over it
+        
         _directories.Remove(path);
     }
 
