@@ -260,5 +260,23 @@ public interface IFileSystem
     /// <returns></returns>
     Task WriteAllLinesAsync(AbsolutePath path, [InstantHandle(RequireAwait = true)] IEnumerable<string> lines, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Changes the Unix FileSystem permissions on this file.
+    /// </summary>
+    /// <param name="absolutePath">Path of the file where the <see cref="UnixFileMode"/> should be changed.</param>
+    /// <param name="flags">The Unix FileSystem permissions to set.</param>
+    /// <remarks>
+    ///     On non-Unix based systems, or FileSystems without perms, this is a no-operation.
+    /// </remarks>
+    void SetUnixFileMode(AbsolutePath absolutePath, UnixFileMode flags);
 
+    /// <summary>
+    /// Retrieves the Unix FileSystem permissions of this file.
+    /// </summary>
+    /// <param name="absolutePath">The path of the file to get the permissions.</param>
+    /// <returns>Returns the FileSystem permissions.</returns>
+    /// <remarks>
+    ///     On non-Unix based systems, or FileSystems without perms, this is a no-operation.
+    /// </remarks>
+    UnixFileMode GetUnixFileMode(AbsolutePath absolutePath);
 }

@@ -116,4 +116,12 @@ public readonly partial struct AbsolutePath
     /// <inheritdoc cref="IFileSystem.ReadAllBytesAsync"/>
     public Task<byte[]> ReadAllBytesAsync(CancellationToken token = default)
         => FileSystem.ReadAllBytesAsync(this, token);
+
+    /// <inheritdoc cref="IFileSystem.SetUnixFileMode"/>
+    public void SetUnixFileMode(UnixFileMode flags)
+        => FileSystem.SetUnixFileMode(this, flags);
+
+    /// <inheritdoc cref="IFileSystem.GetUnixFileMode"/>
+    public UnixFileMode GetUnixFileMode()
+        => FileSystem.GetUnixFileMode(this);
 }

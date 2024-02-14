@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -57,6 +58,23 @@ public partial class FileSystem : BaseFileSystem
         Dictionary<KnownPath, AbsolutePath> knownPathMappings,
         bool convertCrossPlatformPaths = false)
         => new FileSystem(pathMappings, knownPathMappings, convertCrossPlatformPaths);
+
+    /// <inheritdoc/>
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
+    public override void SetUnixFileMode(AbsolutePath absolutePath, UnixFileMode flags)
+    {
+        if (!OS.IsUnix())
+            return;
+
+        File.SetUnixFileMode(absolutePath.GetFullPath(), flags);
+    }
+
+    /// <inheritdoc/>
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
+    public override UnixFileMode GetUnixFileMode(AbsolutePath absolutePath)
+    {
+        return OS.IsUnix() ? File.GetUnixFileMode(absolutePath.GetFullPath()) : default;
+    }
 
     /// <inheritdoc/>
     protected override IFileEntry InternalGetFileEntry(AbsolutePath path)
