@@ -407,6 +407,19 @@ public abstract class BaseFileSystem : IFileSystem
         }
     }
 
+    /// <inheritdoc/>
+    public virtual void SetUnixFileMode(AbsolutePath absolutePath, UnixFileMode flags)
+    {
+        // No-op on most implementations, so not calling internal.
+    }
+
+    /// <inheritdoc/>
+    public virtual UnixFileMode GetUnixFileMode(AbsolutePath absolutePath)
+    {
+        // No-op on most implementations, so not calling internal.
+        return default;
+    }
+
     #endregion
 
     #region Abstract Methods
