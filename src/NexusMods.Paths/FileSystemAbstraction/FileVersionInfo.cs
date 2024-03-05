@@ -18,8 +18,8 @@ public record struct FileVersionInfo(Version ProductVersion, Version FileVersion
     /// </summary>
     public Version GetBestVersion()
     {
-        if (ProductVersion.Equals(Zero)) return FileVersion;
-        if (FileVersion.Equals(Zero)) return ProductVersion;
-        return ProductVersion;
+        return ProductVersion.Equals(Zero)
+            ? FileVersion
+            : ProductVersion;
     }
 }
