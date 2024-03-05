@@ -52,7 +52,20 @@ public partial class FileSystem
         public FileVersionInfo GetFileVersionInfo()
         {
             var fvi = System.Diagnostics.FileVersionInfo.GetVersionInfo(_path.GetFullPath());
-            return new FileVersionInfo(FileVersionInfo.ParseVersionString(fvi.ProductVersion));
+
+            var sProductVersion = fvi.ProductVersion;
+            if (!Version.TryParse(sProductVersion, out var productVersion))
+            {
+                productVersion = new Version(fvi.ProductMajorPart, fvi.ProductMinorPart, fvi.ProductBuildPart, fvi.ProductPrivatePart);
+            }
+
+            var sFileVersion = fvi.FileVersion;
+            if (!Version.TryParse(sFileVersion, out var fileVersion))
+            {
+                fileVersion = new Version(fvi.FileMajorPart, fvi.FileMinorPart, fvi.FileBuildPart, fvi.FilePrivatePart);
+            }
+
+            return new FileVersionInfo(productVersion, fileVersion);
         }
     }
 }

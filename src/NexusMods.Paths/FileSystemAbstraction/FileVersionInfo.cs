@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 
 namespace NexusMods.Paths;
 
@@ -6,15 +7,19 @@ namespace NexusMods.Paths;
 /// Represents version information for a file on disk.
 /// </summary>
 /// <param name="ProductVersion">Gets the version of the product this file is distributed with.</param>
-public record struct FileVersionInfo(Version ProductVersion)
+/// <param name="FileVersion">Gets the file version number.</param>
+[PublicAPI]
+public record struct FileVersionInfo(Version ProductVersion, Version FileVersion)
 {
+    private static readonly Version Zero = new(0, 0, 0, 0);
+
     /// <summary>
-    /// Parses the input as a <see cref="Version"/>.
+    /// Returns the first non-zero version.
     /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    public static Version ParseVersionString(string? input)
+    public Version GetBestVersion()
     {
-        return input is null ? Version.Parse("1.0.0.0") : Version.Parse(input);
+        if (ProductVersion.Equals(Zero)) return FileVersion;
+        if (FileVersion.Equals(Zero)) return ProductVersion;
+        return ProductVersion;
     }
 }
