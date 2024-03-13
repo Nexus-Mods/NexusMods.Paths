@@ -251,6 +251,7 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
     /// </remarks>
     /// <param name="other">The path from which the relative path should be made.</param>
     /// <throws><see cref="PathException"/> if the paths are not in the same folder.</throws>
+    [SkipLocalsInit]
     public RelativePath RelativeTo(AbsolutePath other)
     {
         var childLength = GetFullPathLength();
@@ -272,6 +273,7 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
     }
 
     /// <inheritdoc />
+    [SkipLocalsInit]
     public bool InFolder(AbsolutePath parent)
     {
         var parentLength = parent.GetFullPathLength();
