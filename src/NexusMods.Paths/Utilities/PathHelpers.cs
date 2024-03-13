@@ -388,6 +388,12 @@ public static class PathHelpers
         var spanLength = GetExactJoinedPartLength(left, right);
         unsafe
         {
+            // Note: We're deconstructing and reconstructing a span here, because we cannot
+            // pass ref-structs (Span) via a delegate (SpanAction). This is a workaround for
+            // said issue.
+
+            // This isn't the only way to pin, it's also possible to pin via refs.
+            // Just that this is the more readable approach to the problem.
             fixed (char* leftPtr = left)
             fixed (char* rightPtr = right)
             {
