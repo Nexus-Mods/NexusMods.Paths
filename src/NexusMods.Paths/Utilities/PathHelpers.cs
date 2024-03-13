@@ -6,6 +6,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Reloaded.Memory.Extensions;
+using Reloaded.Memory.Pointers;
 
 namespace NexusMods.Paths.Utilities;
 
@@ -367,6 +368,7 @@ public static class PathHelpers
         return left.Length + DirectorySeparatorString.Length + right.Length;
     }
 
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
     /// <summary>
     /// Joins two path parts together and returns the joined path as a string.
     /// </summary>
@@ -388,29 +390,37 @@ public static class PathHelpers
         var spanLength = GetExactJoinedPartLength(left, right);
         unsafe
         {
-            // Note: We're deconstructing and reconstructing a span here, because we cannot
-            // pass ref-structs (Span) via a delegate (SpanAction). This is a workaround for
-            // said issue.
+            // Note: The two Span objects are on the Stack. We access them inside
+            // string.Create, by dereferencing these items from the stack.
 
-            // This isn't the only way to pin, it's also possible to pin via refs.
-            // Just that this is the more readable approach to the problem.
-            fixed (char* leftPtr = left)
-            fixed (char* rightPtr = right)
+            // If a GC happens, the pointers inside these referenced items will be
+            // moved, but our stack objects won't. Therefore, access like this without
+            // an explicit pin is safe.
+            // A similar trick also exists out there known as 'ref pinning'.
+
+            // Don't believe me? Go crazy with `DOTNET_GCStress` 😉 - Sewer
+            var @params = new JoinPartsParams
             {
-                return string.Create(spanLength, (((IntPtr)leftPtr, left.Length), ((IntPtr)rightPtr, right.Length), os), (span, tuple) =>
-                {
-                    // ReSharper disable InconsistentNaming
-                    var (left_, right_, os_) = tuple;
-                    // ReSharper restore InconsistentNaming
+                Left = &left,
+                Right = &right,
+                Os = os
+            };
 
-                    var leftSpan = new ReadOnlySpan<char>((void*)left_.Item1, left_.Length);
-                    var rightSpan = new ReadOnlySpan<char>((void*)right_.Item1, right_.Length);
-                    var count = JoinParts(span, leftSpan, rightSpan, os_);
-                    Debug.Assert(count == spanLength, $"Calculated span length '{spanLength}' doesn't match actual span length '{count}'");
-                });
-            }
+            return string.Create(spanLength, @params, (span, tuple) =>
+            {
+                var count = JoinParts(span, *tuple.Left, *tuple.Right, tuple.Os);
+                Debug.Assert(count == spanLength, $"Calculated span length '{spanLength}' doesn't match actual span length '{count}'");
+            });
         }
     }
+
+    unsafe struct JoinPartsParams
+    {
+        internal ReadOnlySpan<char>* Left;
+        internal ReadOnlySpan<char>* Right;
+        internal IOSInformation Os;
+    }
+#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 
     /// <summary>
     /// Joins two path parts together and returns the joined path as a string.

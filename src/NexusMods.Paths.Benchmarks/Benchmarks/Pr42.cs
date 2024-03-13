@@ -30,13 +30,13 @@ public class Pr42 : IBenchmark
     [Benchmark]
     public string Current()
     {
-        return PathHelpers.JoinParts(Path1, Path2, _osInformation);
+        return PathHelpers.JoinParts(Path1.AsSpan(), Path2.AsSpan(), _osInformation);
     }
 
     [Benchmark]
     public string OldMethod()
     {
-        return JoinParts(Path1, Path2, _osInformation);
+        return JoinParts(Path1.AsSpan(), Path2.AsSpan(), _osInformation);
     }
 
     [SkipLocalsInit] // original method didn't have it, but it's still good for comparison.
