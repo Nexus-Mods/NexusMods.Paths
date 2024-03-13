@@ -386,15 +386,24 @@ public static class PathHelpers
         DebugAssertIsSanitized(right, os);
 
         var spanLength = GetExactJoinedPartLength(left, right);
-        var buffer = spanLength > 512
-            ? GC.AllocateUninitializedArray<char>(spanLength)
-            : stackalloc char[spanLength];
+        unsafe
+        {
+            fixed (char* leftPtr = left)
+            fixed (char* rightPtr = right)
+            {
+                return string.Create(spanLength, (((IntPtr)leftPtr, left.Length), ((IntPtr)rightPtr, right.Length), os), (span, tuple) =>
+                {
+                    // ReSharper disable InconsistentNaming
+                    var (left_, right_, os_) = tuple;
+                    // ReSharper restore InconsistentNaming
 
-        var count = JoinParts(buffer, left, right, os);
-        if (count == 0) return string.Empty;
-
-        Debug.Assert(count == spanLength, $"Calculated span length '{spanLength}' doesn't match actual span length '{count}'");
-        return buffer.ToString();
+                    var leftSpan = new ReadOnlySpan<char>((void*)left_.Item1, left_.Length);
+                    var rightSpan = new ReadOnlySpan<char>((void*)right_.Item1, right_.Length);
+                    var count = JoinParts(span, leftSpan, rightSpan, os_);
+                    Debug.Assert(count == spanLength, $"Calculated span length '{spanLength}' doesn't match actual span length '{count}'");
+                });
+            }
+        }
     }
 
     /// <summary>
