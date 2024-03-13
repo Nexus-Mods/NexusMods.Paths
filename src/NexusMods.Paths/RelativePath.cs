@@ -305,7 +305,6 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     }
 
     /// <inheritdoc />
-    [SkipLocalsInit]
     public override int GetHashCode()
     {
         // A custom HashCode, based on FNV-1 with added Vectorization because the default one is very slow for our use in trees, dictionaries, etc.
