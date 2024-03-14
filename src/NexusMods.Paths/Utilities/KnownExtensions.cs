@@ -194,6 +194,9 @@ public static class KnownExtensions
 
     #region Database
 
+    /// <summary>.sqlite - Database, generic extension common in databases.</summary>
+    public static readonly Extension Db = new(".db");
+
     /// <summary>.sqlite - Database, Database. Used by SQLite.</summary>
     public static readonly Extension Sqlite = new(".sqlite");
 
