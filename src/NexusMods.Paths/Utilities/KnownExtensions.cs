@@ -85,7 +85,7 @@ public static class KnownExtensions
     /// <summary>.cpk - Archive. CRI Middleware. Common in Japanese games from 2008 onwards.</summary>
     public static readonly Extension Cpk = new(".cpk");
 
-    /// <summary>.fsn - Archive. FMOD Sound Bank. Common Middleware.</summary>
+    /// <summary>.fsb - Archive. FMOD Sound Bank. Common Middleware.</summary>
     public static readonly Extension Fsb = new(".fsb");
 
     /// <summary>.hkx - Archive. Havok Archive Format. Souls Games, Late 2000s Sonic Titles, etc.</summary>
