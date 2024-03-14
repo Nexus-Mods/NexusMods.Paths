@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using NexusMods.Paths.Utilities.Enums;
 
 namespace NexusMods.Paths.Utilities;
 
@@ -570,81 +571,4 @@ public static class KnownExtensions
         { Usm, ExtensionCategory.Video },
         { Wmv, ExtensionCategory.Video },
     };
-}
-
-/// <summary>
-///     Provides categories for each common extension.
-/// </summary>
-[PublicAPI]
-public enum ExtensionCategory
-{
-    /// <summary>
-    /// Unknown file format.
-    /// </summary>
-    Unknown,
-
-    /// <summary>
-    /// Represents archive and compressed file formats.
-    /// </summary>
-    Archive,
-
-    /// <summary>
-    /// Represents archives containing audio data.
-    /// </summary>
-    ArchiveOfAudio,
-
-    /// <summary>
-    /// Represents archives containing texture/image data.
-    /// </summary>
-    ArchiveOfImage,
-
-    /// <summary>
-    /// Represents audio and sound file formats.
-    /// </summary>
-    Audio,
-
-    /// <summary>
-    /// Represents binary.
-    /// </summary>
-    Binary,
-
-    /// <summary>
-    /// Represents database and data storage formats.
-    /// </summary>
-    Database,
-
-    /// <summary>
-    /// Represents executable and application file formats.
-    /// </summary>
-    Executable,
-
-    /// <summary>
-    /// Represents image and graphic file formats.
-    /// </summary>
-    Image,
-
-    /// <summary>
-    /// Represents dynamic library and code library formats.
-    /// </summary>
-    Library,
-
-    /// <summary>
-    /// Represents 3D model and related file formats.
-    /// </summary>
-    Model,
-
-    /// <summary>
-    /// Represents script and source code file formats.
-    /// </summary>
-    Script,
-
-    /// <summary>
-    /// Represents text, configuration, and documentation file formats.
-    /// </summary>
-    Text,
-
-    /// <summary>
-    /// Represents video, movie, and cutscene file formats.
-    /// </summary>
-    Video,
 }
