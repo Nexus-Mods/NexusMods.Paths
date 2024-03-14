@@ -32,17 +32,6 @@ public static class KnownExtensions
     /// </summary>
     public static readonly Extension Afs = new(".afs");
 
-    /// <summary>
-    ///     .awb - Archive, CRI Middleware. (a.k.a. AFS2) Common in Japanese games from 2008 onwards. Usually stores
-    ///     audio.
-    /// </summary>
-    public static readonly Extension Awb = new(".awb");
-
-    /// <summary>
-    ///     .bank - Archive (of Audio), 'Bank'. Not a specific format, but a term, seen in a bunch of games. Usually contains multiple voice clips.
-    /// </summary>
-    public static readonly Extension Bank = new(".bank");
-
     /// <summary>.ba2 - Archive. Bethesda games.</summary>
     public static readonly Extension Ba2 = new(".ba2");
 
@@ -66,27 +55,14 @@ public static class KnownExtensions
     /// </summary>
     public static readonly Extension Bnd = new(".bnd");
 
-    /// <summary>
-    ///     .bnk - Archive (of Audio), 'Bank'. Not a specific format, but a term, seen in a bunch of games. Usually contains multiple voice clips.
-    /// </summary>
-    public static readonly Extension Bnk = new(".bnk");
-
     /// <summary>.bsa - Archive. Bethesda games.</summary>
     public static readonly Extension Bsa = new(".bsa");
 
     /// <summary>.bundle - Archive, Unity Engine. As shipped in games. a.k.a. AssetBundle</summary>
     public static readonly Extension Bundle = new(".bundle");
 
-    /// <summary>
-    ///     .csb - Archive. CRI Middleware. Archive of Audio Files. Common in Japanese games from 2008 onwards.
-    /// </summary>
-    public static readonly Extension Csb = new(".csb");
-
     /// <summary>.cpk - Archive. CRI Middleware. Common in Japanese games from 2008 onwards.</summary>
     public static readonly Extension Cpk = new(".cpk");
-
-    /// <summary>.fsb - Archive. FMOD Sound Bank. Common Middleware.</summary>
-    public static readonly Extension Fsb = new(".fsb");
 
     /// <summary>.hkx - Archive. Havok Archive Format. Souls Games, Late 2000s Sonic Titles, etc.</summary>
     public static readonly Extension Hkx = new(".hkx");
@@ -102,12 +78,6 @@ public static class KnownExtensions
 
     /// <summary>.rar - Archive, RARLab/WinRAR.</summary>
     public static readonly Extension Rar = new(".rar");
-
-    /// <summary>.txd - Archive, (RenderWare) Texture Dictionary. Contains packed textures.</summary>
-    public static readonly Extension Txd = new(".txd");
-
-    /// <summary>.tpf - Archive, (of Images). From Software, Souls Games. Contains packed textures.</summary>
-    public static readonly Extension Tpf = new(".tpf");
 
     /// <summary>.uasset - Archive, Unreal Engine..</summary>
     public static readonly Extension Uasset = new(".uasset");
@@ -126,6 +96,45 @@ public static class KnownExtensions
 
     /// <summary>.zip - Archive, PKZip.</summary>
     public static readonly Extension Zip = new(".zip");
+
+    #endregion
+
+    #region ArchiveOfAudio
+
+    /// <summary>
+    ///     .awb - Archive, CRI Middleware. (a.k.a. AFS2) Common in Japanese games from 2008 onwards. Usually stores
+    ///     audio but can (technically) store data. Storage of data is so uncommon however, that this
+    ///     goes under 'Archive of Audio' category, unlike original <see cref="Afs"/>.
+    /// </summary>
+    public static readonly Extension Awb = new(".awb");
+
+    /// <summary>
+    ///     .bank - Archive (of Audio), 'Bank'. Not a specific format, but a term, seen in a bunch of games. Usually contains multiple voice clips.
+    /// </summary>
+    public static readonly Extension Bank = new(".bank");
+
+    /// <summary>
+    ///     .bnk - Archive (of Audio), 'Bank'. Not a specific format, but a term, seen in a bunch of games. Usually contains multiple voice clips.
+    /// </summary>
+    public static readonly Extension Bnk = new(".bnk");
+
+    /// <summary>
+    ///     .csb - Archive. CRI Middleware. Archive of Audio Files. Common in Japanese games from 2008 onwards.
+    /// </summary>
+    public static readonly Extension Csb = new(".csb");
+
+    /// <summary>.fsb - Archive. FMOD Sound Bank. Common Middleware.</summary>
+    public static readonly Extension Fsb = new(".fsb");
+
+    #endregion
+
+    #region ArchiveOfTexture
+
+    /// <summary>.txd - Archive, (RenderWare) Texture Dictionary. Contains packed textures.</summary>
+    public static readonly Extension Txd = new(".txd");
+
+    /// <summary>.tpf - Archive, (of Images). From Software, Souls Games. Contains packed textures.</summary>
+    public static readonly Extension Tpf = new(".tpf");
 
     #endregion
 
@@ -447,31 +456,33 @@ public static class KnownExtensions
         { _7zip, ExtensionCategory.Archive },
         { Archive, ExtensionCategory.Archive },
         { Afs, ExtensionCategory.Archive },
-        { Awb, ExtensionCategory.Archive },
         { Ba2, ExtensionCategory.Archive },
         { Bdt, ExtensionCategory.Archive },
         { Bht, ExtensionCategory.Archive },
         { Bfs, ExtensionCategory.Archive },
-        { Bank, ExtensionCategory.Audio }, // Based on fact it stores audio.
-        { Bnk, ExtensionCategory.Audio }, // Based on fact it stores audio.
         { Bsa, ExtensionCategory.Archive },
         { Bundle, ExtensionCategory.Archive },
-        { Csb, ExtensionCategory.Audio }, // Based on fact it stores audio.
         { Cpk, ExtensionCategory.Archive },
-        { Fsb, ExtensionCategory.Audio }, // Based on fact it stores audio.
         { Hkx, ExtensionCategory.Archive },
         { Nx, ExtensionCategory.Archive },
         { Oiv, ExtensionCategory.Archive },
         { Pak, ExtensionCategory.Archive },
         { Rar, ExtensionCategory.Archive },
-        { Txd, ExtensionCategory.Image }, // Based on fact it's texture container.
-        { Tpf, ExtensionCategory.Image }, // Based on fact it's texture container.
         { Uasset, ExtensionCategory.Archive },
         { Unitypackage, ExtensionCategory.Archive },
         { Vpk, ExtensionCategory.Archive },
         { Wad, ExtensionCategory.Archive },
         { Xnb, ExtensionCategory.Archive },
         { Zip, ExtensionCategory.Archive },
+        // ArchiveOfAudio
+        { Awb, ExtensionCategory.ArchiveOfAudio },
+        { Bank, ExtensionCategory.ArchiveOfAudio },
+        { Bnk, ExtensionCategory.ArchiveOfAudio },
+        { Csb, ExtensionCategory.ArchiveOfAudio },
+        { Fsb, ExtensionCategory.ArchiveOfAudio },
+        // ArchiveOfTexture
+        { Txd, ExtensionCategory.ArchiveOfImage },
+        { Tpf, ExtensionCategory.ArchiveOfImage },
         // Audio
         { Aac, ExtensionCategory.Audio },
         { Adx, ExtensionCategory.Audio },
@@ -571,6 +582,16 @@ public enum ExtensionCategory
     /// Represents archive and compressed file formats.
     /// </summary>
     Archive,
+
+    /// <summary>
+    /// Represents archives containing audio data.
+    /// </summary>
+    ArchiveOfAudio,
+
+    /// <summary>
+    /// Represents archives containing texture/image data.
+    /// </summary>
+    ArchiveOfImage,
 
     /// <summary>
     /// Represents audio and sound file formats.
