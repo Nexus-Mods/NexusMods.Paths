@@ -579,6 +579,11 @@ public static class KnownExtensions
 public enum ExtensionCategory
 {
     /// <summary>
+    /// Unknown file format.
+    /// </summary>
+    Unknown,
+
+    /// <summary>
     /// Represents archive and compressed file formats.
     /// </summary>
     Archive,
@@ -642,9 +647,4 @@ public enum ExtensionCategory
     /// Represents video, movie, and cutscene file formats.
     /// </summary>
     Video,
-
-    /// <summary>
-    /// Unknown file format.
-    /// </summary>
-    Unknown,
 }
