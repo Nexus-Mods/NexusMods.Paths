@@ -118,6 +118,7 @@ public static class PathHelpers
     /// Sanitizes the given path. Only sanitized paths should be used with
     /// <see cref="PathHelpers"/>.
     /// </summary>
+    [SkipLocalsInit]
     public static string Sanitize(ReadOnlySpan<char> path, IOSInformation os)
     {
         // Path has already been sanitized.
@@ -156,6 +157,7 @@ public static class PathHelpers
     /// Assumes sanitized path, changes to `/` on Unix-based systems and `\` on Windows.
     /// </remarks>
     /// </summary>
+    [SkipLocalsInit]
     public static string ToNativeSeparators(ReadOnlySpan<char> path, IOSInformation os)
     {
         DebugAssertIsSanitized(path, os);
