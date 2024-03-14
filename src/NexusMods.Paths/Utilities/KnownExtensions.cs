@@ -106,7 +106,7 @@ public static class KnownExtensions
     /// <summary>.txd - Archive, (RenderWare) Texture Dictionary. Contains packed textures.</summary>
     public static readonly Extension Txd = new(".txd");
 
-    /// <summary>.txd - Archive, (of Images). From Software, Souls Games. Contains packed textures.</summary>
+    /// <summary>.tpf - Archive, (of Images). From Software, Souls Games. Contains packed textures.</summary>
     public static readonly Extension Tpf = new(".tpf");
 
     /// <summary>.uasset - Archive, Unreal Engine..</summary>
