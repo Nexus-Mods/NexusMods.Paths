@@ -127,6 +127,9 @@ public static class KnownExtensions
     /// <summary>.fsb - Archive. FMOD Sound Bank. Common Middleware.</summary>
     public static readonly Extension Fsb = new(".fsb");
 
+    /// <summary>.fuz - Archive. Bethesda. Contains audio in <see cref="Xwm"/> and lip synd data.</summary>
+    public static readonly Extension Fuz = new(".fuz");
+
     #endregion
 
     #region ArchiveOfTexture
@@ -202,9 +205,16 @@ public static class KnownExtensions
 
     #endregion
 
-    #region Database
+    #region Binary (Script)
 
-    /// <summary>.sqlite - Database, generic extension common in databases.</summary>
+    /// <summary>.pex - Binary Script, Bethesda. Precompiled <see cref="Psc"/> files, in binary format.</summary>
+    public static readonly Extension Pex = new(".pex");
+
+    #endregion
+
+    #region Database (i.e. Collections of 'Records'/'Entries')
+
+    /// <summary>.db - Database, generic extension common in databases.</summary>
     public static readonly Extension Db = new(".db");
 
     /// <summary>.sqlite - Database, Database. Used by SQLite.</summary>
@@ -350,6 +360,9 @@ public static class KnownExtensions
     /// <summary>.lua - Script, LUA.</summary>
     public static readonly Extension Lua = new(".lua");
 
+    /// <summary>.psc - Script, Bethesda. 'Papyrus Script'</summary>
+    public static readonly Extension Psc = new(".psc");
+
     /// <summary>.py - Script, Python.</summary>
     public static readonly Extension Py = new(".py");
 
@@ -481,6 +494,7 @@ public static class KnownExtensions
         { Bnk, ExtensionCategory.ArchiveOfAudio },
         { Csb, ExtensionCategory.ArchiveOfAudio },
         { Fsb, ExtensionCategory.ArchiveOfAudio },
+        { Fuz, ExtensionCategory.ArchiveOfAudio },
         // ArchiveOfTexture
         { Txd, ExtensionCategory.ArchiveOfImage },
         { Tpf, ExtensionCategory.ArchiveOfImage },
@@ -502,6 +516,8 @@ public static class KnownExtensions
         // Binary
         { Tmp, ExtensionCategory.Binary },
         { Xsb, ExtensionCategory.Binary },
+        // Binary (Script)
+        { Pex, ExtensionCategory.BinaryScript },
         // Database
         { Sqlite, ExtensionCategory.Database },
         { Esp, ExtensionCategory.Database },
@@ -538,7 +554,7 @@ public static class KnownExtensions
         { X, ExtensionCategory.Model },
         { Xno, ExtensionCategory.Model },
         { Zno, ExtensionCategory.Model },
-        // Script
+        // Script (Human Readable)
         { Bat, ExtensionCategory.Script },
         { Cs, ExtensionCategory.Script },
         { Fx, ExtensionCategory.Script },
@@ -546,6 +562,7 @@ public static class KnownExtensions
         { Hks, ExtensionCategory.Script },
         { Hlsl, ExtensionCategory.Script },
         { Lua, ExtensionCategory.Script },
+        { Psc, ExtensionCategory.Script },
         { Py, ExtensionCategory.Script },
         { Sh, ExtensionCategory.Script },
         { Ws, ExtensionCategory.Script },
