@@ -454,6 +454,12 @@ public static class KnownExtensions
     /// </summary>
     /// <param name="extension">The extension to get the category for.</param>
     /// <returns>The <see cref="ExtensionCategory"/> that the extension belongs to.</returns>
+    /// <remarks>
+    ///     Remember that this an extension only represents a 'hint' to you, the programmer.
+    ///
+    ///     You should always check with the actual file data to assert that the format
+    ///     of a file matches your expectations before calling this method to categorize it.
+    /// </remarks>
     public static ExtensionCategory GetCategory(this Extension extension)
     {
         return ExtensionToCategoryMap.GetValueOrDefault(extension, ExtensionCategory.Unknown);
