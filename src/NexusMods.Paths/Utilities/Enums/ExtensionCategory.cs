@@ -39,50 +39,44 @@ public enum ExtensionCategory : byte
     Binary = 5,
 
     /// <summary>
-    /// Represents precompiled scripts that are not meant to be directly
-    /// executed by the user.
-    /// </summary>
-    BinaryScript = 6,
-
-    /// <summary>
     /// Represents databases and other files which contain a collection of 'records'.
     /// </summary>
-    Database = 7,
+    Database = 6,
 
     /// <summary>
     /// Represents executable and application file formats.
     /// These should be binaries that are intended to be directly executed
     /// by the user.
     /// </summary>
-    Executable = 8,
+    Executable = 7,
 
     /// <summary>
     /// Represents image and graphic file formats.
     /// </summary>
-    Image = 9,
+    Image = 8,
 
     /// <summary>
     /// Represents dynamic library and code library formats.
     /// </summary>
-    Library = 10,
+    Library = 9,
 
     /// <summary>
     /// Represents 2D & 3D model and related file formats.
     /// </summary>
-    Model = 11,
+    Model = 10,
 
     /// <summary>
     /// Represents script and source code file formats. Must be human readable.
     /// </summary>
-    Script = 12,
+    Script = 11,
 
     /// <summary>
     /// Represents text, configuration, and documentation file formats.
     /// </summary>
-    Text = 13,
+    Text = 12,
 
     /// <summary>
     /// Represents video, movie, and cutscene file formats.
     /// </summary>
-    Video = 14,
+    Video = 13,
 }
