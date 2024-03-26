@@ -6,6 +6,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Reloaded.Memory.Extensions;
+using Reloaded.Memory.Pointers;
 
 namespace NexusMods.Paths.Utilities;
 
@@ -369,6 +370,7 @@ public static class PathHelpers
         return left.Length + DirectorySeparatorString.Length + right.Length;
     }
 
+#pragma warning disable CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
     /// <summary>
     /// Joins two path parts together and returns the joined path as a string.
     /// </summary>
@@ -388,16 +390,39 @@ public static class PathHelpers
         DebugAssertIsSanitized(right, os);
 
         var spanLength = GetExactJoinedPartLength(left, right);
-        var buffer = spanLength > 512
-            ? GC.AllocateUninitializedArray<char>(spanLength)
-            : stackalloc char[spanLength];
+        unsafe
+        {
+            // Note: The two Span objects are on the Stack. We access them inside
+            // string.Create, by dereferencing these items from the stack.
 
-        var count = JoinParts(buffer, left, right, os);
-        if (count == 0) return string.Empty;
+            // If a GC happens, the pointers inside these referenced items will be
+            // moved, but our stack objects won't. Therefore, access like this without
+            // an explicit pin is safe.
+            // A similar trick also exists out there known as 'ref pinning'.
 
-        Debug.Assert(count == spanLength, $"Calculated span length '{spanLength}' doesn't match actual span length '{count}'");
-        return buffer.ToString();
+            // Don't believe me? Go crazy with `DOTNET_GCStress` 😉 - Sewer
+            var @params = new JoinPartsParams
+            {
+                Left = &left,
+                Right = &right,
+                Os = os
+            };
+
+            return string.Create(spanLength, @params, (span, tuple) =>
+            {
+                var count = JoinParts(span, *tuple.Left, *tuple.Right, tuple.Os);
+                Debug.Assert(count == spanLength, $"Calculated span length '{spanLength}' doesn't match actual span length '{count}'");
+            });
+        }
     }
+
+    unsafe struct JoinPartsParams
+    {
+        internal ReadOnlySpan<char>* Left;
+        internal ReadOnlySpan<char>* Right;
+        internal IOSInformation Os;
+    }
+#pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 
     /// <summary>
     /// Joins two path parts together and returns the joined path as a string.
