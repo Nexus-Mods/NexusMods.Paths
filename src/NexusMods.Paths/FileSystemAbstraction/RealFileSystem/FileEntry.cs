@@ -65,7 +65,12 @@ public partial class FileSystem
                 fileVersion = new Version(fvi.FileMajorPart, fvi.FileMinorPart, fvi.FileBuildPart, fvi.FilePrivatePart);
             }
 
-            return new FileVersionInfo(productVersion, fileVersion);
+            return new FileVersionInfo(
+                ProductVersion: productVersion,
+                FileVersion: fileVersion,
+                ProductVersionString: sProductVersion,
+                FileVersionString: sFileVersion
+            );
         }
     }
 }
