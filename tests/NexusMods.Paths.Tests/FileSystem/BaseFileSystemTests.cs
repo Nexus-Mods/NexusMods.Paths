@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using FluentAssertions;
 using NexusMods.Paths.TestingHelpers;
+using NexusMods.Paths.Utilities;
 
 namespace NexusMods.Paths.Tests.FileSystem;
 
@@ -250,5 +251,61 @@ public class BaseFileSystemTests
         Action act = () => fs.GetKnownPath(knownPath);
         if (expected) act.Should().NotThrow();
         else act.Should().Throw<Exception>();
+    }
+
+    [Fact]
+    public void TryResolveRealFilesystemPath_WithRealFileSystem_ReturnsTrue()
+    {
+        // Arrange
+        var fs = new Paths.FileSystem();
+        using var tempManager = new TemporaryFileManager(fs);
+        using var tempFile = tempManager.CreateFile();
+
+        // Act
+        var result = FileSystemMarshal.TryResolveRealFilesystemPath(tempFile, out var resolvedPath);
+
+        // Assert
+        result.Should().BeTrue();
+        resolvedPath.Should().Be(tempFile.Path.GetFullPath());
+    }
+
+    [Fact]
+    public void TryResolveRealFilesystemPath_WithInMemoryFileSystem_ReturnsFalse()
+    {
+        // Arrange
+        var fs = new InMemoryFileSystem();
+        using var tempManager = new TemporaryFileManager(fs);
+        using var tempFile = tempManager.CreateFile();
+
+        // Act
+        var result = FileSystemMarshal.TryResolveRealFilesystemPath(tempFile, out var resolvedPath);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void TryResolveRealFilesystemPath_WithMappedPath_ResolvesCorrectly()
+    {
+        // Arrange
+        var fs = new Paths.FileSystem();
+        using var tempManager = new TemporaryFileManager(fs);
+        using var tempFile1 = tempManager.CreateFile();
+        using var tempFile2 = tempManager.CreateFile();
+        var originalPath = tempFile1.Path;
+        var mappedPath = tempFile2.Path;
+
+        var overlayFileSystem = fs.CreateOverlayFileSystem(new Dictionary<AbsolutePath, AbsolutePath>
+        {
+            { originalPath, mappedPath }
+        }, new Dictionary<KnownPath, AbsolutePath>());
+
+        // Act
+        var source = overlayFileSystem.FromUnsanitizedFullPath(originalPath.GetFullPath());
+        var result = FileSystemMarshal.TryResolveRealFilesystemPath(source, out var resolvedPath);
+
+        // Assert
+        result.Should().BeTrue();
+        resolvedPath.Should().Be(mappedPath.GetFullPath());
     }
 }

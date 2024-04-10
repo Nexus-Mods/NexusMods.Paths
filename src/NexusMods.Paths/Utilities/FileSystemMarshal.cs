@@ -1,10 +1,9 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace NexusMods.Paths.Utilities;
 
 /// <summary>
-///     This is a suite of low level methods that provide 'escape hatches' for the
-///     file system abstraction where lower level access is required.
+///     This is a suite of low level methods that provide 'escape hatches' and
+///     other utilities for the file system abstraction where lower level access
+///     is required.
 /// </summary>
 /// <remarks>
 ///     This is named after classes like
@@ -31,7 +30,7 @@ public static class FileSystemMarshal
     ///     that works with the <see cref="IFileSystem"/> abstraction, or throw
     ///     an exception.
     /// </remarks>
-    public static bool TryResolveRealFilesystemPath(AbsolutePath path, [MaybeNullWhen(false)] out string? fullFilePath)
+    public static bool TryResolveRealFilesystemPath(AbsolutePath path, out string? fullFilePath)
     {
         // Only paths from the Real 'FileSystem' can be resolved here.
         if (path.FileSystem is not FileSystem realFs)
