@@ -42,22 +42,23 @@ public partial class InMemoryFileSystem
             throw new NotImplementedException();
         }
 
-        public Stream CreateReadStream()
+        public MemoryStream CreateReadStream()
         {
             var ms = new MemoryStream(_contents, 0, _contents.Length, false);
             return ms;
         }
 
-        public Stream CreateWriteStream()
+        public MemoryStream CreateWriteStream()
         {
             var stream = new MemoryStreamWrapper(this);
             return stream;
         }
 
-        public Stream CreateReadWriteStream()
+        public MemoryStream CreateReadWriteStream()
         {
             var stream = new MemoryStreamWrapper(this);
             stream.Write(_contents);
+            stream.Position = 0;
             return stream;
         }
 

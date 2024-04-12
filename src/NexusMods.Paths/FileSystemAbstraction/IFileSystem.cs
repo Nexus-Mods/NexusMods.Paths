@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -279,4 +280,12 @@ public interface IFileSystem
     ///     On non-Unix based systems, or FileSystems without perms, this is a no-operation.
     /// </remarks>
     UnixFileMode GetUnixFileMode(AbsolutePath absolutePath);
+
+    /// <summary>
+    ///     Creates a new 'Memory Mapped File' from the existing file.
+    /// </summary>
+    /// <param name="absPath">Path of the file to memory map.</param>
+    /// <param name="mode">The mode the file is opened with.</param>
+    /// <param name="access">What you intend to do with the memory mapped file.</param>
+    MemoryMappedFileHandle CreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access);
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Threading;
 using JetBrains.Annotations;
@@ -224,6 +225,16 @@ public partial class FileSystem : BaseFileSystem
     /// <inheritdoc/>
     protected override void InternalMoveFile(AbsolutePath source, AbsolutePath dest, bool overwrite)
         => File.Move(source.GetFullPath(), dest.GetFullPath(), overwrite);
+
+    /// <inheritdoc/>
+    protected override unsafe MemoryMappedFileHandle InternalCreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access)
+    {
+        var targetPath = GetMappedPath(absPath).GetFullPath();
+        var memoryMappedFile = MemoryMappedFile.CreateFromFile(targetPath, mode);
+        var accessor = memoryMappedFile.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
+        var ptrData = (byte*)accessor.SafeMemoryMappedViewHandle.DangerousGetHandle();
+        return new MemoryMappedFileHandle(ptrData, (nuint)accessor.Capacity, new FilesystemMemoryMappedHandle(accessor, memoryMappedFile));
+    }
 
     #endregion
 

@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 using NexusMods.Paths.Utilities;
+using Reloaded.Memory.Utilities;
 
 namespace NexusMods.Paths;
 
@@ -228,6 +230,17 @@ public partial class InMemoryFileSystem : BaseFileSystem
     /// <inheritdoc/>
     protected override Stream InternalOpenFile(AbsolutePath path, FileMode mode, FileAccess access, FileShare share)
     {
+        var inMemoryFileEntry = InternalCreateFile(path, mode, access);
+        return access switch
+        {
+            FileAccess.Read => inMemoryFileEntry.CreateReadStream(),
+            FileAccess.Write => inMemoryFileEntry.CreateWriteStream(),
+            FileAccess.ReadWrite => inMemoryFileEntry.CreateReadWriteStream(),
+        };
+    }
+
+    private InMemoryFileEntry InternalCreateFile(AbsolutePath path, FileMode mode, FileAccess access)
+    {
         if (access == FileAccess.Read && mode != FileMode.Open && mode != FileMode.OpenOrCreate)
         {
             throw new ArgumentException($"Access can't be Read with mode {mode}", nameof(access));
@@ -275,12 +288,7 @@ public partial class InMemoryFileSystem : BaseFileSystem
         if (inMemoryFileEntry is null)
             throw new FileNotFoundException($"File \"{path.GetFullPath()}\" does not exist");
 
-        return access switch
-        {
-            FileAccess.Read => inMemoryFileEntry.CreateReadStream(),
-            FileAccess.Write => inMemoryFileEntry.CreateWriteStream(),
-            FileAccess.ReadWrite => inMemoryFileEntry.CreateReadWriteStream(),
-        };
+        return inMemoryFileEntry;
     }
 
     /// <inheritdoc/>
@@ -305,7 +313,6 @@ public partial class InMemoryFileSystem : BaseFileSystem
         parentDirectory.Files.Remove(path.RelativeTo(parentDirectory.Path));
         _files.Remove(path);
     }
-
 
     /// <inheritdoc/>
     protected override void InternalDeleteDirectory(AbsolutePath path, bool recursive)
@@ -358,7 +365,7 @@ public partial class InMemoryFileSystem : BaseFileSystem
         }
 
         // Don't remove this from parent.Directories since parent is iterating over it
-        
+
         _directories.Remove(path);
     }
 
@@ -386,6 +393,30 @@ public partial class InMemoryFileSystem : BaseFileSystem
         destFile.IsReadOnly = sourceFile.IsReadOnly;
 
         DeleteFile(source);
+    }
+
+    /// <inheritdoc/>
+    protected override unsafe MemoryMappedFileHandle InternalCreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access)
+    {
+        var fileAccess = access switch
+        {
+            MemoryMappedFileAccess.Read => FileAccess.Read,
+            MemoryMappedFileAccess.Write => FileAccess.Write,
+            MemoryMappedFileAccess.ReadWrite => FileAccess.ReadWrite,
+            _ => throw new ArgumentOutOfRangeException(nameof(access), access, null)
+        };
+
+        var file = InternalCreateFile(absPath, mode, fileAccess);
+        var stream = fileAccess switch
+        {
+            FileAccess.Read => file.CreateReadStream(),
+            FileAccess.Write => file.CreateWriteStream(),
+            FileAccess.ReadWrite => file.CreateReadWriteStream(),
+        };
+
+        var buffer = stream.GetBuffer();
+        var pin = new Pinnable<byte>(buffer);
+        return new MemoryMappedFileHandle(pin.Pointer, (nuint)file.Size.Value, pin);
     }
 
     #endregion
