@@ -1,5 +1,3 @@
-using FluentAssertions;
-
 namespace NexusMods.Paths.Tests;
 
 public class SizeTests

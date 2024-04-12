@@ -10,6 +10,7 @@ namespace NexusMods.Paths;
 /// Provides information about the current operating system.
 /// </summary>
 [PublicAPI]
+// ReSharper disable once InconsistentNaming
 public interface IOSInformation
 {
     /// <summary>

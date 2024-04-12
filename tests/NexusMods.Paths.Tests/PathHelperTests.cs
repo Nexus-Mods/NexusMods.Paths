@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using FluentAssertions;
 using NexusMods.Paths.Utilities;
 
 namespace NexusMods.Paths.Tests;
@@ -74,7 +73,7 @@ public class PathHelperTests
         var actualOutput = PathHelpers.Sanitize(input, CreateOSInformation(isUnix));
         actualOutput.Should().Be(expectedOutput);
     }
-    
+
     [Theory]
     [InlineData(true, "", "")]
     [InlineData(false, "", "")]

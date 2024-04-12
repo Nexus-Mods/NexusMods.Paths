@@ -5,6 +5,7 @@ namespace NexusMods.Paths.Extensions;
 /// <summary>
 /// Extensions for <see cref="IFileSystem"/>.
 /// </summary>
+// ReSharper disable once InconsistentNaming
 public static class IFileSystemExtensions
 {
     /// <summary>

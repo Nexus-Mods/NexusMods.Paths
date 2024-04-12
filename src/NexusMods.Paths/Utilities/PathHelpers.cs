@@ -6,7 +6,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Reloaded.Memory.Extensions;
-using Reloaded.Memory.Pointers;
 
 namespace NexusMods.Paths.Utilities;
 

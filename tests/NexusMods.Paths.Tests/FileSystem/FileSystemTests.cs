@@ -1,5 +1,4 @@
 using System.Reflection;
-using FluentAssertions;
 
 namespace NexusMods.Paths.Tests.FileSystem;
 

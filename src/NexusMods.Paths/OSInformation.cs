@@ -8,6 +8,7 @@ namespace NexusMods.Paths;
 /// Implementation of <see cref="IOSInformation"/>.
 /// </summary>
 [PublicAPI]
+// ReSharper disable once InconsistentNaming
 public sealed class OSInformation : IOSInformation
 {
     /// <summary>

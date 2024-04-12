@@ -17,6 +17,7 @@ public interface IFileSystem
     /// <summary>
     /// Gets the current <see cref="IOSInformation"/> associated with this file system.
     /// </summary>
+    // ReSharper disable once InconsistentNaming
     IOSInformation OS { get; }
 
     /// <summary>
@@ -54,6 +55,7 @@ public interface IFileSystem
     /// <seealso cref="GetKnownPath"/>
     AbsolutePath GetKnownPath(KnownPath knownPath);
 
+    /// <summary/>
     [Obsolete(message: "This will be removed once dependents have updated.", error: true)]
     AbsolutePath FromFullPath(string fullPath) => FromUnsanitizedFullPath(fullPath);
 
