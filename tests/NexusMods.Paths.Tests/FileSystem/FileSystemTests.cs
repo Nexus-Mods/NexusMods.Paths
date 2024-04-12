@@ -1,6 +1,7 @@
 using System.IO.MemoryMappedFiles;
 using System.Reflection;
 using FluentAssertions;
+using NexusMods.Paths.TestingHelpers;
 
 namespace NexusMods.Paths.Tests.FileSystem;
 
@@ -44,12 +45,15 @@ public class FileSystemTests
             .Contain(x => x.Path == file);
     }
 
-    [Fact]
-    public async Task Test_CreateMemoryMappedFile_CanOpen()
+    [Theory, AutoFileSystem]
+    public async Task Test_CreateMemoryMappedFile_CanOpen(RelativePath relativePath, byte[] contents)
     {
         var fs = new Paths.FileSystem();
-        var file = fs.FromUnsanitizedFullPath(Assembly.GetExecutingAssembly().Location);
-        var expectedData = await file.ReadAllBytesAsync();
+        var file = fs.GetKnownPath(KnownPath.TempDirectory).Combine(relativePath);
+        await using (var stream = fs.CreateFile(file))
+        {
+            stream.Write(contents);
+        }
 
         unsafe
         {
@@ -59,7 +63,7 @@ public class FileSystemTests
             mmf.Length.Should().Be((nuint)file.FileInfo.Size);
 
             // Assert that the contents are equal
-            mmf.AsSpan().SequenceEqual(expectedData).Should().BeTrue();
+            mmf.AsSpan().SequenceEqual(contents).Should().BeTrue();
         }
     }
 }
