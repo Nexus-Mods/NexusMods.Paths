@@ -32,6 +32,43 @@ public class FileSystemTests
     }
 
     [Fact]
+    public void Test_DeleteDirectoryShouldDeleteEmpty()
+    {
+        var fs = new Paths.FileSystem();
+
+        var directory = fs.FromUnsanitizedFullPath(AppContext.BaseDirectory).Combine("TestDirectory");
+        fs.CreateDirectory(directory);
+
+        fs.DeleteDirectory(directory, recursive: false);
+
+        fs.DirectoryExists(directory).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Test_DeleteDirectoryShouldNotDeleteNonEmpty()
+    {
+        var fs = new Paths.FileSystem();
+
+        var directory = fs.FromUnsanitizedFullPath(AppContext.BaseDirectory).Combine("TestDirectory");
+        var child = directory.Combine("Child");
+
+        fs.CreateDirectory(directory);
+        fs.CreateDirectory(child);
+
+        var action = () => fs.DeleteDirectory(directory, recursive: false);
+        action.Should().Throw<IOException>();
+
+        // Cleanup to avoid breaking the other tests
+        fs.DeleteDirectory(child, recursive: false);
+
+        fs.DirectoryExists(child).Should().BeFalse();
+
+        fs.DeleteDirectory(directory, recursive: false);
+
+        fs.DirectoryExists(directory).Should().BeFalse();
+    }
+
+    [Fact]
     public void Test_EnumerateFileEntries()
     {
         var fs = new Paths.FileSystem();
