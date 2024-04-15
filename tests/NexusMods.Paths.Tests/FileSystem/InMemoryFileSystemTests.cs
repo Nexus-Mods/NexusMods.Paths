@@ -1,3 +1,4 @@
+using System.IO.MemoryMappedFiles;
 using NexusMods.Paths.TestingHelpers;
 
 namespace NexusMods.Paths.Tests.FileSystem;
@@ -341,5 +342,23 @@ public class InMemoryFileSystemTests
         fs.FileExists(dest).Should().BeTrue();
 
         fs.GetFileEntry(dest).Size.Should().Be(Size.FromLong(contents.Length));
+    }
+
+    [Theory, AutoFileSystem]
+    public void Test_CreateMemoryMappedFile_CanOpen(InMemoryFileSystem fs,
+        AbsolutePath file, byte[] contents)
+    {
+        fs.AddFile(file, contents);
+
+        unsafe
+        {
+            using var mmf = fs.CreateMemoryMappedFile(file, FileMode.Open, MemoryMappedFileAccess.ReadWrite);
+            mmf.Should().NotBeNull();
+            ((nuint)mmf.Pointer).Should().NotBe(0);
+            mmf.Length.Should().Be((nuint)file.FileInfo.Size);
+
+            // Assert that the contents are equal
+            mmf.AsSpan().SequenceEqual(contents).Should().BeTrue();
+        }
     }
 }

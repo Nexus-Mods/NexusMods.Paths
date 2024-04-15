@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -422,6 +423,12 @@ public abstract class BaseFileSystem : IFileSystem
         return default;
     }
 
+    /// <inheritdoc/>
+    public MemoryMappedFileHandle CreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access)
+    {
+        return InternalCreateMemoryMappedFile(GetMappedPath(absPath), mode, access);
+    }
+
     #endregion
 
     #region Abstract Methods
@@ -462,5 +469,7 @@ public abstract class BaseFileSystem : IFileSystem
     /// <inheritdoc cref="IFileSystem.MoveFile"/>
     protected abstract void InternalMoveFile(AbsolutePath source, AbsolutePath dest, bool overwrite);
 
+    /// <inheritdoc cref="IFileSystem.CreateMemoryMappedFile"/>
+    protected abstract MemoryMappedFileHandle InternalCreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access);
     #endregion
 }

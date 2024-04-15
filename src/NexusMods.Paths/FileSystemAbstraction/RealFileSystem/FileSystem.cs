@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Threading;
 using JetBrains.Annotations;
@@ -225,6 +227,43 @@ public partial class FileSystem : BaseFileSystem
     protected override void InternalMoveFile(AbsolutePath source, AbsolutePath dest, bool overwrite)
         => File.Move(source.GetFullPath(), dest.GetFullPath(), overwrite);
 
+    /// <inheritdoc/>
+    protected override unsafe MemoryMappedFileHandle InternalCreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access)
+    {
+        var fs = new FileStream(absPath.GetFullPath(), new FileStreamOptions
+        {
+            Mode = mode,
+            Access = GetFileAccess(access),
+            Share = FileShare.Read,
+            BufferSize = 0
+        });
+        var memoryMappedFile = MemoryMappedFile.CreateFromFile(fs, null, fs.Length, access, HandleInheritability.None, false);
+        var accessor = memoryMappedFile.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
+        var ptrData = (byte*)accessor.SafeMemoryMappedViewHandle.DangerousGetHandle();
+        return new MemoryMappedFileHandle(ptrData, (nuint)fs.Length, new FilesystemMemoryMappedHandle(accessor, memoryMappedFile));
+    }
+
     #endregion
 
+    // Note(Sewer): This is taken straight from Runtime.
+    // https://github.com/dotnet/runtime/blob/3a78480ae21a909ecd3ac9edfd2aa3e63dd890fb/src/libraries/System.IO.MemoryMappedFiles/src/System/IO/MemoryMappedFiles/MemoryMappedFile.cs#L486
+    private static FileAccess GetFileAccess(MemoryMappedFileAccess access)
+    {
+        switch (access)
+        {
+            case MemoryMappedFileAccess.Read:
+            case MemoryMappedFileAccess.ReadExecute:
+                return FileAccess.Read;
+
+            case MemoryMappedFileAccess.ReadWrite:
+            case MemoryMappedFileAccess.CopyOnWrite:
+            case MemoryMappedFileAccess.ReadWriteExecute:
+                return FileAccess.ReadWrite;
+
+            case MemoryMappedFileAccess.Write:
+            default:
+                Debug.Assert(access == MemoryMappedFileAccess.Write);
+                return FileAccess.Write;
+        }
+    }
 }
