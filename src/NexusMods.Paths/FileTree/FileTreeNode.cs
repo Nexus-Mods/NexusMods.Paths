@@ -209,15 +209,13 @@ public class FileTreeNode<TPath, TValue> : IFileTree<FileTreeNode<TPath, TValue>
     /// <throws><see cref="ArgumentException"/> if the collection is empty.</throws>
     public static FileTreeNode<TPath, TValue> CreateTree(IEnumerable<KeyValuePair<TPath, TValue>> files)
     {
-        if (!files.Any()) throw new ArgumentException("Collection of files cannot be empty");
-
         var fileArray = files.ToArray();
+        if (fileArray.Length <= 0) throw new ArgumentException("Collection of files cannot be empty");
         var rootComponent = fileArray.First().Key.GetRootComponent;
 
         // If paths are rooted, we assume all the passed paths share the same root
         // If paths are not rooted, we assume they are all relative to the same unknown root (RelativePath.Empty)
         var rootNode = new FileTreeNode<TPath, TValue>(rootComponent, RelativePath.Empty, false, default);
-
         rootNode.PopulateTree(fileArray);
 
         return rootNode;

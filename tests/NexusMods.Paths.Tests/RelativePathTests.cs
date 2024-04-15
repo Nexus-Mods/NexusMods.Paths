@@ -1,9 +1,8 @@
-using FluentAssertions;
-
 namespace NexusMods.Paths.Tests;
 
 public class RelativePathTests
 {
+    // ReSharper disable once InconsistentNaming
     private static IOSInformation CreateOSInformation(bool isUnix)
     {
         return isUnix ? OSInformation.FakeUnix : OSInformation.FakeWindows;
@@ -138,9 +137,9 @@ public class RelativePathTests
 
     [Theory]
     [InlineData("", new string[] { })]
-    [InlineData("foo", new string[] { "foo" })]
-    [InlineData("foo/bar", new string[] { "foo", "bar" })]
-    [InlineData("foo/bar/baz", new string[] { "foo", "bar", "baz" })]
+    [InlineData("foo", new[] { "foo" })]
+    [InlineData("foo/bar", new[] { "foo", "bar" })]
+    [InlineData("foo/bar/baz", new[] { "foo", "bar", "baz" })]
     public void Test_Parts(string input, string[] expectedParts)
     {
         var path = new RelativePath(input);
@@ -150,9 +149,9 @@ public class RelativePathTests
 
     [Theory]
     [InlineData("", new string[] { })]
-    [InlineData("foo", new string[] { "foo" })]
-    [InlineData("foo/bar", new string[] { "foo/bar", "foo" })]
-    [InlineData("foo/bar/baz", new string[] { "foo/bar/baz", "foo/bar", "foo" })]
+    [InlineData("foo", new[] { "foo" })]
+    [InlineData("foo/bar", new[] { "foo/bar", "foo" })]
+    [InlineData("foo/bar/baz", new[] { "foo/bar/baz", "foo/bar", "foo" })]
     public void Test_GetAllParents(string input, string[] expectedParts)
     {
         var path = new RelativePath(input);

@@ -79,7 +79,7 @@ public class RelativeFileTreeTests
         node!.HasParent.Should().Be(hasParent);
         if (hasParent)
         {
-            node!.Parent.Should().NotBeNull();
+            node.Parent.Should().NotBeNull();
         }
     }
 
@@ -97,18 +97,18 @@ public class RelativeFileTreeTests
         node!.IsTreeRoot.Should().Be(isRoot);
         if (isRoot)
         {
-            var act = () => node!.Parent;
+            var act = () => node.Parent;
             act.Should().Throw<InvalidOperationException>();
         }
 
-        node!.Root.Path.Should().Be("");
+        node.Root.Path.Should().Be("");
     }
 
 
     [Theory]
     [InlineData("", new string[] { })]
-    [InlineData("file1.txt", new string[] { "foo", "baz" })]
-    [InlineData("foo", new string[] { "file1.txt", "baz" })]
+    [InlineData("file1.txt", new[] { "foo", "baz" })]
+    [InlineData("foo", new[] { "file1.txt", "baz" })]
     [InlineData("foo/bar/file4.txt", new string[] { })]
     public void Test_GetSiblings(string path, string[] expectedSiblingPaths)
     {
@@ -122,13 +122,13 @@ public class RelativeFileTreeTests
 
     [Theory]
     [InlineData("",
-        new string[]
+        new[]
             { "file1.txt", "foo/file2.txt", "foo/file3.txt", "foo/bar/file4.txt", "baz/bazer/file5.txt" })]
     [InlineData("file1.txt", new string[] { })]
-    [InlineData("foo", new string[] { "foo/file2.txt", "foo/file3.txt", "foo/bar/file4.txt" })]
+    [InlineData("foo", new[] { "foo/file2.txt", "foo/file3.txt", "foo/bar/file4.txt" })]
     [InlineData("foo/file2.txt", new string[] { })]
-    [InlineData("foo/bar", new string[] { "foo/bar/file4.txt" })]
-    [InlineData("baz", new string[] { "baz/bazer/file5.txt" })]
+    [InlineData("foo/bar", new[] { "foo/bar/file4.txt" })]
+    [InlineData("baz", new[] { "baz/bazer/file5.txt" })]
     public void Test_GetAllDescendentFiles(string path, string[] expectedDescendentPaths)
     {
         var tree = MakeTestTree();
@@ -142,13 +142,13 @@ public class RelativeFileTreeTests
 
     [Theory]
     [InlineData("",
-        new string[]
+        new[]
             { "file1.txt", "foo/file2.txt", "foo/file3.txt", "foo/bar/file4.txt", "baz/bazer/file5.txt" })]
     [InlineData("file1.txt", new string[] { })]
-    [InlineData("foo", new string[] { "foo/file2.txt", "foo/file3.txt", "foo/bar/file4.txt" })]
+    [InlineData("foo", new[] { "foo/file2.txt", "foo/file3.txt", "foo/bar/file4.txt" })]
     [InlineData("foo/file2.txt", new string[] { })]
-    [InlineData("foo/bar", new string[] { "foo/bar/file4.txt" })]
-    [InlineData("baz", new string[] { "baz/bazer/file5.txt" })]
+    [InlineData("foo/bar", new[] { "foo/bar/file4.txt" })]
+    [InlineData("baz", new[] { "baz/bazer/file5.txt" })]
     public void Test_GetAllDescendentFilesDictionary(string path, string[] expectedDescendentPaths)
     {
         var tree = MakeTestTree();

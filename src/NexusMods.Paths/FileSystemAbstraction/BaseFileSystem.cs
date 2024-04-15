@@ -88,6 +88,7 @@ public abstract class BaseFileSystem : IFileSystem
         // This enables path mappings to map "/c" to something else, like
         // "/opt/wine/drive_c"
 
+        // ReSharper disable once InconsistentNaming
         var sanitizedPathCurrentOS = PathHelpers.Sanitize(input, OS);
 
         // Only supported on Linux and with the setting enabled
@@ -197,6 +198,7 @@ public abstract class BaseFileSystem : IFileSystem
         Debug.Assert(path != default, $"{nameof(GetKnownPath)} returns 'default' for {nameof(KnownPath)} '{knownPath}'. You forgot to add a mapping for this {nameof(KnownPath)}!");
         return path;
 
+        // ReSharper disable once InconsistentNaming
         AbsolutePath GetXDGBaseDirectory(string environmentVariable, Func<IFileSystem, AbsolutePath> defaultFunc)
         {
             if (!OS.IsLinux) throw OS.CreatePlatformNotSupportedException();

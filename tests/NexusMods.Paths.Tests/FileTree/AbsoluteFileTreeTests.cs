@@ -104,7 +104,7 @@ public class AbsoluteFileTreeTests
         node!.HasParent.Should().Be(hasParent);
         if (hasParent)
         {
-            node!.Parent.Should().NotBeNull();
+            node.Parent.Should().NotBeNull();
         }
     }
 
@@ -126,21 +126,21 @@ public class AbsoluteFileTreeTests
         node!.IsTreeRoot.Should().Be(isRoot);
         if (isRoot)
         {
-            var act = () => node!.Parent;
+            var act = () => node.Parent;
             act.Should().Throw<InvalidOperationException>();
         }
 
-        node!.Root.Path.Should().Be(isUnix ? CreateAbsPath("/", isUnix) : CreateAbsPath("C:/", isUnix));
+        node.Root.Path.Should().Be(isUnix ? CreateAbsPath("/", isUnix) : CreateAbsPath("C:/", isUnix));
     }
 
     [Theory]
     [InlineData("/", true, new string[] { })]
-    [InlineData("/file1.txt", true, new string[] { "/foo", "/baz" })]
-    [InlineData("/foo", true, new string[] { "/file1.txt", "/baz" })]
+    [InlineData("/file1.txt", true, new[] { "/foo", "/baz" })]
+    [InlineData("/foo", true, new[] { "/file1.txt", "/baz" })]
     [InlineData("/foo/bar/file4.txt", true, new string[] { })]
     [InlineData("C:/", false, new string[] { })]
-    [InlineData("C:/file1.txt", false, new string[] { "C:/foo", "C:/baz" })]
-    [InlineData("C:/foo", false, new string[] { "C:/file1.txt", "C:/baz" })]
+    [InlineData("C:/file1.txt", false, new[] { "C:/foo", "C:/baz" })]
+    [InlineData("C:/foo", false, new[] { "C:/file1.txt", "C:/baz" })]
     [InlineData("C:/foo/bar/file4.txt", false, new string[] { })]
     public void Test_GetSiblings(string path, bool isUnix, string[] expectedSiblingPaths)
     {
@@ -154,21 +154,21 @@ public class AbsoluteFileTreeTests
 
     [Theory]
     [InlineData("/", true,
-        new string[]
+        new[]
             { "/file1.txt", "/foo/file2.txt", "/foo/file3.txt", "/foo/bar/file4.txt", "/baz/bazer/file5.txt" })]
     [InlineData("/file1.txt", true, new string[] { })]
-    [InlineData("/foo", true, new string[] { "/foo/file2.txt", "/foo/file3.txt", "/foo/bar/file4.txt" })]
+    [InlineData("/foo", true, new[] { "/foo/file2.txt", "/foo/file3.txt", "/foo/bar/file4.txt" })]
     [InlineData("/foo/file2.txt", true, new string[] { })]
-    [InlineData("/foo/bar", true, new string[] { "/foo/bar/file4.txt" })]
-    [InlineData("/baz", true, new string[] { "/baz/bazer/file5.txt" })]
+    [InlineData("/foo/bar", true, new[] { "/foo/bar/file4.txt" })]
+    [InlineData("/baz", true, new[] { "/baz/bazer/file5.txt" })]
     [InlineData("C:/", false,
-        new string[]
+        new[]
             { "C:/file1.txt", "C:/foo/file2.txt", "C:/foo/file3.txt", "C:/foo/bar/file4.txt", "C:/baz/bazer/file5.txt" })]
     [InlineData("C:/file1.txt", false, new string[] { })]
-    [InlineData("C:/foo", false, new string[] { "C:/foo/file2.txt", "C:/foo/file3.txt", "C:/foo/bar/file4.txt" })]
+    [InlineData("C:/foo", false, new[] { "C:/foo/file2.txt", "C:/foo/file3.txt", "C:/foo/bar/file4.txt" })]
     [InlineData("C:/foo/file2.txt", false, new string[] { })]
-    [InlineData("C:/foo/bar", false, new string[] { "C:/foo/bar/file4.txt" })]
-    [InlineData("C:/baz", false, new string[] { "C:/baz/bazer/file5.txt" })]
+    [InlineData("C:/foo/bar", false, new[] { "C:/foo/bar/file4.txt" })]
+    [InlineData("C:/baz", false, new[] { "C:/baz/bazer/file5.txt" })]
     public void Test_GetAllDescendentFiles(string path, bool isUnix, string[] expectedDescendentPaths)
     {
         var tree = MakeTestTree(isUnix);
@@ -182,21 +182,21 @@ public class AbsoluteFileTreeTests
 
     [Theory]
     [InlineData("/", true,
-        new string[]
+        new[]
             { "/file1.txt", "/foo/file2.txt", "/foo/file3.txt", "/foo/bar/file4.txt", "/baz/bazer/file5.txt" })]
     [InlineData("/file1.txt", true, new string[] { })]
-    [InlineData("/foo", true, new string[] { "/foo/file2.txt", "/foo/file3.txt", "/foo/bar/file4.txt" })]
+    [InlineData("/foo", true, new[] { "/foo/file2.txt", "/foo/file3.txt", "/foo/bar/file4.txt" })]
     [InlineData("/foo/file2.txt", true, new string[] { })]
-    [InlineData("/foo/bar", true, new string[] { "/foo/bar/file4.txt" })]
-    [InlineData("/baz", true, new string[] { "/baz/bazer/file5.txt" })]
+    [InlineData("/foo/bar", true, new[] { "/foo/bar/file4.txt" })]
+    [InlineData("/baz", true, new[] { "/baz/bazer/file5.txt" })]
     [InlineData("C:/", false,
-        new string[]
+        new[]
             { "C:/file1.txt", "C:/foo/file2.txt", "C:/foo/file3.txt", "C:/foo/bar/file4.txt", "C:/baz/bazer/file5.txt" })]
     [InlineData("C:/file1.txt", false, new string[] { })]
-    [InlineData("C:/foo", false, new string[] { "C:/foo/file2.txt", "C:/foo/file3.txt", "C:/foo/bar/file4.txt" })]
+    [InlineData("C:/foo", false, new[] { "C:/foo/file2.txt", "C:/foo/file3.txt", "C:/foo/bar/file4.txt" })]
     [InlineData("C:/foo/file2.txt", false, new string[] { })]
-    [InlineData("C:/foo/bar", false, new string[] { "C:/foo/bar/file4.txt" })]
-    [InlineData("C:/baz", false, new string[] { "C:/baz/bazer/file5.txt" })]
+    [InlineData("C:/foo/bar", false, new[] { "C:/foo/bar/file4.txt" })]
+    [InlineData("C:/baz", false, new[] { "C:/baz/bazer/file5.txt" })]
     public void Test_GetAllDescendentFilesDictionary(string path, bool isUnix, string[] expectedDescendentPaths)
     {
         var tree = MakeTestTree(isUnix);
@@ -244,6 +244,7 @@ public class AbsoluteFileTreeTests
         return path;
     }
 
+    // ReSharper disable once InconsistentNaming
     private static IOSInformation CreateOSInformation(bool isUnix)
     {
         return isUnix ? new OSInformation(OSPlatform.Linux) : new OSInformation(OSPlatform.Windows);
