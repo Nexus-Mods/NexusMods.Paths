@@ -246,6 +246,7 @@ public partial class FileSystem : BaseFileSystem
     #endregion
 
     // Note(Sewer): This is taken straight from Runtime.
+    // https://github.com/dotnet/runtime/blob/3a78480ae21a909ecd3ac9edfd2aa3e63dd890fb/src/libraries/System.IO.MemoryMappedFiles/src/System/IO/MemoryMappedFiles/MemoryMappedFile.cs#L486
     private static FileAccess GetFileAccess(MemoryMappedFileAccess access)
     {
         switch (access)
