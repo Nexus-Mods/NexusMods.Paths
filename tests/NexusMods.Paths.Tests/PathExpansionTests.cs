@@ -1,6 +1,4 @@
-﻿using FluentAssertions;
-using NexusMods.Paths.Extensions;
-using NexusMods.Paths.Utilities;
+﻿using NexusMods.Paths.Extensions;
 
 namespace NexusMods.Paths.Tests;
 

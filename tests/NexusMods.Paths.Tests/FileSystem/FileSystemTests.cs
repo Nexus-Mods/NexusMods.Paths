@@ -1,7 +1,5 @@
 using System.IO.MemoryMappedFiles;
 using System.Reflection;
-using FluentAssertions;
-using NexusMods.Paths.TestingHelpers;
 
 namespace NexusMods.Paths.Tests.FileSystem;
 

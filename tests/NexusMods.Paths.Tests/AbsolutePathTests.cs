@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using FluentAssertions;
 using NexusMods.Paths.Utilities;
 
 namespace NexusMods.Paths.Tests;
@@ -85,11 +84,11 @@ public class AbsolutePathTests
 
     [Theory]
     [InlineData(true, "/", new string[] { })]
-    [InlineData(true, "/foo", new string[] { "foo" })]
-    [InlineData(true, "/foo/bar", new string[] { "foo", "bar" })]
+    [InlineData(true, "/foo", new[] { "foo" })]
+    [InlineData(true, "/foo/bar", new[] { "foo", "bar" })]
     [InlineData(false, "C:/", new string[] { })]
-    [InlineData(false, "C:/foo", new string[] { "foo" })]
-    [InlineData(false, "C:/foo/bar", new string[] { "foo", "bar" })]
+    [InlineData(false, "C:/foo", new[] { "foo" })]
+    [InlineData(false, "C:/foo/bar", new[] { "foo", "bar" })]
     public void Test_Parts(bool isUnix, string input, string[] expectedParts)
     {
         var path = CreatePath(input, isUnix);
@@ -99,12 +98,12 @@ public class AbsolutePathTests
     }
 
     [Theory]
-    [InlineData(true, "/", new string[] { "/" })]
-    [InlineData(true, "/foo", new string[] { "/foo", "/" })]
-    [InlineData(true, "/foo/bar", new string[] { "/foo/bar", "/foo", "/" })]
-    [InlineData(false, "C:/", new string[] { "C:/" })]
-    [InlineData(false, "C:/foo", new string[] { "C:/foo", "C:/" })]
-    [InlineData(false, "C:/foo/bar", new string[] { "C:/foo/bar", "C:/foo", "C:/" })]
+    [InlineData(true, "/", new[] { "/" })]
+    [InlineData(true, "/foo", new[] { "/foo", "/" })]
+    [InlineData(true, "/foo/bar", new[] { "/foo/bar", "/foo", "/" })]
+    [InlineData(false, "C:/", new[] { "C:/" })]
+    [InlineData(false, "C:/foo", new[] { "C:/foo", "C:/" })]
+    [InlineData(false, "C:/foo/bar", new[] { "C:/foo/bar", "C:/foo", "C:/" })]
     public void Test_GetAllParents(bool isUnix, string input, string[] expectedParts)
     {
         var path = CreatePath(input, isUnix);
@@ -325,6 +324,7 @@ public class AbsolutePathTests
         return path;
     }
 
+    // ReSharper disable once InconsistentNaming
     private static IOSInformation CreateOSInformation(bool isUnix)
     {
         return isUnix ? new OSInformation(OSPlatform.Linux) : new OSInformation(OSPlatform.Windows);

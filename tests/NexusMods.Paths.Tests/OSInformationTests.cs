@@ -1,10 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using AutoFixture.Xunit2;
-using FluentAssertions;
 
 namespace NexusMods.Paths.Tests;
 
+// ReSharper disable once InconsistentNaming
 public class OSInformationTests
 {
     [Theory]

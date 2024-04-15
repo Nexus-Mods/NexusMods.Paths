@@ -1,17 +1,7 @@
-using FluentAssertions;
-using NexusMods.Paths.Utilities;
-
 namespace NexusMods.Paths.Tests;
 
 public class ExtensionTests
 {
-    private readonly InMemoryFileSystem _fileSystem;
-
-    public ExtensionTests()
-    {
-        _fileSystem = new InMemoryFileSystem();
-    }
-
     // ReSharper disable InconsistentNaming
     private static readonly Extension DDS = new(".DDS");
     private static readonly Extension Dds = new(".Dds");

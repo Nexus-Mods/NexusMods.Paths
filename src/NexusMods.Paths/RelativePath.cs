@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using NexusMods.Paths.Utilities;
 using Reloaded.Memory.Extensions;
@@ -16,6 +15,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     // NOTE(erri120): since relative paths are not rooted, the operating system
     // shouldn't matter. The OS is usually only relevant to determine the root part
     // of a path.
+    // ReSharper disable once InconsistentNaming
     private static readonly IOSInformation OS = OSInformation.Shared;
 
     /// <summary>
