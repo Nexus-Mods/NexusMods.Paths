@@ -1,10 +1,12 @@
 using System;
+using JetBrains.Annotations;
 
 namespace NexusMods.Paths;
 
 /// <summary>
 ///     This represents a 'handle' to an underlying MemoryMappedFile.
 /// </summary>
+[PublicAPI]
 public readonly unsafe struct MemoryMappedFileHandle : IDisposable
 {
     /// <summary>
