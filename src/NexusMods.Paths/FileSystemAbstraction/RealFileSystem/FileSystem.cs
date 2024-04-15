@@ -230,8 +230,7 @@ public partial class FileSystem : BaseFileSystem
     /// <inheritdoc/>
     protected override unsafe MemoryMappedFileHandle InternalCreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access)
     {
-        var targetPath = GetMappedPath(absPath).GetFullPath();
-        var fs = new FileStream(targetPath, new FileStreamOptions
+        var fs = new FileStream(absPath.GetFullPath(), new FileStreamOptions
         {
             Mode = mode,
             Access = GetFileAccess(access),

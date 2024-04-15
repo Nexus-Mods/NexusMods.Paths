@@ -424,7 +424,7 @@ public abstract class BaseFileSystem : IFileSystem
     /// <inheritdoc/>
     public MemoryMappedFileHandle CreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access)
     {
-        return InternalCreateMemoryMappedFile(absPath, mode, access);
+        return InternalCreateMemoryMappedFile(GetMappedPath(absPath), mode, access);
     }
 
     #endregion
