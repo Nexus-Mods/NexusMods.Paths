@@ -147,9 +147,9 @@ public partial class FileSystem : BaseFileSystem
 
         if (!recursive)
         {
-            var isEmpty = EnumerateFiles(path, recursive: false).Any() ||
+            var hasChildren = EnumerateFiles(path, recursive: false).Any() ||
                           EnumerateDirectories(path, recursive: false).Any();
-            if (!isEmpty)
+            if (hasChildren)
             {
                 throw new IOException($"The directory {fullPath} is not empty and {nameof(recursive)} is set to {recursive}");
             }
