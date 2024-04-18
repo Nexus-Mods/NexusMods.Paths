@@ -237,10 +237,22 @@ public partial class FileSystem : BaseFileSystem
             Share = FileShare.Read,
             BufferSize = 0
         });
-        var memoryMappedFile = MemoryMappedFile.CreateFromFile(fs, null, fs.Length, access, HandleInheritability.None, false);
-        var accessor = memoryMappedFile.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
-        var ptrData = (byte*)accessor.SafeMemoryMappedViewHandle.DangerousGetHandle();
-        return new MemoryMappedFileHandle(ptrData, (nuint)fs.Length, new FilesystemMemoryMappedHandle(accessor, memoryMappedFile));
+        MemoryMappedFile? mmf = null;
+        MemoryMappedViewAccessor? view = null;
+        try
+        {
+            mmf = MemoryMappedFile.CreateFromFile(fs, null, fs.Length, access, HandleInheritability.None, false);
+            view = mmf.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
+            var ptrData = (byte*)view.SafeMemoryMappedViewHandle.DangerousGetHandle();
+            return new MemoryMappedFileHandle(ptrData, (nuint)fs.Length, new FilesystemMemoryMappedHandle(view, mmf));
+        }
+        catch
+        {
+            fs.Dispose();
+            mmf?.Dispose();
+            view?.Dispose();
+            throw;
+        }
     }
 
     #endregion
