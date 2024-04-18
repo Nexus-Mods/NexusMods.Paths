@@ -242,7 +242,7 @@ public partial class FileSystem : BaseFileSystem
         try
         {
             mmf = MemoryMappedFile.CreateFromFile(fs, null, fs.Length, access, HandleInheritability.None, false);
-            view = mmf.CreateViewAccessor(0, 0, MemoryMappedFileAccess.Read);
+            view = mmf.CreateViewAccessor(0, 0, access);
             var ptrData = (byte*)view.SafeMemoryMappedViewHandle.DangerousGetHandle();
             return new MemoryMappedFileHandle(ptrData, (nuint)fs.Length, new FilesystemMemoryMappedHandle(view, mmf));
         }
