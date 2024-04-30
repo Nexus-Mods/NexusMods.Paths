@@ -84,8 +84,8 @@ public partial class InMemoryFileSystem : BaseFileSystem
         _files.Add(path, inMemoryFile);
         directory.Files.Add(inMemoryFile.Path.RelativeTo(directory.Path), inMemoryFile);
 
-        inMemoryFile.CreationTime = DateTime.Now;
-        inMemoryFile.LastWriteTime = DateTime.Now;
+        inMemoryFile.CreationTime = DateTime.UtcNow;
+        inMemoryFile.LastWriteTime = DateTime.UtcNow;
         return inMemoryFile;
     }
 
@@ -290,7 +290,7 @@ public partial class InMemoryFileSystem : BaseFileSystem
         if (inMemoryFileEntry is null)
             throw new FileNotFoundException($"File \"{path.GetFullPath()}\" does not exist");
 
-        inMemoryFileEntry.LastWriteTime = DateTime.Now;
+        inMemoryFileEntry.LastWriteTime = DateTime.UtcNow;
         return inMemoryFileEntry;
     }
 
