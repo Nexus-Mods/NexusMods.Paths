@@ -8,9 +8,6 @@ public class SizeTests
         var a = (Size)10L;
         var b = Size.FromLong(20L);
 
-        a.Should().BeLessThan(b);
-        b.Should().BeGreaterThan(a);
-
         (a == b).Should().BeFalse();
         (a != b).Should().BeTrue();
 
@@ -35,6 +32,5 @@ public class SizeTests
         ((Size)1024L * 1024L * 1024L * 1024L).ToString().Should().Be("1 TB");
         ((Size)1024L * 1024L * 1024L * 1024L * 1024L).ToString().Should().Be("1 PB");
         ((Size)1024L * 1024L * 1024L * 1024L * 1024L * 1024L).ToString().Should().Be("1 EB");
-
     }
 }

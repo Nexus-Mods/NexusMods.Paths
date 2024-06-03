@@ -1,5 +1,5 @@
 using NexusMods.Paths.Extensions;
-using Vogen;
+using TransparentValueObjects;
 
 namespace NexusMods.Paths;
 
@@ -7,8 +7,8 @@ namespace NexusMods.Paths;
 /// Represents bandwidth in bytes per second.
 /// </summary>
 [ValueObject<ulong>]
-public readonly partial struct Bandwidth
+public readonly partial struct Bandwidth : IAugmentWith<JsonAugment>
 {
     /// <inheritdoc />
-    public override string ToString() => _value.ToFileSizeString("/sec");
+    public override string ToString() => Value.ToFileSizeString("/sec");
 }

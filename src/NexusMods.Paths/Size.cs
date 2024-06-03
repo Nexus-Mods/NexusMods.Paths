@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using JetBrains.Annotations;
 using NexusMods.Paths.Extensions;
-using Vogen;
+using TransparentValueObjects;
+
 // ReSharper disable InconsistentNaming
 
 namespace NexusMods.Paths;
@@ -16,7 +18,9 @@ namespace NexusMods.Paths;
 /// 1MB * 1MB is technically 1MB^2, but we don't want to allow that because it's not a valid size.
 /// </summary>
 [ValueObject<ulong>]
+[PublicAPI]
 public readonly partial struct Size :
+    IAugmentWith<JsonAugment>,
     IAdditionOperators<Size, Size, Size>,
     ISubtractionOperators<Size, Size, Size>,
     IDivisionOperators<Size, Size, double>,
@@ -69,45 +73,35 @@ public readonly partial struct Size :
     public static Size TB => FromLong(1024L * 1024 * 1024 * 1024);
 
     /// <inheritdoc />
-    public static Size operator /(Size left, double right) => From((ulong)(left._value / right));
+    public static Size operator /(Size left, double right) => From((ulong)(left.Value / right));
 
     /// <inheritdoc />
-    public static Size operator *(Size left, double right) => From((ulong)(left._value * right));
+    public static Size operator *(Size left, double right) => From((ulong)(left.Value * right));
 
     /// <inheritdoc />
-    public override string ToString() => _value.ToFileSizeString();
+    public override string ToString() => Value.ToFileSizeString();
 
     /// <inheritdoc />
     public static Bandwidth operator /(Size left, TimeSpan right)
     {
-        return Bandwidth.From((ulong)(left._value / right.TotalSeconds));
+        return Bandwidth.From((ulong)(left.Value / right.TotalSeconds));
     }
 
     /// <inheritdoc />
-    public static Size operator +(Size left, Size right) => From(left._value + right._value);
+    public static Size operator +(Size left, Size right) => From(left.Value + right.Value);
 
     /// <inheritdoc />
-    public static Size operator -(Size left, Size right) => From(left._value - right._value);
+    public static Size operator -(Size left, Size right) => From(left.Value - right.Value);
 
     /// <inheritdoc />
-    public static double operator /(Size left, Size right) => (double)left._value / right._value;
+    public static double operator /(Size left, Size right) => (double)left.Value / right.Value;
 
-    /// <inheritdoc />
-    public static bool operator >(Size left, Size right) => left._value > right._value;
-
-    /// <inheritdoc />
-    public static bool operator >=(Size left, Size right) => left._value >= right._value;
-
-    /// <inheritdoc />
-    public static bool operator <(Size left, Size right) => left._value < right._value;
-
-    /// <inheritdoc />
-    public static bool operator <=(Size left, Size right) => left._value <= right._value;
 }
 
 /// <summary>
 /// Extensions related to <see cref="Size"/> class.
 /// </summary>
+[PublicAPI]
 public static class SizeExtensions
 {
     /// <summary>
