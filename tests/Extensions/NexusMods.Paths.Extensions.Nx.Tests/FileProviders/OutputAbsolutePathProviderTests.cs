@@ -20,13 +20,14 @@ public class OutputAbsolutePathProviderTests
         // Arrange
         var path = CreateTestPath(fileSystem);
         var entry = new FileEntry { DecompressedSize = 100 };
-        var provider = new OutputAbsolutePathProvider(path, "relative/path.txt", entry);
 
         // Act
-        var fileData = provider.GetFileData(10, 5);
-
-        // Assert
-        fileData.DataLength.Should().Be(5ul);
+        using (var provider = new OutputAbsolutePathProvider(path, "relative/path.txt", entry))
+        using (var fileData = provider.GetFileData(10, 5))
+        {
+            // Assert
+            fileData.DataLength.Should().Be(5ul);
+        }
 
         // Cleanup
         CleanupTestFile(fileSystem, path);
@@ -39,14 +40,15 @@ public class OutputAbsolutePathProviderTests
         // Arrange
         var path = CreateTestPath(fileSystem);
         var entry = new FileEntry { DecompressedSize = 0 };
-        var provider = new OutputAbsolutePathProvider(path, "relative/path.txt", entry);
 
         // Act
-        var fileData = provider.GetFileData(0, 5);
-
-        // Assert
-        fileData.DataLength.Should().Be(0ul);
-        Assert.IsType<ArrayFileData>(fileData);
+        using (var provider = new OutputAbsolutePathProvider(path, "relative/path.txt", entry))
+        using (var fileData = provider.GetFileData(0, 5))
+        {
+            // Assert
+            fileData.DataLength.Should().Be(0ul);
+            Assert.IsType<ArrayFileData>(fileData);
+        }
 
         // Cleanup
         CleanupTestFile(fileSystem, path);
@@ -61,10 +63,11 @@ public class OutputAbsolutePathProviderTests
         var entry = new FileEntry { DecompressedSize = 100 };
 
         // Act
-        _ = new OutputAbsolutePathProvider(path, "relative/path.txt", entry);
-
-        // Assert
-        fileSystem.FileExists(path).Should().BeTrue();
+        using (_ = new OutputAbsolutePathProvider(path, "relative/path.txt", entry))
+        {
+            // Assert
+            fileSystem.FileExists(path).Should().BeTrue();
+        }
 
         // Cleanup
         CleanupTestFile(fileSystem, path);
