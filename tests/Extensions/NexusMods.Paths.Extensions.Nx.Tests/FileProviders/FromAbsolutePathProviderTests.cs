@@ -1,4 +1,6 @@
+using FluentAssertions;
 using NexusMods.Paths.Extensions.Nx.FileProviders;
+using Xunit;
 namespace NexusMods.Paths.Extensions.Nx.Tests.FileProviders;
 
 public class FromAbsolutePathProviderTests

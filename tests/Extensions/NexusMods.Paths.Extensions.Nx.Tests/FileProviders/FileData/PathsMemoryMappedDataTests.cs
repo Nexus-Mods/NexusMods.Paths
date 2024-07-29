@@ -1,4 +1,6 @@
+using FluentAssertions;
 using NexusMods.Paths.Extensions.Nx.FileProviders.FileData;
+using Xunit;
 namespace NexusMods.Paths.Extensions.Nx.Tests.FileProviders.FileData;
 
 public unsafe class PathsMemoryMappedDataTests
