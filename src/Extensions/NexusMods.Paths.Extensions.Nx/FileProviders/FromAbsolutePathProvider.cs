@@ -21,6 +21,7 @@ public class FromAbsolutePathProvider : IFileDataProvider
         // TODO: This could probably be better, as it's unoptimal for chunked files.
         // Ideally the file should be opened once in the provider and then calls in GetFileData
         // could work on slices of the larger MMF.
+        // This however requires a change in Nx itself, which should be done at some point.
         var fileSystem = FilePath.FileSystem;
         var handle = fileSystem.CreateMemoryMappedFile(FilePath, FileMode.Open, MemoryMappedFileAccess.Read, 0);
         return new PathsMemoryMappedFileData(handle, start, length);
