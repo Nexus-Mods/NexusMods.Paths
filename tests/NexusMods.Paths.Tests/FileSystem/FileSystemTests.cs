@@ -93,13 +93,47 @@ public class FileSystemTests
 
         unsafe
         {
-            using var mmf = fs.CreateMemoryMappedFile(file, FileMode.Open, MemoryMappedFileAccess.ReadWrite);
+            using var mmf = fs.CreateMemoryMappedFile(file, FileMode.Open, MemoryMappedFileAccess.ReadWrite, 0);
             mmf.Should().NotBeNull();
             ((nuint)mmf.Pointer).Should().NotBe(0);
             mmf.Length.Should().Be((nuint)file.FileInfo.Size);
 
             // Assert that the contents are equal
             mmf.AsSpan().SequenceEqual(contents).Should().BeTrue();
+        }
+    }
+
+    [Fact]
+    public async Task Test_CreateMemoryMappedFile_CanCreateAndWrite()
+    {
+        var fs = new Paths.FileSystem();
+        var tempFile = fs.GetKnownPath(KnownPath.TempDirectory).Combine(Path.GetRandomFileName());
+        var contents = new byte[] { 1, 2, 3, 4, 5 };
+
+        try
+        {
+            // Create a new MemoryMappedFile
+            using var mmf = fs.CreateMemoryMappedFile(tempFile, FileMode.CreateNew, MemoryMappedFileAccess.ReadWrite, (ulong)contents.Length);
+
+            unsafe
+            {
+                mmf.Should().NotBeNull();
+                ((nuint)mmf.Pointer).Should().NotBe(0);
+                mmf.Length.Should().Be((nuint)contents.Length);
+
+                // Write data to the MemoryMappedFile
+                contents.CopyTo(new Span<byte>(mmf.Pointer, contents.Length));
+            }
+
+            // Verify the data was written correctly
+            var writtenData = await fs.ReadAllBytesAsync(tempFile);
+            writtenData.Should().BeEquivalentTo(contents);
+        }
+        finally
+        {
+            // Clean up
+            if (fs.FileExists(tempFile))
+                fs.DeleteFile(tempFile);
         }
     }
 }

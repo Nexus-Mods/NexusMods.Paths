@@ -44,7 +44,7 @@ public partial class InMemoryFileSystem
 
         public MemoryStream CreateReadStream()
         {
-            var ms = new MemoryStream(_contents, 0, _contents.Length, false);
+            var ms = new MemoryStream(_contents, 0, _contents.Length, false, true);
             return ms;
         }
 

@@ -1,26 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
     <PropertyGroup>
         <EnableXunitDependencyInjectionDefaultTestFrameworkAttribute>false</EnableXunitDependencyInjectionDefaultTestFrameworkAttribute>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\NexusMods.Paths.TestingHelpers\NexusMods.Paths.TestingHelpers.csproj" />
-        <ProjectReference Include="..\..\src\NexusMods.Paths\NexusMods.Paths.csproj" />
+      <ProjectReference Include="..\..\..\src\Extensions\NexusMods.Paths.Extensions.Nx\NexusMods.Paths.Extensions.Nx.csproj" />
+      <ProjectReference Include="..\..\..\src\NexusMods.Paths.TestingHelpers\NexusMods.Paths.TestingHelpers.csproj" />
+      <ProjectReference Include="..\..\..\src\NexusMods.Paths\NexusMods.Paths.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Update="Assets/**">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
-
-
-    <ItemGroup>
-        <Compile Include="..\SharedUsings.cs">
+        <Compile Include="..\..\SharedUsings.cs">
             <Link>SharedUsings.cs</Link>
         </Compile>
-        <Compile Include="..\SharedAssemblyAttributes.cs">
+        <Compile Include="..\..\SharedAssemblyAttributes.cs">
             <Link>SharedAssemblyAttributes.cs</Link>
         </Compile>
     </ItemGroup>

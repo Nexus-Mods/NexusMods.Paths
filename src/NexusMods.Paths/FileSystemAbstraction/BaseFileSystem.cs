@@ -424,9 +424,9 @@ public abstract class BaseFileSystem : IFileSystem
     }
 
     /// <inheritdoc/>
-    public MemoryMappedFileHandle CreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access)
+    public MemoryMappedFileHandle CreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access, ulong fileSize)
     {
-        return InternalCreateMemoryMappedFile(GetMappedPath(absPath), mode, access);
+        return InternalCreateMemoryMappedFile(GetMappedPath(absPath), mode, access, fileSize);
     }
 
     #endregion
@@ -470,6 +470,6 @@ public abstract class BaseFileSystem : IFileSystem
     protected abstract void InternalMoveFile(AbsolutePath source, AbsolutePath dest, bool overwrite);
 
     /// <inheritdoc cref="IFileSystem.CreateMemoryMappedFile"/>
-    protected abstract MemoryMappedFileHandle InternalCreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access);
+    protected abstract MemoryMappedFileHandle InternalCreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access, ulong fileSize);
     #endregion
 }

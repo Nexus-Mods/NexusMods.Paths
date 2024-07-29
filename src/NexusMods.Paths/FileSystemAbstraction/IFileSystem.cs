@@ -289,5 +289,6 @@ public interface IFileSystem
     /// <param name="absPath">Path of the file to memory map.</param>
     /// <param name="mode">The mode the file is opened with.</param>
     /// <param name="access">What you intend to do with the memory mapped file.</param>
-    MemoryMappedFileHandle CreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access);
+    /// <param name="fileSize">The size of the file, if creating a new file.</param>
+    MemoryMappedFileHandle CreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access, ulong fileSize);
 }

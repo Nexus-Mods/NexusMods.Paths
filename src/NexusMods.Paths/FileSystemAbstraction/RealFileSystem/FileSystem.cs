@@ -228,23 +228,34 @@ public partial class FileSystem : BaseFileSystem
         => File.Move(source.GetFullPath(), dest.GetFullPath(), overwrite);
 
     /// <inheritdoc/>
-    protected override unsafe MemoryMappedFileHandle InternalCreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access)
+    protected override unsafe MemoryMappedFileHandle InternalCreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access, ulong fileSize)
     {
         var fs = new FileStream(absPath.GetFullPath(), new FileStreamOptions
         {
             Mode = mode,
             Access = GetFileAccess(access),
             Share = FileShare.Read,
-            BufferSize = 0
+            BufferSize = 0,
+            PreallocationSize = (long)fileSize
         });
         MemoryMappedFile? mmf = null;
         MemoryMappedViewAccessor? view = null;
         try
         {
-            mmf = MemoryMappedFile.CreateFromFile(fs, null, fs.Length, access, HandleInheritability.None, false);
+            // Note(sewer):
+            // If the file is empty, we can't create a memory mapped file.
+            // So instead return a null pointer.
+            // This pointer is null because this helps us detect invalid read/write via Access Violation (0xC0000005).
+            if (fileSize == 0)
+                fileSize = (ulong)fs.Length;
+
+            if (fileSize == 0)
+                return new MemoryMappedFileHandle((byte*)0, 0, null);
+
+            mmf = MemoryMappedFile.CreateFromFile(fs, null, (long)fileSize, access, HandleInheritability.None, false);
             view = mmf.CreateViewAccessor(0, 0, access);
             var ptrData = (byte*)view.SafeMemoryMappedViewHandle.DangerousGetHandle();
-            return new MemoryMappedFileHandle(ptrData, (nuint)fs.Length, new FilesystemMemoryMappedHandle(view, mmf));
+            return new MemoryMappedFileHandle(ptrData, (nuint)fileSize, new FilesystemMemoryMappedHandle(view, mmf));
         }
         catch
         {
