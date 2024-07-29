@@ -250,7 +250,10 @@ public partial class FileSystem : BaseFileSystem
                 fileSize = (ulong)fs.Length;
 
             if (fileSize == 0)
+            {
+                fs.Dispose(); // Dispose early.
                 return new MemoryMappedFileHandle((byte*)0, 0, null);
+            }
 
             mmf = MemoryMappedFile.CreateFromFile(fs, null, (long)fileSize, access, HandleInheritability.None, false);
             view = mmf.CreateViewAccessor(0, 0, access);
