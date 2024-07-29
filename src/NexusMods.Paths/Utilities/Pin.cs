@@ -9,19 +9,13 @@ namespace NexusMods.Paths.Utilities;
 internal unsafe class Pin<T> : IDisposable where T : unmanaged
 {
     /// <summary>
-    ///     Pointer to the native value in question.
-    ///     If the class was instantiated using an array, this is the pointer to the first element of the array.
+    ///     Pointer to the first value of the pinned array.
     /// </summary>
     public T* Pointer { get; private set; }
 
     // Handle keeping the object pinned.
     private GCHandle _handle;
     private bool _disposed;
-
-    /* Constructor/Destructor */
-
-    // Note: GCHandle.Alloc causes boxing(due to conversion to object), meaning our item is stored on the heap.
-    // This means that for value types, we do not need to store them explicitly.
 
     /// <summary>
     ///     Pins an array of values to the heap.
@@ -37,11 +31,6 @@ internal unsafe class Pin<T> : IDisposable where T : unmanaged
         Pointer = (T*)_handle.AddrOfPinnedObject();
     }
 
-
-    /// <summary>
-    ///     Allows an object to try to free resources and perform other cleanup operations before it is reclaimed by
-    ///     garbage collection.
-    /// </summary>
     ~Pin() => Dispose();
 
     /// <inheritdoc />
