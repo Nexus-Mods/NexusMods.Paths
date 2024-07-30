@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 using NexusMods.Paths.Utilities;
-using Reloaded.Memory.Utilities;
 
 namespace NexusMods.Paths;
 
@@ -232,7 +231,7 @@ public partial class InMemoryFileSystem : BaseFileSystem
     /// <inheritdoc/>
     protected override Stream InternalOpenFile(AbsolutePath path, FileMode mode, FileAccess access, FileShare share)
     {
-        var inMemoryFileEntry = InternalCreateFile(path, mode, access);
+        var inMemoryFileEntry = InternalCreateFile(path, mode, access, 0);
         return access switch
         {
             FileAccess.Read => inMemoryFileEntry.CreateReadStream(),
@@ -241,7 +240,7 @@ public partial class InMemoryFileSystem : BaseFileSystem
         };
     }
 
-    private InMemoryFileEntry InternalCreateFile(AbsolutePath path, FileMode mode, FileAccess access)
+    private InMemoryFileEntry InternalCreateFile(AbsolutePath path, FileMode mode, FileAccess access, ulong fileSize)
     {
         if (access == FileAccess.Read && mode != FileMode.Open && mode != FileMode.OpenOrCreate)
         {
@@ -259,7 +258,7 @@ public partial class InMemoryFileSystem : BaseFileSystem
             case FileMode.Create:
             {
                 if (!_files.TryGetValue(path, out inMemoryFileEntry))
-                    inMemoryFileEntry = InternalAddFile(path, Array.Empty<byte>());
+                    inMemoryFileEntry = InternalAddFile(path, new byte[fileSize]);
                 else
                     inMemoryFileEntry.SetContents(Array.Empty<byte>());
                 break;
@@ -268,13 +267,13 @@ public partial class InMemoryFileSystem : BaseFileSystem
             {
                 if (_files.ContainsKey(path))
                     throw new IOException($"{FileMode.CreateNew} can't be used if the file already exists!");
-                inMemoryFileEntry = InternalAddFile(path, Array.Empty<byte>());
+                inMemoryFileEntry = InternalAddFile(path, new byte[fileSize]);
                 break;
             }
             case FileMode.OpenOrCreate:
             {
                 if (!_files.TryGetValue(path, out inMemoryFileEntry))
-                    inMemoryFileEntry = InternalAddFile(path, Array.Empty<byte>());
+                    inMemoryFileEntry = InternalAddFile(path, new byte[fileSize]);
                 break;
             }
             case FileMode.Truncate:
@@ -399,7 +398,7 @@ public partial class InMemoryFileSystem : BaseFileSystem
     }
 
     /// <inheritdoc/>
-    protected override unsafe MemoryMappedFileHandle InternalCreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access)
+    protected override unsafe MemoryMappedFileHandle InternalCreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access, ulong fileSize)
     {
         var fileAccess = access switch
         {
@@ -409,16 +408,9 @@ public partial class InMemoryFileSystem : BaseFileSystem
             _ => throw new ArgumentOutOfRangeException(nameof(access), access, null)
         };
 
-        var file = InternalCreateFile(absPath, mode, fileAccess);
-        var stream = fileAccess switch
-        {
-            FileAccess.Read => file.CreateReadStream(),
-            FileAccess.Write => file.CreateWriteStream(),
-            FileAccess.ReadWrite => file.CreateReadWriteStream(),
-        };
-
-        var buffer = stream.GetBuffer();
-        var pin = new Pinnable<byte>(buffer);
+        var file = InternalCreateFile(absPath, mode, fileAccess, fileSize);
+        var buffer = file.GetContents();
+        var pin = new Pin<byte>(buffer);
         return new MemoryMappedFileHandle(pin.Pointer, (nuint)file.Size.Value, pin);
     }
 

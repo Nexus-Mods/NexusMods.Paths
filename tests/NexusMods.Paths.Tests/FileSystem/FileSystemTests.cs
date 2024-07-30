@@ -93,13 +93,61 @@ public class FileSystemTests
 
         unsafe
         {
-            using var mmf = fs.CreateMemoryMappedFile(file, FileMode.Open, MemoryMappedFileAccess.ReadWrite);
+            using var mmf = fs.CreateMemoryMappedFile(file, FileMode.Open, MemoryMappedFileAccess.ReadWrite, 0);
             mmf.Should().NotBeNull();
             ((nuint)mmf.Pointer).Should().NotBe(0);
             mmf.Length.Should().Be((nuint)file.FileInfo.Size);
 
             // Assert that the contents are equal
             mmf.AsSpan().SequenceEqual(contents).Should().BeTrue();
+        }
+    }
+
+    [Fact]
+    public async Task Test_CreateMemoryMappedFile_CanCreateAndWrite()
+    {
+        var fs = new Paths.FileSystem();
+        var tempFile = fs.GetKnownPath(KnownPath.TempDirectory).Combine(Path.GetRandomFileName());
+        var contents = new byte[] { 1, 2, 3, 4, 5 };
+
+        // Create a new MemoryMappedFile
+        try
+        {
+            using (var mmf = fs.CreateMemoryMappedFile(tempFile, FileMode.CreateNew, MemoryMappedFileAccess.ReadWrite,
+                       (ulong)contents.Length))
+            {
+                unsafe
+                {
+                    mmf.Should().NotBeNull();
+                    ((nuint)mmf.Pointer).Should().NotBe(0);
+                    mmf.Length.Should().Be((nuint)contents.Length);
+
+                    // Write data to the MemoryMappedFile
+                    contents.CopyTo(new Span<byte>(mmf.Pointer, contents.Length));
+                }
+            }
+            
+            /*
+                Note(sewer)
+                
+                There's something weird going on in the Memory Mapped File abstraction,
+                we open a FileStream with `FileShare.Read`, to create the MemoryMappedFile from under the hood,
+                and we propagate this when opening the MemoryMappedFile.
+                
+                Below in `ReadAllBytesAsync`, we are opening a second FileStream with `FileAccess.Read` and `FileShare.Read`.
+                It should technically work, but it does not. Chances are it's some not properly documented part
+                of .NET's MemoryMappedFile abstraction for Win32.
+            */
+
+            // Verify the data was written correctly
+            var writtenData = await fs.ReadAllBytesAsync(tempFile);
+            writtenData.Should().BeEquivalentTo(contents);
+        }
+        finally
+        {
+            // Clean up
+            if (fs.FileExists(tempFile))
+                fs.DeleteFile(tempFile);
         }
     }
 }

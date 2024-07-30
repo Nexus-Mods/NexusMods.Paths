@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <EnableXunitDependencyInjectionDefaultTestFrameworkAttribute>false</EnableXunitDependencyInjectionDefaultTestFrameworkAttribute>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\src\Extensions\NexusMods.Paths.Extensions.Nx\NexusMods.Paths.Extensions.Nx.csproj" />
+      <ProjectReference Include="..\..\..\src\NexusMods.Paths.TestingHelpers\NexusMods.Paths.TestingHelpers.csproj" />
+      <ProjectReference Include="..\..\..\src\NexusMods.Paths\NexusMods.Paths.csproj" />
+    </ItemGroup>
+</Project>

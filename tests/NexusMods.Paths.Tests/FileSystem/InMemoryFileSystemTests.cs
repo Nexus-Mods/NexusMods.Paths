@@ -352,7 +352,7 @@ public class InMemoryFileSystemTests
 
         unsafe
         {
-            using var mmf = fs.CreateMemoryMappedFile(file, FileMode.Open, MemoryMappedFileAccess.ReadWrite);
+            using var mmf = fs.CreateMemoryMappedFile(file, FileMode.Open, MemoryMappedFileAccess.ReadWrite, 0);
             mmf.Should().NotBeNull();
             ((nuint)mmf.Pointer).Should().NotBe(0);
             mmf.Length.Should().Be((nuint)file.FileInfo.Size);
@@ -360,5 +360,27 @@ public class InMemoryFileSystemTests
             // Assert that the contents are equal
             mmf.AsSpan().SequenceEqual(contents).Should().BeTrue();
         }
+    }
+
+    [Theory, AutoFileSystem]
+    public async Task Test_CreateMemoryMappedFile_CanCreateAndWrite(InMemoryFileSystem fs,
+        AbsolutePath file, byte[] contents)
+    {
+        // Create a new MemoryMappedFile
+        using var mmf = fs.CreateMemoryMappedFile(file, FileMode.CreateNew, MemoryMappedFileAccess.ReadWrite, (ulong)contents.Length);
+
+        unsafe
+        {
+            mmf.Should().NotBeNull();
+            ((nuint)mmf.Pointer).Should().NotBe(0);
+            mmf.Length.Should().Be((nuint)contents.Length);
+
+            // Write data to the MemoryMappedFile
+            contents.CopyTo(new Span<byte>(mmf.Pointer, contents.Length));
+        }
+
+        // Verify the data was written correctly
+        var writtenData = await fs.ReadAllBytesAsync(file);
+        writtenData.Should().BeEquivalentTo(contents);
     }
 }
