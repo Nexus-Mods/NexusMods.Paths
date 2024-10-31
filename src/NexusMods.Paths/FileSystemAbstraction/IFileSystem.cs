@@ -213,6 +213,25 @@ public interface IFileSystem
     void MoveFile(AbsolutePath source, AbsolutePath dest, bool overwrite);
 
     /// <summary>
+    /// Reads all bytes from a file into an array based on the provided offset and length.
+    /// </summary>
+    /// <param name="path">Path to the file.</param>
+    /// <param name="offset">The byte offset in the file at which to begin reading.</param>
+    /// <param name="length">The number of bytes to read.</param>
+    /// <returns></returns>
+    int ReadBytesRandom(AbsolutePath absolutePath, Span<byte> bytes, int offset);
+
+    /// <summary>
+    /// Reads all bytes from a file into an array based on the provided offset and length.
+    /// </summary>
+    /// <param name="path">Path to the file.</param>
+    /// <param name="offset">The byte offset in the file at which to begin reading.</param>
+    /// <param name="length">The number of bytes to read.</param>
+    /// <param name="cancellationToken">Optional <see cref="CancellationToken"/>.</param>
+    /// <returns></returns>
+    Task<int> ReadBytesRandomAsync(AbsolutePath path, Memory<byte> bytes, int offset, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Reads all bytes from a file into an array.
     /// </summary>
     /// <param name="path">Path to the file.</param>
