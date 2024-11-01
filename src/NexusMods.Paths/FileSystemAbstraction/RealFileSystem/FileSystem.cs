@@ -69,8 +69,8 @@ public partial class FileSystem : BaseFileSystem
         var readTotal = 0;
         while (readTotal < bytes.Length)
         {
-            var read = RandomAccess.Read(handle, bytes, offset + readTotal);
-            if (read == 0) break;
+            var read = RandomAccess.Read(handle, bytes.Slice(readTotal), offset + readTotal);
+            if (read <= 0) break;
             readTotal += read;
         }
         return readTotal;
@@ -83,7 +83,7 @@ public partial class FileSystem : BaseFileSystem
         var readTotal = 0;
         while (readTotal < bytes.Length)
         {
-            var read = await RandomAccess.ReadAsync(handle, bytes, offset + readTotal, cancellationToken);
+            var read = await RandomAccess.ReadAsync(handle, bytes.Slice(readTotal), offset + readTotal, cancellationToken);
             if (read <= 0) break;
             readTotal += read;
         }
