@@ -383,4 +383,42 @@ public class InMemoryFileSystemTests
         var writtenData = await fs.ReadAllBytesAsync(file);
         writtenData.Should().BeEquivalentTo(contents);
     }
+
+    [Theory, AutoFileSystem]
+    public void Test_ReadBytesRandom(InMemoryFileSystem fs, AbsolutePath path, byte[] contents)
+    {
+        fs.AddFile(path, contents);
+        var bytes = new byte[contents.Length];
+        fs.ReadBytesRandom(path, bytes, 0);
+        bytes.Should().BeEquivalentTo(contents);
+    }
+
+    [Theory, AutoFileSystem]
+    public void Test_ReadBytesRandomWithOffset(InMemoryFileSystem fs, AbsolutePath path, byte[] contents)
+    {
+        var offset = new Random().Next(1, contents.Length - 1);
+        fs.AddFile(path, contents);
+        var bytes = new byte[contents.Length - offset];
+        fs.ReadBytesRandom(path, bytes, offset);
+        bytes.Should().BeEquivalentTo(contents.AsSpan(offset).ToArray());
+    }
+
+    [Theory, AutoFileSystem]
+    public async Task Test_ReadBytesRandomAsync(InMemoryFileSystem fs, AbsolutePath path, byte[] contents)
+    {
+        fs.AddFile(path, contents);
+        var bytes = new byte[contents.Length];
+        await fs.ReadBytesRandomAsync(path, bytes, 0);
+        bytes.Should().BeEquivalentTo(contents);
+    }
+
+    [Theory, AutoFileSystem]
+    public async Task Test_ReadBytesRandomAsyncWithOffset(InMemoryFileSystem fs, AbsolutePath path, byte[] contents)
+    {
+        var offset = new Random().Next(1, contents.Length - 1);
+        fs.AddFile(path, contents);
+        var bytes = new byte[contents.Length - offset];
+        await fs.ReadBytesRandomAsync(path, bytes, offset);
+        bytes.Should().BeEquivalentTo(contents.AsSpan(offset).ToArray());
+    }
 }
