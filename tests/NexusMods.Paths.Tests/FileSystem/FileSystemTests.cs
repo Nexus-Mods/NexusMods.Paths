@@ -150,4 +150,70 @@ public class FileSystemTests
                 fs.DeleteFile(tempFile);
         }
     }
+
+    [Fact]
+    public void Test_ReadBytesRandom()
+    {
+        var fs = new Paths.FileSystem();
+        var tempFile = fs.GetKnownPath(KnownPath.TempDirectory).Combine(Path.GetRandomFileName());
+        var contents = new byte[] { 1, 2, 3, 4, 5 };
+        using (var stream = fs.CreateFile(tempFile))
+        {
+            stream.Write(contents);
+        }
+
+        var bytes = new byte[contents.Length];
+        fs.ReadBytesRandom(tempFile, bytes, 0);
+        bytes.Should().BeEquivalentTo(contents);
+    }
+
+    [Fact]
+    public void Test_ReadBytesRandomWithOffset()
+    {
+        var fs = new Paths.FileSystem();
+        var tempFile = fs.GetKnownPath(KnownPath.TempDirectory).Combine(Path.GetRandomFileName());
+        var contents = new byte[] { 1, 2, 3, 4, 5 };
+        using (var stream = fs.CreateFile(tempFile))
+        {
+            stream.Write(contents);
+        }
+        var offset = new Random().Next(1, contents.Length - 1);
+
+        var bytes = new byte[contents.Length - offset];
+        fs.ReadBytesRandom(tempFile, bytes, offset);
+        bytes.Should().BeEquivalentTo(contents.AsSpan(offset).ToArray());
+    }
+
+    [Fact]
+    public async Task Test_ReadBytesRandomAsync()
+    {
+        var fs = new Paths.FileSystem();
+        var tempFile = fs.GetKnownPath(KnownPath.TempDirectory).Combine(Path.GetRandomFileName());
+        var contents = new byte[] { 1, 2, 3, 4, 5 };
+        await using (var stream = fs.CreateFile(tempFile))
+        {
+            await stream.WriteAsync(contents);
+        }
+        
+        var bytes = new byte[contents.Length];
+        await fs.ReadBytesRandomAsync(tempFile, bytes, 0);
+        bytes.Should().BeEquivalentTo(contents);
+    }
+
+    [Fact]
+    public async Task Test_ReadBytesRandomAsyncWithOffset()
+    {
+        var fs = new Paths.FileSystem();
+        var tempFile = fs.GetKnownPath(KnownPath.TempDirectory).Combine(Path.GetRandomFileName());
+        var contents = new byte[] { 1, 2, 3, 4, 5 };
+        await using (var stream = fs.CreateFile(tempFile))
+        {
+            await stream.WriteAsync(contents);
+        }
+        var offset = new Random().Next(1, contents.Length - 1);
+
+        var bytes = new byte[contents.Length - offset];
+        await fs.ReadBytesRandomAsync(tempFile, bytes, offset);
+        bytes.Should().BeEquivalentTo(contents.AsSpan(offset).ToArray());
+    }
 }
