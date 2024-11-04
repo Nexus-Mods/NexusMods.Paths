@@ -97,7 +97,8 @@ public static class PathHelpers
         if (path.DangerousGetReferenceAt(path.Length - 1) == DirectorySeparatorChar) return false;
 
         // Paths on Windows that use backwards slashes '\' instead of forward ones are invalid.
-        if (path.Count('\\') != 0) return false;
+        // ReSharper disable once RedundantNameQualifier
+        if (Reloaded.Memory.Extensions.SpanExtensions.Count(path, '\\') != 0) return false;
 
         // Everything else is valid.
         return true;
@@ -124,7 +125,8 @@ public static class PathHelpers
         if (IsSanitized(path, os)) return path.ToString();
 
         // Paths without backslashes only need to be checked for trailing directory separators.
-        if (path.Count('\\') == 0) return RemoveTrailingDirectorySeparator(path).ToString();
+        // ReSharper disable once RedundantNameQualifier
+        if (Reloaded.Memory.Extensions.SpanExtensions.Count(path, '\\') == 0) return RemoveTrailingDirectorySeparator(path).ToString();
 
         // Paths with backslashes instead of forward slashes need to be fixed.
         var buffer = path.Length > 512
@@ -547,7 +549,8 @@ public static class PathHelpers
     public static int GetDirectoryDepth(ReadOnlySpan<char> path, IOSInformation os)
     {
         DebugAssertIsSanitized(path, os);
-        return path.Count(DirectorySeparatorChar);
+        // ReSharper disable once RedundantNameQualifier
+        return Reloaded.Memory.Extensions.SpanExtensions.Count(path, DirectorySeparatorChar);
     }
 
     /// <summary>
