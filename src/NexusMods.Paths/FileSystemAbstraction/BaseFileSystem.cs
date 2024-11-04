@@ -363,10 +363,10 @@ public abstract class BaseFileSystem : IFileSystem
         => InternalMoveFile(GetMappedPath(source), GetMappedPath(dest), overwrite);
 
     /// <inheritdoc />
-    public abstract int ReadBytesRandom(AbsolutePath absolutePath, Span<byte> bytes, int offset);
+    public abstract int ReadBytesRandomAccess(AbsolutePath path, Span<byte> bytes, long offset);
 
     /// <inheritdoc />
-    public abstract Task<int> ReadBytesRandomAsync(AbsolutePath path, Memory<byte> bytes, int offset, CancellationToken cancellationToken = default);
+    public abstract Task<int> ReadBytesRandomAccessAsync(AbsolutePath path, Memory<byte> bytes, long offset, CancellationToken cancellationToken = default);
 
     /// <inheritdoc/>
     public async Task<byte[]> ReadAllBytesAsync(AbsolutePath path, CancellationToken cancellationToken = default)

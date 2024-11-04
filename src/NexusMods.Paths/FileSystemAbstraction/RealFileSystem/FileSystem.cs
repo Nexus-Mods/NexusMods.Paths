@@ -63,9 +63,9 @@ public partial class FileSystem : BaseFileSystem
         => new FileSystem(pathMappings, knownPathMappings, convertCrossPlatformPaths);
 
     /// <inheritdoc />
-    public override int ReadBytesRandom(AbsolutePath absolutePath, Span<byte> bytes, int offset)
+    public override int ReadBytesRandomAccess(AbsolutePath path, Span<byte> bytes, long offset)
     {
-        using var handle = File.OpenHandle(absolutePath.GetFullPath(), options: FileOptions.RandomAccess);
+        using var handle = File.OpenHandle(path.GetFullPath(), options: FileOptions.RandomAccess);
         var readTotal = 0;
         while (readTotal < bytes.Length)
         {
@@ -77,7 +77,7 @@ public partial class FileSystem : BaseFileSystem
     }
 
     /// <inheritdoc />
-    public override async Task<int> ReadBytesRandomAsync(AbsolutePath absolutePath, Memory<byte> bytes, int offset, CancellationToken cancellationToken = default)
+    public override async Task<int> ReadBytesRandomAccessAsync(AbsolutePath absolutePath, Memory<byte> bytes, long offset, CancellationToken cancellationToken = default)
     {
         using var handle = File.OpenHandle(absolutePath.GetFullPath(), options: FileOptions.RandomAccess);
         var readTotal = 0;

@@ -161,7 +161,7 @@ public partial class InMemoryFileSystem : BaseFileSystem
         => new InMemoryFileSystem(pathMappings, knownPathMappings, convertCrossPlatformPaths, OS);
 
     /// <inheritdoc />
-    public override int ReadBytesRandom(AbsolutePath path, Span<byte> bytes, int offset)
+    public override int ReadBytesRandomAccess(AbsolutePath path, Span<byte> bytes, long offset)
     {
         using var s = ReadFile(path);
         s.Seek(offset, SeekOrigin.Begin);
@@ -169,7 +169,7 @@ public partial class InMemoryFileSystem : BaseFileSystem
     }
 
     /// <inheritdoc />
-    public override async Task<int> ReadBytesRandomAsync(AbsolutePath path, Memory<byte> bytes, int offset, CancellationToken cancellationToken = default)
+    public override async Task<int> ReadBytesRandomAccessAsync(AbsolutePath path, Memory<byte> bytes, long offset, CancellationToken cancellationToken = default)
     {
         await using var s = ReadFile(path);
         s.Seek(offset, SeekOrigin.Begin);

@@ -389,7 +389,7 @@ public class InMemoryFileSystemTests
     {
         fs.AddFile(path, contents);
         var bytes = new byte[contents.Length];
-        fs.ReadBytesRandom(path, bytes, 0);
+        fs.ReadBytesRandomAccess(path, bytes, 0);
         bytes.Should().BeEquivalentTo(contents);
     }
 
@@ -399,7 +399,7 @@ public class InMemoryFileSystemTests
         var offset = new Random().Next(1, contents.Length - 1);
         fs.AddFile(path, contents);
         var bytes = new byte[contents.Length - offset];
-        fs.ReadBytesRandom(path, bytes, offset);
+        fs.ReadBytesRandomAccess(path, bytes, offset);
         bytes.Should().BeEquivalentTo(contents.AsSpan(offset).ToArray());
     }
 
@@ -408,7 +408,7 @@ public class InMemoryFileSystemTests
     {
         fs.AddFile(path, contents);
         var bytes = new byte[contents.Length];
-        await fs.ReadBytesRandomAsync(path, bytes, 0);
+        await fs.ReadBytesRandomAccessAsync(path, bytes, 0);
         bytes.Should().BeEquivalentTo(contents);
     }
 
@@ -418,7 +418,7 @@ public class InMemoryFileSystemTests
         var offset = new Random().Next(1, contents.Length - 1);
         fs.AddFile(path, contents);
         var bytes = new byte[contents.Length - offset];
-        await fs.ReadBytesRandomAsync(path, bytes, offset);
+        await fs.ReadBytesRandomAccessAsync(path, bytes, offset);
         bytes.Should().BeEquivalentTo(contents.AsSpan(offset).ToArray());
     }
 }

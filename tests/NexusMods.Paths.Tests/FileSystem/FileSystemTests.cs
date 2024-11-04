@@ -163,7 +163,7 @@ public class FileSystemTests
         }
 
         var bytes = new byte[contents.Length];
-        fs.ReadBytesRandom(tempFile, bytes, 0);
+        fs.ReadBytesRandomAccess(tempFile, bytes, 0);
         bytes.Should().BeEquivalentTo(contents);
     }
 
@@ -180,7 +180,7 @@ public class FileSystemTests
         var offset = new Random().Next(1, contents.Length - 1);
 
         var bytes = new byte[contents.Length - offset];
-        fs.ReadBytesRandom(tempFile, bytes, offset);
+        fs.ReadBytesRandomAccess(tempFile, bytes, offset);
         bytes.Should().BeEquivalentTo(contents.AsSpan(offset).ToArray());
     }
 
@@ -196,7 +196,7 @@ public class FileSystemTests
         }
         
         var bytes = new byte[contents.Length];
-        await fs.ReadBytesRandomAsync(tempFile, bytes, 0);
+        await fs.ReadBytesRandomAccessAsync(tempFile, bytes, 0);
         bytes.Should().BeEquivalentTo(contents);
     }
 
@@ -213,7 +213,7 @@ public class FileSystemTests
         var offset = new Random().Next(1, contents.Length - 1);
 
         var bytes = new byte[contents.Length - offset];
-        await fs.ReadBytesRandomAsync(tempFile, bytes, offset);
+        await fs.ReadBytesRandomAccessAsync(tempFile, bytes, offset);
         bytes.Should().BeEquivalentTo(contents.AsSpan(offset).ToArray());
     }
 }
