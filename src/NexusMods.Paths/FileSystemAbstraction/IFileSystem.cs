@@ -213,6 +213,35 @@ public interface IFileSystem
     void MoveFile(AbsolutePath source, AbsolutePath dest, bool overwrite);
 
     /// <summary>
+    /// Reads all bytes from a file, at specific offset, into a <see cref="Span{T}"/>.
+    /// </summary>
+    /// <param name="path">Path to the file.</param>
+    /// <param name="bytes">The span to receive the read in bytes.</param>
+    /// <param name="offset">The byte offset in the file at which to begin reading.</param>
+    /// <remarks>
+    ///     Use this method when you want to open a file, read some bytes and then immediately close it.
+    ///     This method makes use of OS specific optimized read logic under the hood, mainly <see cref="RandomAccess"/>
+    ///     to speed up quick reads of small files.
+    /// </remarks>
+    /// <returns>Number of bytes read into the buffer.</returns>
+    int ReadBytesRandomAccess(AbsolutePath path, Span<byte> bytes, long offset);
+
+    /// <summary>
+    /// Reads all bytes from a file, at specific offset, into a <see cref="Memory{T}"/>.
+    /// </summary>
+    /// <param name="path">Path to the file.</param>
+    /// <param name="bytes">The memory buffer to receive the read in bytes.</param>
+    /// <param name="offset">The byte offset in the file at which to begin reading.</param>
+    /// <param name="cancellationToken">Optional <see cref="CancellationToken"/>.</param>
+    /// <remarks>
+    ///     Use this method when you want to open a file, read some bytes and then immediately close it.
+    ///     This method makes use of OS specific optimized read logic under the hood, mainly <see cref="RandomAccess"/>
+    ///     to speed up quick reads of small files.
+    /// </remarks>
+    /// <returns>Number of bytes read into the buffer.</returns>
+    Task<int> ReadBytesRandomAccessAsync(AbsolutePath path, Memory<byte> bytes, long offset, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Reads all bytes from a file into an array.
     /// </summary>
     /// <param name="path">Path to the file.</param>

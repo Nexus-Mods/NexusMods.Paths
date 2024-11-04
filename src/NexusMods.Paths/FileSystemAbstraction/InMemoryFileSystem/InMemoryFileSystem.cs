@@ -5,6 +5,8 @@ using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using NexusMods.Paths.Utilities;
 
@@ -157,6 +159,22 @@ public partial class InMemoryFileSystem : BaseFileSystem
         Dictionary<KnownPath, AbsolutePath> knownPathMappings,
         bool convertCrossPlatformPaths = false)
         => new InMemoryFileSystem(pathMappings, knownPathMappings, convertCrossPlatformPaths, OS);
+
+    /// <inheritdoc />
+    public override int ReadBytesRandomAccess(AbsolutePath path, Span<byte> bytes, long offset)
+    {
+        using var s = ReadFile(path);
+        s.Seek(offset, SeekOrigin.Begin);
+        return s.ReadAtLeast(bytes, bytes.Length, false);
+    }
+
+    /// <inheritdoc />
+    public override async Task<int> ReadBytesRandomAccessAsync(AbsolutePath path, Memory<byte> bytes, long offset, CancellationToken cancellationToken = default)
+    {
+        await using var s = ReadFile(path);
+        s.Seek(offset, SeekOrigin.Begin);
+        return await s.ReadAtLeastAsync(bytes, bytes.Length, false, cancellationToken);
+    }
 
     /// <inheritdoc/>
     protected override IFileEntry InternalGetFileEntry(AbsolutePath path)

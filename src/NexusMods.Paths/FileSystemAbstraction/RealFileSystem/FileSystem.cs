@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using NexusMods.Paths.Utilities;
 
@@ -60,6 +61,34 @@ public partial class FileSystem : BaseFileSystem
         Dictionary<KnownPath, AbsolutePath> knownPathMappings,
         bool convertCrossPlatformPaths = false)
         => new FileSystem(pathMappings, knownPathMappings, convertCrossPlatformPaths);
+
+    /// <inheritdoc />
+    public override int ReadBytesRandomAccess(AbsolutePath path, Span<byte> bytes, long offset)
+    {
+        using var handle = File.OpenHandle(path.GetFullPath(), options: FileOptions.RandomAccess);
+        var readTotal = 0;
+        while (readTotal < bytes.Length)
+        {
+            var read = RandomAccess.Read(handle, bytes.Slice(readTotal), offset + readTotal);
+            if (read <= 0) break;
+            readTotal += read;
+        }
+        return readTotal;
+    }
+
+    /// <inheritdoc />
+    public override async Task<int> ReadBytesRandomAccessAsync(AbsolutePath absolutePath, Memory<byte> bytes, long offset, CancellationToken cancellationToken = default)
+    {
+        using var handle = File.OpenHandle(absolutePath.GetFullPath(), options: FileOptions.RandomAccess);
+        var readTotal = 0;
+        while (readTotal < bytes.Length)
+        {
+            var read = await RandomAccess.ReadAsync(handle, bytes.Slice(readTotal), offset + readTotal, cancellationToken);
+            if (read <= 0) break;
+            readTotal += read;
+        }
+        return readTotal;
+    }
 
     /// <inheritdoc/>
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
