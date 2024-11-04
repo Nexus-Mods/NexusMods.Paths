@@ -189,7 +189,8 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
             return Array.Empty<RelativePath>();
 
         // Count the number of parts in the path based on the directory separator character
-        var partCount = path.Count(PathHelpers.DirectorySeparatorChar); // This operation is SIMD accelerated
+        // ReSharper disable once RedundantNameQualifier
+        var partCount = Reloaded.Memory.Extensions.SpanExtensions.Count(path, PathHelpers.DirectorySeparatorChar);
 
         // Allocate an array to hold the parts
         var parts = GC.AllocateUninitializedArray<RelativePath>(partCount + 1);
