@@ -52,10 +52,15 @@ public interface IOSInformation
         Func<TOut>? onLinux = null,
         Func<TOut>? onOSX = null)
     {
-        if (IsWindows) return onWindows is null ? throw CreatePlatformNotSupportedException() : onWindows();
-        if (IsLinux) return onLinux is null ? throw CreatePlatformNotSupportedException() : onLinux();
-        if (IsOSX) return onOSX is null ? throw CreatePlatformNotSupportedException() : onOSX();
-        throw CreatePlatformNotSupportedException();
+        Func<TOut>? func = null;
+
+        if (IsWindows) func = onWindows;
+        else if (IsLinux) func = onLinux;
+        else if (IsOSX) func = onOSX;
+        else ThrowUnsupported();
+
+        if (func is null) ThrowUnsupported();
+        return func();
     }
 
     /// <summary>
@@ -80,10 +85,15 @@ public interface IOSInformation
         FuncRef<TState, TOut>? onLinux = null,
         FuncRef<TState, TOut>? onOSX = null)
     {
-        if (IsWindows) return onWindows is null ? throw CreatePlatformNotSupportedException() : onWindows(ref state);
-        if (IsLinux) return onLinux is null ? throw CreatePlatformNotSupportedException() : onLinux(ref state);
-        if (IsOSX) return onOSX is null ? throw CreatePlatformNotSupportedException() : onOSX(ref state);
-        throw CreatePlatformNotSupportedException();
+        FuncRef<TState, TOut>? func = null;
+
+        if (IsWindows) func = onWindows;
+        else if (IsLinux) func = onLinux;
+        else if (IsOSX) func = onOSX;
+        else ThrowUnsupported();
+
+        if (func is null) ThrowUnsupported();
+        return func(ref state);
     }
 
     /// <summary>
@@ -102,39 +112,20 @@ public interface IOSInformation
         Action? onLinux = null,
         Action? onOSX = null)
     {
-        if (IsWindows)
-        {
-            if (onWindows is null)
-                throw CreatePlatformNotSupportedException();
+        Action? action = null;
 
-            onWindows();
-            return;
-        }
+        if (IsWindows) action = onWindows;
+        else if (IsLinux) action = onLinux;
+        else if (IsOSX) action = onOSX;
+        else ThrowUnsupported();
 
-        if (IsLinux)
-        {
-            if (onLinux is null)
-                throw CreatePlatformNotSupportedException();
-
-            onLinux();
-            return;
-        }
-
-        if (IsOSX)
-        {
-            if (onOSX is null)
-                throw CreatePlatformNotSupportedException();
-
-            onOSX();
-            return;
-        }
-
-        throw CreatePlatformNotSupportedException();
+        if (action is null) ThrowUnsupported();
+        action();
     }
 
     /// <summary>
     /// Switches on the current platform and allows <paramref name="state"/> to be
-    /// passed to the each handler, preventing lambda allocations.
+    /// passed to each handler, preventing lambda allocations.
     /// </summary>
     /// <param name="onWindows"></param>
     /// <param name="onLinux"></param>
@@ -152,34 +143,15 @@ public interface IOSInformation
         ActionRef<TState>? onLinux = null,
         ActionRef<TState>? onOSX = null)
     {
-        if (IsWindows)
-        {
-            if (onWindows is null)
-                throw CreatePlatformNotSupportedException();
+        ActionRef<TState>? action = null;
 
-            onWindows(ref state);
-            return;
-        }
+        if (IsWindows) action = onWindows;
+        else if (IsLinux) action = onLinux;
+        else if (IsOSX) action = onOSX;
+        else ThrowUnsupported();
 
-        if (IsLinux)
-        {
-            if (onLinux is null)
-                throw CreatePlatformNotSupportedException();
-
-            onLinux(ref state);
-            return;
-        }
-
-        if (IsOSX)
-        {
-            if (onOSX is null)
-                throw CreatePlatformNotSupportedException();
-
-            onOSX(ref state);
-            return;
-        }
-
-        throw CreatePlatformNotSupportedException();
+        if (action is null) ThrowUnsupported();
+        action(ref state);
     }
 
     /// <summary>
@@ -198,9 +170,28 @@ public interface IOSInformation
     bool IsUnix() => IsLinux || IsOSX;
 
     /// <summary>
+    /// Throws <see cref="PlatformNotSupportedException"/> for the current platform.
+    /// </summary>
+    /// <exception cref="PlatformNotSupportedException"/>
+    [DoesNotReturn]
+    void ThrowUnsupported() => throw new PlatformNotSupportedException($"The operation or feature isn't unsupported on the current platform `{Platform}`");
+
+    /// <summary>
+    /// Throws <see cref="PlatformNotSupportedException"/> for the current platform.
+    /// </summary>
+    /// <exception cref="PlatformNotSupportedException"/>
+    [DoesNotReturn]
+    T ThrowUnsupported<T>()
+    {
+        ThrowUnsupported();
+        return default;
+    }
+
+    /// <summary>
     /// Guard statement for platform support.
     /// </summary>
     /// <exception cref="PlatformNotSupportedException">Thrown when the current platform is not supported.</exception>
+    [Obsolete(message: $"Use {nameof(ThrowUnsupported)} instead")]
     void PlatformSupportedGuard()
     {
         if (!IsPlatformSupported())
@@ -211,6 +202,7 @@ public interface IOSInformation
     /// Creates a new <see cref="PlatformNotSupportedException"/>.
     /// </summary>
     /// <returns></returns>
+    [Obsolete(message: $"Use {nameof(ThrowUnsupported)} instead")]
     PlatformNotSupportedException CreatePlatformNotSupportedException()
     {
         return new PlatformNotSupportedException($"The current platform is not supported: {Platform}");

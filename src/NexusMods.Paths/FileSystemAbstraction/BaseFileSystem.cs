@@ -202,7 +202,7 @@ public abstract class BaseFileSystem : IFileSystem
         // ReSharper disable once InconsistentNaming
         AbsolutePath GetXDGBaseDirectory(string environmentVariable, Func<IFileSystem, AbsolutePath> defaultFunc)
         {
-            if (!OS.IsLinux) throw OS.CreatePlatformNotSupportedException();
+            if (!OS.IsLinux) OS.ThrowUnsupported();
 
             var value = Environment.GetEnvironmentVariable(environmentVariable, EnvironmentVariableTarget.Process);
             return value is null ? defaultFunc(this) : FromUnsanitizedFullPath(value);

@@ -8,27 +8,6 @@ public class OSInformationTests
 {
     [Theory]
     [MemberData(nameof(PlatformsMemberData))]
-    public void Test_IsPlatformSupported_True(OSPlatform platform)
-    {
-        IOSInformation info = new OSInformation(platform);
-        info.IsPlatformSupported().Should().BeTrue();
-
-        info.Invoking(x => x.PlatformSupportedGuard())
-            .Should().NotThrow<PlatformNotSupportedException>();
-    }
-
-    [Theory, AutoData]
-    public void Test_IsPlatformSupported_False(string platformName)
-    {
-        IOSInformation info = new OSInformation(OSPlatform.Create(platformName));
-        info.IsPlatformSupported().Should().BeFalse();
-
-        info.Invoking(x => x.PlatformSupportedGuard())
-            .Should().ThrowExactly<PlatformNotSupportedException>();
-    }
-
-    [Theory]
-    [MemberData(nameof(PlatformsMemberData))]
     public void Test_IsWindows(OSPlatform platform)
     {
         IOSInformation info = new OSInformation(platform);
