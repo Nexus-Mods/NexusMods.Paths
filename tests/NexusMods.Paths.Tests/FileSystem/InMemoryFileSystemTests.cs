@@ -28,10 +28,10 @@ public class InMemoryFileSystemTests
         string fileName2,
         string subDirectoryName1)
     {
-        var subDirectory1 = parentDirectory.Combine(subDirectoryName1);
+        var subDirectory1 = parentDirectory / subDirectoryName1;
 
-        var file1 = parentDirectory.Combine(fileName1);
-        var file2 = subDirectory1.Combine(fileName2);
+        var file1 = parentDirectory / fileName1;
+        var file2 = subDirectory1 / fileName2;
 
         fs.AddDirectory(parentDirectory);
         fs.AddDirectory(subDirectory1);
@@ -53,12 +53,12 @@ public class InMemoryFileSystemTests
         string subDirectoryName1,
         string subDirectoryName2)
     {
-        var subDirectory1 = parentDirectory.Combine(subDirectoryName1);
-        var subDirectory2 = parentDirectory.Combine(subDirectoryName2);
+        var subDirectory1 = parentDirectory / subDirectoryName1;
+        var subDirectory2 = parentDirectory / subDirectoryName2;
 
-        var file1 = parentDirectory.Combine(fileName1);
-        var file2 = subDirectory1.Combine(fileName2);
-        var file3 = subDirectory2.Combine(fileName3);
+        var file1 = parentDirectory / fileName1;
+        var file2 = subDirectory1 / fileName2;
+        var file3 = subDirectory2 / fileName3;
 
         fs.AddDirectory(parentDirectory);
         fs.AddDirectory(subDirectory1);
@@ -80,9 +80,9 @@ public class InMemoryFileSystemTests
         string subDirectoryName2,
         string subDirectoryName3)
     {
-        var subDirectory1 = parentDirectory.Combine(subDirectoryName1);
-        var subDirectory2 = parentDirectory.Combine(subDirectoryName2);
-        var subDirectory3 = subDirectory1.Combine(subDirectoryName3);
+        var subDirectory1 = parentDirectory / subDirectoryName1;
+        var subDirectory2 = parentDirectory / subDirectoryName2;
+        var subDirectory3 = subDirectory1 / subDirectoryName3;
 
         fs.AddDirectory(parentDirectory);
         fs.AddDirectory(subDirectory1);
@@ -102,9 +102,9 @@ public class InMemoryFileSystemTests
         string subDirectoryName2,
         string subDirectoryName3)
     {
-        var subDirectory1 = parentDirectory.Combine(subDirectoryName1);
-        var subDirectory2 = parentDirectory.Combine(subDirectoryName2);
-        var subDirectory3 = subDirectory1.Combine(subDirectoryName3);
+        var subDirectory1 = parentDirectory / subDirectoryName1;
+        var subDirectory2 = parentDirectory / subDirectoryName2;
+        var subDirectory3 = subDirectory1 / subDirectoryName3;
 
         fs.AddDirectory(parentDirectory);
         fs.AddDirectory(subDirectory1);
@@ -124,10 +124,10 @@ public class InMemoryFileSystemTests
         string fileName2,
         string subDirectoryName1)
     {
-        var subDirectory1 = parentDirectory.Combine(subDirectoryName1);
+        var subDirectory1 = parentDirectory / (subDirectoryName1);
 
-        var file1 = parentDirectory.Combine(fileName1);
-        var file2 = subDirectory1.Combine(fileName2);
+        var file1 = parentDirectory / (fileName1);
+        var file2 = subDirectory1 / fileName2;
 
         fs.AddDirectory(parentDirectory);
         fs.AddDirectory(subDirectory1);
@@ -149,12 +149,12 @@ public class InMemoryFileSystemTests
         string subDirectoryName1,
         string subDirectoryName2)
     {
-        var subDirectory1 = parentDirectory.Combine(subDirectoryName1);
-        var subDirectory2 = parentDirectory.Combine(subDirectoryName2);
+        var subDirectory1 = parentDirectory / (subDirectoryName1);
+        var subDirectory2 = parentDirectory / (subDirectoryName2);
 
-        var file1 = parentDirectory.Combine(fileName1);
-        var file2 = subDirectory1.Combine(fileName2);
-        var file3 = subDirectory2.Combine(fileName3);
+        var file1 = parentDirectory / (fileName1);
+        var file2 = subDirectory1 / fileName2;
+        var file3 = subDirectory2 / fileName3;
 
         fs.AddDirectory(parentDirectory);
         fs.AddDirectory(subDirectory1);
@@ -180,7 +180,7 @@ public class InMemoryFileSystemTests
         AbsolutePath parentDirectory,
         string subDirectoryName)
     {
-        var subDirectory = parentDirectory.Combine(subDirectoryName);
+        var subDirectory = parentDirectory / subDirectoryName;
 
         fs.CreateDirectory(subDirectory);
 
@@ -249,11 +249,11 @@ public class InMemoryFileSystemTests
     {
         fs.CreateDirectory(directory);
 
-        var subDirectory = directory.Combine(subDirectoryName);
+        var subDirectory = directory / subDirectoryName;
         fs.CreateDirectory(subDirectory);
 
-        var file1 = directory.Combine(fileName1);
-        var file2 = subDirectory.Combine(fileName2);
+        var file1 = directory / (fileName1);
+        var file2 = subDirectory / fileName2;
 
         fs.AddEmptyFile(file1);
         fs.AddEmptyFile(file2);
@@ -279,7 +279,7 @@ public class InMemoryFileSystemTests
     {
         fs.CreateDirectory(directory);
 
-        var file = directory.Combine(fileName);
+        var file = directory / fileName;
         fs.AddEmptyFile(file);
 
         fs.DirectoryExists(directory).Should().BeTrue();

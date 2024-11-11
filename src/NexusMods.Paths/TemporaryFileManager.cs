@@ -43,7 +43,7 @@ public class TemporaryFileManager : IDisposable
         if (_isDisposed)
             throw new ObjectDisposedException(nameof(TemporaryFileManager));
 
-        var path = _basePath.Combine(Guid.NewGuid().ToString());
+        var path = _basePath / Guid.NewGuid().ToString();
         if (path.Extension != default)
             path = path.AppendExtension(ext ?? KnownExtensions.Tmp);
 
@@ -58,7 +58,7 @@ public class TemporaryFileManager : IDisposable
         if (_isDisposed)
             throw new ObjectDisposedException(nameof(TemporaryFileManager));
 
-        var path = _basePath.Combine(prefix + Guid.NewGuid());
+        var path = _basePath / (prefix + Guid.NewGuid());
         _fileSystem.CreateDirectory(path);
         return new TemporaryPath(_fileSystem, path, deleteOnDispose);
     }

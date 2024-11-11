@@ -28,7 +28,7 @@ public class RelativePathTests
         // A little roundabout, but I wanted to make sure the cast happens as part
         // of a method call.
         var basePath = Paths.FileSystem.Shared.EnumerateRootDirectories().First();
-        var path = basePath.Combine(input).RelativeTo(basePath);
+        var path = (basePath / input).RelativeTo(basePath);
         path.ToString().Should().Be(expected);
     }
 
@@ -207,7 +207,7 @@ public class RelativePathTests
     {
         var leftPath = new RelativePath(left);
         var rightPath = new RelativePath(right);
-        var actualOutput = leftPath.Join(rightPath);
+        var actualOutput = leftPath / rightPath;
         actualOutput.Should().Be(expectedOutput);
     }
 
