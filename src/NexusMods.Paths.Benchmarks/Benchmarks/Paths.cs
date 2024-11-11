@@ -104,7 +104,7 @@ public class Paths : IBenchmark
     [Benchmark]
     public AbsolutePath NexusJoinLarge()
     {
-        return CurrentPath.AbsolutePath/ "foo/bar/baz/quz/qax";
+        return CurrentPath.AbsolutePath / "foo/bar/baz/quz/qax";
     }
 
     [Benchmark]
