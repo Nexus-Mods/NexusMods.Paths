@@ -37,7 +37,7 @@ public static class NxUnpackerBuilderExtensions
         for (var x = 0; x < entries.Length; x++)
         {
             var entry = entries[x];
-            var outputPath = outputDirectory.Combine(entry.FilePath);
+            var outputPath = outputDirectory / entry.FilePath;
             outputProviders[x] = new OutputAbsolutePathProvider(outputPath, entry.FilePath, entry.Entry);
         }
         builder.Outputs.AddRange(outputProviders);

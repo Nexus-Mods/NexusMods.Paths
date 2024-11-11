@@ -75,7 +75,7 @@ public class OutputAbsolutePathProviderTests
 
     private static AbsolutePath CreateTestPath(IFileSystem fileSystem)
     {
-        return fileSystem.GetKnownPath(KnownPath.TempDirectory).Combine(Guid.NewGuid().ToString());
+        return fileSystem.GetKnownPath(KnownPath.TempDirectory) / Guid.NewGuid().ToString();
     }
 
     private static void CleanupTestFile(IFileSystem fileSystem, AbsolutePath path)
