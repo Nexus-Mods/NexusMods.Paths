@@ -11,6 +11,7 @@
         <PackageReference Include="TransparentValueObjects" PrivateAssets="all" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 
+
     <ItemGroup>
         <InternalsVisibleTo Include="NexusMods.Paths.Benchmarks" />
     </ItemGroup>
