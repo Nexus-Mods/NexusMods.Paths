@@ -228,7 +228,7 @@ public static class KnownExtensions
     /// <summary>.dylib - Library, Dynamic Library. macOS.</summary>
     public static readonly Extension Dylib = new(".dylib");
 
-    /// <summary>.so - Library, Shared Object. Linux & Unix-like.</summary>
+    /// <summary>.so - Library, Shared Object. Linux and Unix-like.</summary>
     public static readonly Extension So = new(".so");
 
     #endregion

@@ -61,7 +61,7 @@ public enum ExtensionCategory : byte
     Library = 9,
 
     /// <summary>
-    /// Represents 2D & 3D model and related file formats.
+    /// Represents 2D and 3D model and related file formats.
     /// </summary>
     Model = 10,
 
