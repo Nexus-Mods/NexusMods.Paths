@@ -101,7 +101,7 @@ public class FromAbsolutePathProviderTests
 
     private static async Task<AbsolutePath> CreateTestFile(IFileSystem fileSystem, byte[] testData)
     {
-        var path = fileSystem.GetKnownPath(KnownPath.TempDirectory).Combine(Guid.NewGuid().ToString());
+        var path = fileSystem.GetKnownPath(KnownPath.TempDirectory) / Guid.NewGuid().ToString();
         await fileSystem.WriteAllBytesAsync(path, testData);
         return path;
     }

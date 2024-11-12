@@ -92,7 +92,7 @@ public class Paths : IBenchmark
     {
         // Not a fair test here since one is a string concat; other includes
         // normalization to OS path.
-        return CurrentPath.AbsolutePath.Combine("foo");
+        return CurrentPath.AbsolutePath / "foo";
     }
 
     [Benchmark]
@@ -104,7 +104,7 @@ public class Paths : IBenchmark
     [Benchmark]
     public AbsolutePath NexusJoinLarge()
     {
-        return CurrentPath.AbsolutePath.Combine("foo/bar/baz/quz/qax");
+        return CurrentPath.AbsolutePath / "foo/bar/baz/quz/qax";
     }
 
     [Benchmark]

@@ -16,13 +16,13 @@ public class NxBuilderExtensionsTests
     public async Task NxPackerBuilder_CanAddFolderFromIFileSystem_AndExtractToIFileSystem(InMemoryFileSystem fs, AbsolutePath folderPath)
     {
         // Arrange
-        var file1 = folderPath.Combine("file1.txt");
-        var file2 = folderPath.Combine("subfolder/file2.txt");
+        var file1 = folderPath / "file1.txt";
+        var file2 = folderPath / "subfolder/file2.txt";
         await fs.WriteAllTextAsync(file1, "Content 1");
         await fs.WriteAllTextAsync(file2, "Content 2");
 
         var builder = new NxPackerBuilder();
-        var outputPath = folderPath.Parent.Combine("output.nx");
+        var outputPath = folderPath.Parent / "output.nx";
 
         // Act
         builder.AddFolder(folderPath)
@@ -38,11 +38,11 @@ public class NxBuilderExtensionsTests
         entries.Should().Contain(e => e.FilePath == "subfolder/file2.txt");
         
         // Verify we can extract all files
-        var extractFolder = folderPath.Parent.Combine("extracted");
+        var extractFolder = folderPath.Parent / "extracted";
         unpacker.AddAllFilesWithFileSystemOutput(extractFolder).Extract();
 
-        var extractedFile1 = extractFolder.Combine("file1.txt");
-        var extractedFile2 = extractFolder.Combine("subfolder/file2.txt");
+        var extractedFile1 = extractFolder / "file1.txt";
+        var extractedFile2 = extractFolder / "subfolder/file2.txt";
 
         fs.FileExists(extractedFile1).Should().BeTrue();
         fs.FileExists(extractedFile2).Should().BeTrue();
@@ -52,7 +52,7 @@ public class NxBuilderExtensionsTests
         
         // Verify we can extract a single file.
         unpacker = NxUnpackerBuilderExtensions.FromFile(outputPath);
-        var extractedFile1Copy = extractFolder.Combine("file1-copy.txt");
+        var extractedFile1Copy = extractFolder / "file1-copy.txt";
         var file1Entry = entries.First(x => x.FilePath == "file1.txt");
         unpacker.AddFileWithFileSystemOutput(file1Entry, extractedFile1Copy).Extract();
         (await fs.ReadAllTextAsync(extractedFile1Copy)).Should().Be("Content 1");
