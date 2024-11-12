@@ -164,6 +164,11 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     {
         return new RelativePath(PathHelpers.JoinParts(Path, other.Path, OS));
     }
+    
+    /// <summary>
+    /// Appends another path to an existing path.
+    /// </summary>
+    public static RelativePath operator /(RelativePath self, RelativePath other) => self.Join(other);
 
     /// <summary>
     /// Returns true if the relative path starts with a given string.

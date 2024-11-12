@@ -72,7 +72,7 @@ public abstract class BaseFileSystem : IFileSystem
         if (newParentDirectory == default) return originalPath;
 
         var relativePath = originalPath.RelativeTo(originalParentDirectory);
-        var newPath = newParentDirectory.Combine(relativePath);
+        var newPath = newParentDirectory / relativePath;
 
         return newPath;
     }
@@ -189,10 +189,10 @@ public abstract class BaseFileSystem : IFileSystem
             KnownPath.MyDocumentsDirectory => FromUnsanitizedFullPath(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)),
             KnownPath.MyGamesDirectory => FromUnsanitizedDirectoryAndFileName(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games"),
 
-            KnownPath.XDG_CONFIG_HOME => GetXDGBaseDirectory($"{nameof(KnownPath.XDG_CONFIG_HOME)}", static fs => fs.GetKnownPath(KnownPath.HomeDirectory).Combine(".config")),
-            KnownPath.XDG_CACHE_HOME => GetXDGBaseDirectory($"{nameof(KnownPath.XDG_CACHE_HOME)}", static fs => fs.GetKnownPath(KnownPath.HomeDirectory).Combine(".cache")),
-            KnownPath.XDG_DATA_HOME => GetXDGBaseDirectory($"{nameof(KnownPath.XDG_DATA_HOME)}", static fs => fs.GetKnownPath(KnownPath.HomeDirectory).Combine(".local").Combine("share")),
-            KnownPath.XDG_STATE_HOME => GetXDGBaseDirectory($"{nameof(KnownPath.XDG_STATE_HOME)}", static fs => fs.GetKnownPath(KnownPath.HomeDirectory).Combine(".local").Combine("state")),
+            KnownPath.XDG_CONFIG_HOME => GetXDGBaseDirectory($"{nameof(KnownPath.XDG_CONFIG_HOME)}", static fs => fs.GetKnownPath(KnownPath.HomeDirectory) / ".config"),
+            KnownPath.XDG_CACHE_HOME => GetXDGBaseDirectory($"{nameof(KnownPath.XDG_CACHE_HOME)}", static fs => fs.GetKnownPath(KnownPath.HomeDirectory) / ".cache"),
+            KnownPath.XDG_DATA_HOME => GetXDGBaseDirectory($"{nameof(KnownPath.XDG_DATA_HOME)}", static fs => fs.GetKnownPath(KnownPath.HomeDirectory) / ".local" / "share"),
+            KnownPath.XDG_STATE_HOME => GetXDGBaseDirectory($"{nameof(KnownPath.XDG_STATE_HOME)}", static fs => fs.GetKnownPath(KnownPath.HomeDirectory) / ".local" / "state"),
             KnownPath.XDG_RUNTIME_DIR => GetXDGBaseDirectory($"{nameof(KnownPath.XDG_RUNTIME_DIR)}", static fs => fs.GetKnownPath(KnownPath.TempDirectory)),
         };
 
@@ -202,7 +202,7 @@ public abstract class BaseFileSystem : IFileSystem
         // ReSharper disable once InconsistentNaming
         AbsolutePath GetXDGBaseDirectory(string environmentVariable, Func<IFileSystem, AbsolutePath> defaultFunc)
         {
-            if (!OS.IsLinux) throw OS.CreatePlatformNotSupportedException();
+            if (!OS.IsLinux) OS.ThrowUnsupported();
 
             var value = Environment.GetEnvironmentVariable(environmentVariable, EnvironmentVariableTarget.Process);
             return value is null ? defaultFunc(this) : FromUnsanitizedFullPath(value);
@@ -244,18 +244,18 @@ public abstract class BaseFileSystem : IFileSystem
                 KnownPath.EntryDirectory => fileSystem.GetKnownPath(knownPath),
                 KnownPath.CurrentDirectory => fileSystem.GetKnownPath(knownPath),
 
-                KnownPath.CommonApplicationDataDirectory => rootDirectory.Combine("ProgramData"),
-                KnownPath.ProgramFilesDirectory => rootDirectory.Combine("Program Files"),
-                KnownPath.ProgramFilesX86Directory => rootDirectory.Combine("Program Files (x86)"),
-                KnownPath.CommonProgramFilesDirectory => rootDirectory.Combine("Program Files/Common Files"),
-                KnownPath.CommonProgramFilesX86Directory => rootDirectory.Combine("Program Files (x86)/Common Files"),
+                KnownPath.CommonApplicationDataDirectory => rootDirectory / "ProgramData",
+                KnownPath.ProgramFilesDirectory => rootDirectory / "Program Files",
+                KnownPath.ProgramFilesX86Directory => rootDirectory / "Program Files (x86)",
+                KnownPath.CommonProgramFilesDirectory => rootDirectory / "Program Files/Common Files",
+                KnownPath.CommonProgramFilesX86Directory => rootDirectory / "Program Files (x86)/Common Files",
 
                 KnownPath.HomeDirectory => newHomeDirectory,
-                KnownPath.MyDocumentsDirectory => newHomeDirectory.Combine("Documents"),
-                KnownPath.MyGamesDirectory => newHomeDirectory.Combine("Documents/My Games"),
-                KnownPath.LocalApplicationDataDirectory => newHomeDirectory.Combine("AppData/Local"),
-                KnownPath.ApplicationDataDirectory => newHomeDirectory.Combine("AppData/Roaming"),
-                KnownPath.TempDirectory => newHomeDirectory.Combine("AppData/Local/Temp"),
+                KnownPath.MyDocumentsDirectory => newHomeDirectory / "Documents",
+                KnownPath.MyGamesDirectory => newHomeDirectory / "Documents/My Games",
+                KnownPath.LocalApplicationDataDirectory => newHomeDirectory / "AppData/Local",
+                KnownPath.ApplicationDataDirectory => newHomeDirectory / "AppData/Roaming",
+                KnownPath.TempDirectory => newHomeDirectory / "AppData/Local/Temp",
 
                 _ => default
             };

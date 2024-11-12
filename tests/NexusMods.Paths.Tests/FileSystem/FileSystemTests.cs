@@ -36,7 +36,7 @@ public class FileSystemTests
     {
         var fs = new Paths.FileSystem();
 
-        var directory = fs.FromUnsanitizedFullPath(AppContext.BaseDirectory).Combine("TestDirectory");
+        var directory = fs.FromUnsanitizedFullPath(AppContext.BaseDirectory) / "TestDirectory";
         fs.CreateDirectory(directory);
 
         fs.DeleteDirectory(directory, recursive: false);
@@ -49,8 +49,8 @@ public class FileSystemTests
     {
         var fs = new Paths.FileSystem();
 
-        var directory = fs.FromUnsanitizedFullPath(AppContext.BaseDirectory).Combine("TestDirectory");
-        var child = directory.Combine("Child");
+        var directory = fs.FromUnsanitizedFullPath(AppContext.BaseDirectory) / ("TestDirectory");
+        var child = directory / "Child";
 
         fs.CreateDirectory(directory);
         fs.CreateDirectory(child);
@@ -85,7 +85,7 @@ public class FileSystemTests
     public async Task Test_CreateMemoryMappedFile_CanOpen(RelativePath relativePath, byte[] contents)
     {
         var fs = new Paths.FileSystem();
-        var file = fs.GetKnownPath(KnownPath.TempDirectory).Combine(relativePath);
+        var file = fs.GetKnownPath(KnownPath.TempDirectory) / relativePath;
         await using (var stream = fs.CreateFile(file))
         {
             stream.Write(contents);
@@ -107,7 +107,7 @@ public class FileSystemTests
     public async Task Test_CreateMemoryMappedFile_CanCreateAndWrite()
     {
         var fs = new Paths.FileSystem();
-        var tempFile = fs.GetKnownPath(KnownPath.TempDirectory).Combine(Path.GetRandomFileName());
+        var tempFile = fs.GetKnownPath(KnownPath.TempDirectory) / Path.GetRandomFileName();
         var contents = new byte[] { 1, 2, 3, 4, 5 };
 
         // Create a new MemoryMappedFile
@@ -155,7 +155,7 @@ public class FileSystemTests
     public void Test_ReadBytesRandom()
     {
         var fs = new Paths.FileSystem();
-        var tempFile = fs.GetKnownPath(KnownPath.TempDirectory).Combine(Path.GetRandomFileName());
+        var tempFile = fs.GetKnownPath(KnownPath.TempDirectory) / Path.GetRandomFileName();
         var contents = new byte[] { 1, 2, 3, 4, 5 };
         using (var stream = fs.CreateFile(tempFile))
         {
@@ -171,7 +171,7 @@ public class FileSystemTests
     public void Test_ReadBytesRandomWithOffset()
     {
         var fs = new Paths.FileSystem();
-        var tempFile = fs.GetKnownPath(KnownPath.TempDirectory).Combine(Path.GetRandomFileName());
+        var tempFile = fs.GetKnownPath(KnownPath.TempDirectory) / Path.GetRandomFileName();
         var contents = new byte[] { 1, 2, 3, 4, 5 };
         using (var stream = fs.CreateFile(tempFile))
         {
@@ -188,7 +188,7 @@ public class FileSystemTests
     public async Task Test_ReadBytesRandomAsync()
     {
         var fs = new Paths.FileSystem();
-        var tempFile = fs.GetKnownPath(KnownPath.TempDirectory).Combine(Path.GetRandomFileName());
+        var tempFile = fs.GetKnownPath(KnownPath.TempDirectory) / Path.GetRandomFileName();
         var contents = new byte[] { 1, 2, 3, 4, 5 };
         await using (var stream = fs.CreateFile(tempFile))
         {
@@ -204,7 +204,7 @@ public class FileSystemTests
     public async Task Test_ReadBytesRandomAsyncWithOffset()
     {
         var fs = new Paths.FileSystem();
-        var tempFile = fs.GetKnownPath(KnownPath.TempDirectory).Combine(Path.GetRandomFileName());
+        var tempFile = fs.GetKnownPath(KnownPath.TempDirectory) / Path.GetRandomFileName();
         var contents = new byte[] { 1, 2, 3, 4, 5 };
         await using (var stream = fs.CreateFile(tempFile))
         {

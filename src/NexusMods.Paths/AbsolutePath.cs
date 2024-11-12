@@ -240,6 +240,12 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
         var res = PathHelpers.JoinParts(GetFullPath(), path.Path, FileSystem.OS);
         return FromSanitizedFullPath(res, FileSystem);
     }
+    
+    /// <summary>
+    /// Combines the current path with a relative path.
+    /// </summary>
+    public static AbsolutePath operator / (AbsolutePath path, RelativePath relativePath) 
+        => path.Combine(relativePath);
 
     /// <summary/>
     [Obsolete(message: "This will be removed once dependents have updated.", error: true)]

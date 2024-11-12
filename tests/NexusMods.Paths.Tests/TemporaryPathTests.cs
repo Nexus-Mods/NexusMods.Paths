@@ -36,12 +36,12 @@ public class TemporaryPathTests
         var tempDirPath = manager.CreateFolder();
 
         // Create some children
-        var childFileA = tempDirPath.Path.Combine("File A");
+        var childFileA = tempDirPath.Path / "File A";
         fs.CreateFile(childFileA);
 
-        var childFolder = tempDirPath.Path.Combine("Child Folder");
+        var childFolder = tempDirPath.Path / "Child Folder";
         fs.CreateDirectory(childFolder);
-        var childFileB = childFolder.Combine("File B");
+        var childFileB = childFolder / "File B";
         fs.CreateFile(childFileB);
 
 
