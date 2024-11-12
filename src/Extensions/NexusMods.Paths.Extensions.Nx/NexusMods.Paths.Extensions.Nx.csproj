@@ -12,9 +12,4 @@
     <ItemGroup>
         <ProjectReference Include="..\..\NexusMods.Paths\NexusMods.Paths.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <PackageVersion Update="Microsoft.SourceLink.GitHub" Version="8.0.0" />
-    </ItemGroup>
-
 </Project>
