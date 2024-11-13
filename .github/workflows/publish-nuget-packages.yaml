@@ -12,6 +12,10 @@ jobs:
       version: ${{ steps.get-version.outputs.version }}
 
     steps:
+      - name: Install .Net 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
       - name: Get version
         id: get-version
         shell: pwsh
