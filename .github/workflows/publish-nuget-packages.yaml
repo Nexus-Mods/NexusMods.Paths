@@ -12,10 +12,6 @@ jobs:
       version: ${{ steps.get-version.outputs.version }}
 
     steps:
-      - name: Install .Net 9
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 9.0.x
       - name: Get version
         id: get-version
         shell: pwsh
@@ -26,7 +22,7 @@ jobs:
 
   publish:
     needs: get-version
-    uses: Nexus-Mods/NexusMods.App.Meta/.github/workflows/publish-nuget-packages.yaml@728da43cdc13ef02e6bf9899503c2f7e707164f1
+    uses: Nexus-Mods/NexusMods.App.Meta/.github/workflows/publish-nuget-packages.yaml@main
     with:
       version: ${{ needs.get-version.outputs.version }}
       use-nuget: true
