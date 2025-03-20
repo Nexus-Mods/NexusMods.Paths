@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using NexusMods.Paths.Utilities;
 using Reloaded.Memory.Extensions;
@@ -116,10 +117,21 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     /// Creates a relative path given a string.
     /// </summary>
     /// <param name="path">The relative path to use.</param>
-    public RelativePath(string path)
+    internal RelativePath(string path)
     {
         PathHelpers.DebugAssertIsSanitized(path, OS, isRelative: true);
         Path = path;
+    }
+
+    /// <summary>
+    /// Creates an unsafe relative path that hasn't been sanitized.
+    /// </summary>
+    /// <remarks>
+    /// This should only be used sparingly if you previously asserted that the path is sanitized.
+    /// </remarks>
+    public static RelativePath CreateUnsafe(string path)
+    {
+        return new RelativePath(path);
     }
 
     /// <summary>
@@ -327,7 +339,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     public static implicit operator ReadOnlySpan<char>(RelativePath d) => d.Path;
 
     /// <summary/>
-    public static implicit operator RelativePath(string b) => new(b);
+    public static implicit operator RelativePath(string path) => FromUnsanitizedInput(path);
 
     /// <summary/>
     public static bool operator ==(RelativePath lhs, RelativePath rhs) => lhs.Equals(rhs);

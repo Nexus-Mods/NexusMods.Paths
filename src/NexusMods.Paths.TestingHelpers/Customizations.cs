@@ -40,10 +40,7 @@ public static class Customizations
                 return fs.FromUnsanitizedFullPath(fullPath);
             }));
 
-        fixture.Customize<RelativePath>(composer =>
-            composer.FromFactory<string>(path => new RelativePath(path)));
-
-        fixture.Customize<TemporaryFileManager>(composer =>
-            composer.FromFactory<IFileSystem>(fs => new TemporaryFileManager(fs)));
+        fixture.Customize<RelativePath>(composer => composer.FromFactory<string>(path => path));
+        fixture.Customize<TemporaryFileManager>(composer => composer.FromFactory<IFileSystem>(fs => new TemporaryFileManager(fs)));
     }
 }
