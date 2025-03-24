@@ -6,6 +6,39 @@ namespace NexusMods.Paths.Tests;
 
 public class PathHelperTests
 {
+    [Theory]
+    [MemberData(nameof(TestData_GetPathRoot))]
+    public void Test_GetPathRoot(string input, string expectedRootPart, PathRootType expectedRootType)
+    {
+        var pathRoot = PathHelpers.GetPathRoot(input);
+        pathRoot.Span.ToString().Should().Be(expectedRootPart);
+        pathRoot.RootType.Should().Be(expectedRootType);
+    }
+
+    public static TheoryData<string, string, PathRootType> TestData_GetPathRoot()
+    {
+        return new TheoryData<string, string, PathRootType>
+        {
+            { "", "", PathRootType.None },
+            { "/", "/", PathRootType.Unix },
+            { "/foo", "/", PathRootType.Unix },
+            { "C:/", "C:/", PathRootType.DOS },
+            { "C:/foo", "C:/", PathRootType.DOS },
+            { "//A/" , "//A/", PathRootType.UNC },
+            { "//A/foo" , "//A/", PathRootType.UNC },
+            { "//Server/" , "//Server/", PathRootType.UNC },
+            { "//Server/foo" , "//Server/", PathRootType.UNC },
+            { "//./C:/", "//./C:/", PathRootType.DOSDeviceDrive },
+            { "//?/C:/", "//?/C:/", PathRootType.DOSDeviceDrive },
+            { "//./C:/foo", "//./C:/", PathRootType.DOSDeviceDrive },
+            { "//?/C:/foo", "//?/C:/", PathRootType.DOSDeviceDrive },
+            { "//./Volume{b75e2c83-0000-0000-0000-602f00000000}/", "//./Volume{b75e2c83-0000-0000-0000-602f00000000}/", PathRootType.DOSDeviceVolume },
+            { "//?/Volume{b75e2c83-0000-0000-0000-602f00000000}/", "//?/Volume{b75e2c83-0000-0000-0000-602f00000000}/", PathRootType.DOSDeviceVolume },
+            { "//./Volume{b75e2c83-0000-0000-0000-602f00000000}/foo", "//./Volume{b75e2c83-0000-0000-0000-602f00000000}/", PathRootType.DOSDeviceVolume },
+            { "//?/Volume{b75e2c83-0000-0000-0000-602f00000000}/foo", "//?/Volume{b75e2c83-0000-0000-0000-602f00000000}/", PathRootType.DOSDeviceVolume },
+        };
+    }
+
     private static IOSInformation CreateOSInformation(bool isUnix)
     {
         return isUnix ? OSInformation.FakeUnix : OSInformation.FakeWindows;

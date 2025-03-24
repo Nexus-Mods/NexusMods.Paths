@@ -175,6 +175,85 @@ public static class PathHelpers
     }
 
     /// <summary>
+    /// Gets the root type of a path.
+    /// </summary>
+    public static PathRootType GetRootType(ReadOnlySpan<char> path) => GetPathRoot(path).RootType;
+
+    /// <summary>
+    /// Checks whether the given path is rooted.
+    /// </summary>
+    public static bool IsRooted(ReadOnlySpan<char> path, out PathRootType rootType)
+    {
+        rootType = GetRootType(path);
+        return rootType != PathRootType.None;
+    }
+
+    /// <summary>
+    /// Returns the root part of a path.
+    /// </summary>
+    /// <exception cref="PathException">Thrown for invalid paths</exception>
+    public static PathRoot GetPathRoot(ReadOnlySpan<char> path)
+    {
+        if (path.IsEmpty) return new PathRoot(ReadOnlySpan<char>.Empty, PathRootType.None);
+
+        // DOS paths and relative paths don't start with a `/`
+        if (path.DangerousGetReferenceAt(0) is not DirectorySeparatorChar)
+        {
+            // check for DOS path `C:/`
+            if (path.Length < PathRoot.DOSRootLength) return new PathRoot(ReadOnlySpan<char>.Empty, PathRootType.None);
+
+            var hasVolumeSeparator = path.DangerousGetReferenceAt(1) is WindowsVolumeSeparatorChar;
+            var hasDirectorySeparator = path.DangerousGetReferenceAt(2) is DirectorySeparatorChar;
+            if (!hasVolumeSeparator || !hasDirectorySeparator) return new PathRoot(ReadOnlySpan<char>.Empty, PathRootType.None);
+
+            var windowsDriveChar = path.DangerousGetReferenceAt(0);
+            if (!IsValidWindowsDriveChar(windowsDriveChar)) throw new PathException($"Path contains invalid windows drive character: `{path.ToString()}` (`{windowsDriveChar}`)");
+            return new PathRoot(path.SliceFast(start: 0, length: PathRoot.DOSRootLength), PathRootType.DOS);
+        }
+
+        if (path.Length == 1) return new PathRoot(path.SliceFast(start: 0, length: 1), PathRootType.Unix);
+
+        // UNC and DOS device paths start with `//`
+        if (path.DangerousGetReferenceAt(1) is not DirectorySeparatorChar) return new PathRoot(path.SliceFast(start: 0, length: 1), PathRootType.Unix);
+
+        // path starts with `//` and then has a random character, that's not valid
+        if (path.Length < PathRoot.MinUNCRootLength) throw new PathException($"Path is too small to be a valid rooted path: `{path.ToString()}`");
+
+        // DOS device paths start with either `//./` or `//?/`
+        var dosDevicePathSeparatorChar = path.DangerousGetReferenceAt(2);
+        var hasDOSDevicePathSeparatorChar = dosDevicePathSeparatorChar is '.' or '?';
+        var isDOSDevicePath = path.Length >= PathRoot.DOSDeviceDriveRootLength && hasDOSDevicePathSeparatorChar && path.DangerousGetReferenceAt(3) is DirectorySeparatorChar;
+
+        if (!isDOSDevicePath)
+        {
+            // check if UNC `//Server/foo`
+            var slice = path.SliceFast(start: 2);
+            var separatorIndex = slice.IndexOf(DirectorySeparatorChar);
+            if (separatorIndex == -1) throw new PathException($"Invalid UNC path, missing directory separator: `{path.ToString()}`");
+
+            Debug.Assert(path.Length >= 2 + separatorIndex + 1);
+            var rootPart = path.SliceFast(start: 0, length: 2 + separatorIndex + 1);
+            return new PathRoot(rootPart, PathRootType.UNC);
+        }
+
+        // check for DOS device drive paths `//./C:/`
+        if (path.DangerousGetReferenceAt(5) is WindowsVolumeSeparatorChar && path.DangerousGetReferenceAt(6) is DirectorySeparatorChar)
+        {
+            var windowsDriveChar = path.DangerousGetReferenceAt(4);
+            if (!IsValidWindowsDriveChar(windowsDriveChar)) throw new PathException($"Path contains invalid windows drive character: `{path.ToString()}` (`{windowsDriveChar}`)");
+            return new PathRoot(path.SliceFast(start: 0, length: PathRoot.DOSDeviceDriveRootLength), PathRootType.DOSDeviceDrive);
+        }
+
+        if (path.Length < PathRoot.DOSDeviceVolumeRootLength) throw new PathException($"Path is not a valid DOS Device Volume path: `{path.ToString()}`");
+
+        var hasVolumePrefix = path.SliceFast(start: PathRoot.DOSDevicePrefixLength, length: PathRoot.DOSDeviceVolumePrefix.Length).SequenceEqual(PathRoot.DOSDeviceVolumePrefix);
+        if (!hasVolumePrefix) throw new PathException($"Path is missing DOS Device Volume prefix: `{path.ToString()}`");
+
+        if (path.DangerousGetReferenceAt(PathRoot.DOSDeviceVolumeRootLength - 2) is not '}') throw new PathException($"Invalid DOS Device Volume path, missing directory separator: `{path.ToString()}`");
+        return new PathRoot(path.SliceFast(start: 0, length: PathRoot.DOSDeviceVolumeRootLength), PathRootType.DOSDeviceVolume);
+    }
+
+    /// <summary>
     /// Replaces all directory separator characters with the
     /// native directory separator character of the passed OS.
     /// <remarks>
