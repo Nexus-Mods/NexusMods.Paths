@@ -12,35 +12,35 @@ public class PathHelperTests
     }
 
     [Theory]
-    [InlineData(true, "", true)]
-    [InlineData(true, "/", true)]
-    [InlineData(true, "/foo", true)]
-    [InlineData(true, "/foo/bar", true)]
-    [InlineData(true, "/foo/bar.txt", true)]
-    [InlineData(true, "foo", true)]
-    [InlineData(true, "foo/bar", true)]
-    [InlineData(true, "foo/", false)]
-    [InlineData(true, "foo/bar/", false)]
-    [InlineData(true, "/foo/", false)]
-    [InlineData(true, "/            ", false)]
-    [InlineData(false, "", true)]
-    [InlineData(false, "C:/", true)]
-    [InlineData(false, "C:/foo", true)]
-    [InlineData(false, "C:/foo/bar", true)]
-    [InlineData(false, "C:/foo/bar.txt", true)]
-    [InlineData(false, "foo", true)]
-    [InlineData(false, "foo/bar", true)]
-    [InlineData(false, "foo/", false)]
-    [InlineData(false, "foo/bar/", false)]
-    [InlineData(false, "C:/foo/", false)]
-    [InlineData(false, "C:\\", false)]
-    [InlineData(false, "C:\\foo", false)]
-    [InlineData(false, "C:\\foo\\", false)]
-    [InlineData(false, "C:\\\\foo", false)]
-    [InlineData(false, "foo\\bar", false)]
-    public void Test_IsSanitized(bool isUnix, string path, bool expected)
+    [InlineData(true, false, "", true)]
+    [InlineData(true, false, "/", true)]
+    [InlineData(true, false, "/foo", true)]
+    [InlineData(true, false, "/foo/bar", true)]
+    [InlineData(true, false, "/foo/bar.txt", true)]
+    [InlineData(true, true, "foo", true)]
+    [InlineData(true, true, "foo/bar", true)]
+    [InlineData(true, true,"foo/", false)]
+    [InlineData(true, true,"foo/bar/", false)]
+    [InlineData(true, false, "/foo/", false)]
+    [InlineData(true, false, "/            ", false)]
+    [InlineData(false, false, "", true)]
+    [InlineData(false, false, "C:/", true)]
+    [InlineData(false, false,"C:/foo", true)]
+    [InlineData(false, false, "C:/foo/bar", true)]
+    [InlineData(false, false, "C:/foo/bar.txt", true)]
+    [InlineData(false, true,"foo", true)]
+    [InlineData(false, true,"foo/bar", true)]
+    [InlineData(false, true, "foo/", false)]
+    [InlineData(false, false,"foo/bar/", false)]
+    [InlineData(false, false,"C:/foo/", false)]
+    [InlineData(false, false,"C:\\", false)]
+    [InlineData(false, false,"C:\\foo", false)]
+    [InlineData(false, false,"C:\\foo\\", false)]
+    [InlineData(false, false,"C:\\\\foo", false)]
+    [InlineData(false, true,"foo\\bar", false)]
+    public void Test_IsSanitized(bool isUnix, bool isRelative, string path, bool expected)
     {
-        var actual = PathHelpers.IsSanitized(path, CreateOSInformation(isUnix));
+        var actual = PathHelpers.IsSanitized(path, CreateOSInformation(isUnix), isRelative);
         actual.Should().Be(expected);
     }
 
@@ -71,6 +71,16 @@ public class PathHelperTests
     {
         var actualOutput = PathHelpers.Sanitize(input, CreateOSInformation(isUnix), isRelative: false);
         actualOutput.Should().Be(expectedOutput);
+    }
+
+    [Theory]
+    [InlineData(true, true, "/foo")]
+    [InlineData(false, true, "C:/foo")]
+    [InlineData(true, false, "foo")]
+    public void Test_SanitizeException(bool isUnix, bool isRelative, string input)
+    {
+        var act = () => PathHelpers.Sanitize(input, CreateOSInformation(isUnix), isRelative);
+        act.Should().ThrowExactly<PathException>();
     }
 
     [Theory]

@@ -68,8 +68,9 @@ public static class PathHelpers
     /// </summary>
     [Conditional("DEBUG")]
     [ExcludeFromCodeCoverage(Justification = $"{nameof(IsSanitized)} is tested separately.")]
-    public static void DebugAssertIsSanitized(ReadOnlySpan<char> path, IOSInformation os, bool isRelative = false)
+    public static void DebugAssertIsSanitized(ReadOnlySpan<char> path, IOSInformation os)
     {
+        var isRelative = !IsRooted(path, os);
         Debug.Assert(IsSanitized(path, os, isRelative), $"Path is not sanitized: '{path.ToString()}'");
     }
 
@@ -77,7 +78,7 @@ public static class PathHelpers
     /// Determines whether the path is sanitized or not. Only sanitized paths should
     /// be used with <see cref="PathHelpers"/>.
     /// </summary>
-    public static bool IsSanitized(ReadOnlySpan<char> path, IOSInformation os, bool isRelative = false)
+    public static bool IsSanitized(ReadOnlySpan<char> path, IOSInformation os, bool isRelative)
     {
         // Empty strings are valid.
         if (path.IsEmpty) return true;
@@ -86,6 +87,9 @@ public static class PathHelpers
 
         // Relative paths must not be rooted
         if (isRelative && rootLength != -1) return false;
+
+        // Absolute paths must be rooted
+        if (!isRelative && rootLength == -1) return false;
 
         // Paths that only contain the root directory are valid.
         if (!isRelative && rootLength == path.Length) return true;

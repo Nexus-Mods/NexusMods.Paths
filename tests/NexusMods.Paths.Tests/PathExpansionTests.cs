@@ -23,20 +23,4 @@ public class PathExpansionTests
 
         expandedPath.Should().Be(expectedFullPath);
     }
-
-    [Fact]
-    public void CanExpandPath_WithNoPlaceholder()
-    {
-        const string inputPath = "AdorableMeow.png";
-        var expandedPath = _fileSystem.ExpandKnownFoldersPath(inputPath);
-        expandedPath.GetFullPath().Should().Be(inputPath);
-    }
-
-    [Fact]
-    public void CanExpandPath_WithInvalidPlaceholder()
-    {
-        const string inputPath = "{InvalidPlaceholder}/AdorableMeow.png";
-        var expandedPath = _fileSystem.ExpandKnownFoldersPath(inputPath);
-        expandedPath.GetFullPath().Should().Be(inputPath);
-    }
 }
