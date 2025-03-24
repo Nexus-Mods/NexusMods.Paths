@@ -271,9 +271,7 @@ public abstract class BaseFileSystem : IFileSystem
     /// <inheritdoc/>
     public AbsolutePath FromUnsanitizedDirectoryAndFileName(string directoryPath, string fileName)
     {
-        // Note(erri120): hacky at best, PathHelpers.JoinParts expects sanitized inputs
-        var unsanitizedFullPath = Path.Combine(directoryPath, fileName);
-        return FromUnsanitizedFullPath(unsanitizedFullPath);
+        return AbsolutePath.FromUnsanitizedDirectoryAndFileName(directoryPath, fileName, this);
     }
 
     /// <inheritdoc/>
