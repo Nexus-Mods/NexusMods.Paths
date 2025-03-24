@@ -31,7 +31,7 @@ internal sealed class DirectoriesEnumerator : FileSystemEnumerator<string>
 
     protected override string TransformEntry(ref FileSystemEntry entry)
     {
-        _currentDirectory ??= PathHelpers.Sanitize(entry.Directory, _os);
-        return PathHelpers.Sanitize(entry.FileName, _os);
+        _currentDirectory ??= PathHelpers.Sanitize(entry.Directory, _os, isRelative: false);
+        return PathHelpers.Sanitize(entry.FileName, _os, isRelative: true);
     }
 }

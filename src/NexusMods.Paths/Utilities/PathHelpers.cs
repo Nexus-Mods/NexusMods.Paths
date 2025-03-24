@@ -119,14 +119,20 @@ public static class PathHelpers
     /// <see cref="PathHelpers"/>.
     /// </summary>
     [SkipLocalsInit]
-    public static string Sanitize(ReadOnlySpan<char> path, IOSInformation os)
+    public static string Sanitize(ReadOnlySpan<char> path, IOSInformation os, bool isRelative)
     {
         // Path has already been sanitized.
-        if (IsSanitized(path, os)) return path.ToString();
+        if (IsSanitized(path, os, isRelative)) return path.ToString();
 
         // Paths without backslashes only need to be checked for trailing directory separators.
         // ReSharper disable once RedundantNameQualifier
-        if (Reloaded.Memory.Extensions.SpanExtensions.Count(path, '\\') == 0) return RemoveTrailingDirectorySeparator(path).ToString();
+        if (Reloaded.Memory.Extensions.SpanExtensions.Count(path, '\\') == 0)
+        {
+            var result = RemoveTrailingDirectorySeparator(path);
+            AssertRootness(result, os, isRelative);
+
+            return result.ToString();
+        }
 
         // Paths with backslashes instead of forward slashes need to be fixed.
         var buffer = path.Length > 512
@@ -144,11 +150,24 @@ public static class PathHelpers
             previous = current;
         }
 
-        // Don't remove the trailing directory separator for root directories like "C:/".
         var slice = buffer.SliceFast(0, bufferIndex);
-        return IsRootDirectory(slice, os)
-            ? slice.ToString()
-            : RemoveTrailingDirectorySeparator(slice).ToString();
+
+        // Don't remove the trailing directory separator for root directories like "C:/".
+        var output = IsRootDirectory(slice, os) ? slice : RemoveTrailingDirectorySeparator(slice);
+
+        AssertRootness(output, os, isRelative);
+        return output.ToString();
+    }
+
+    /// <summary>
+    /// Verifies that relative paths aren't rooted and that absolute paths are rooted.
+    /// </summary>
+    /// <exception cref="PathException">Thrown when a relative path is rooted or an absolute path isn't rooted</exception>
+    public static void AssertRootness(ReadOnlySpan<char> path, IOSInformation os, bool isRelative)
+    {
+        var isRooted = IsRooted(path, os);
+        if (isRelative && isRooted) throw new PathException($"Relative path can't be rooted: `{path.ToString()}`");
+        if (!isRooted && !isRelative) throw new PathException($"Absolute path must be rooted: `{path.ToString()}`");
     }
 
     /// <summary>
@@ -257,7 +276,7 @@ public static class PathHelpers
     }
 
     /// <summary>
-    /// Checks whether or not the path is rooted.
+    /// Checks whether the path is rooted.
     /// </summary>
     /// <seealso cref="GetRootLength"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

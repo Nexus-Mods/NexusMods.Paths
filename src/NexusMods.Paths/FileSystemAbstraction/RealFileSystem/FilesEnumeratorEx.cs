@@ -32,8 +32,8 @@ internal sealed class FilesEnumeratorEx : FileSystemEnumerator<FilesEnumeratorEx
 
     protected override FilesEnumeratorExEntry TransformEntry(ref FileSystemEntry entry)
     {
-        _currentDirectory ??= PathHelpers.Sanitize(entry.Directory, _os);
-        return new FilesEnumeratorExEntry(PathHelpers.Sanitize(entry.FileName, _os), Size.FromLong(entry.Length), entry.LastWriteTimeUtc.DateTime, entry.IsDirectory);
+        _currentDirectory ??= PathHelpers.Sanitize(entry.Directory, _os, isRelative: false);
+        return new FilesEnumeratorExEntry(PathHelpers.Sanitize(entry.FileName, _os, isRelative: true), Size.FromLong(entry.Length), entry.LastWriteTimeUtc.DateTime, entry.IsDirectory);
     }
 }
 
