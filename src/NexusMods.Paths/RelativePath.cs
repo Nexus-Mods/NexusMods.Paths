@@ -119,7 +119,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     /// <param name="path">The relative path to use.</param>
     internal RelativePath(string path)
     {
-        PathHelpers.DebugAssertIsSanitized(path, OS, isRelative: true);
+        PathHelpers.DebugAssertIsSanitized(path, OS);
         Path = path;
     }
 
@@ -140,7 +140,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     /// <param name="path"></param>
     public static RelativePath FromUnsanitizedInput(ReadOnlySpan<char> path)
     {
-        return new RelativePath(PathHelpers.Sanitize(path, OS));
+        return new RelativePath(PathHelpers.Sanitize(path, OS, isRelative: true));
     }
 
     /// <summary>

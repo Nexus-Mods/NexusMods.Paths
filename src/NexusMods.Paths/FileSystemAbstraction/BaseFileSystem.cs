@@ -89,17 +89,10 @@ public abstract class BaseFileSystem : IFileSystem
         // This enables path mappings to map "/c" to something else, like
         // "/opt/wine/drive_c"
 
-        // ReSharper disable once InconsistentNaming
-        var sanitizedPathCurrentOS = PathHelpers.Sanitize(input, OS);
-
         // Only supported on Linux and with the setting enabled
-        if (!OS.IsLinux || !_convertCrossPlatformPaths) return sanitizedPathCurrentOS;
+        if (!OS.IsLinux || !_convertCrossPlatformPaths) return PathHelpers.Sanitize(input, OS, isRelative: false);
 
-        // The input has to be a Windows path
-        if (PathHelpers.IsRooted(sanitizedPathCurrentOS, OS)) return sanitizedPathCurrentOS;
-
-        var sanitizedPathWindows = PathHelpers.Sanitize(input, OSInformation.FakeWindows);
-        Debug.Assert(PathHelpers.IsRooted(sanitizedPathWindows, OSInformation.FakeWindows));
+        var sanitizedPathWindows = PathHelpers.Sanitize(input, OSInformation.FakeWindows, isRelative: false);
 
         var result = string.Create(
             sanitizedPathWindows.Length,
@@ -278,9 +271,7 @@ public abstract class BaseFileSystem : IFileSystem
     /// <inheritdoc/>
     public AbsolutePath FromUnsanitizedDirectoryAndFileName(string directoryPath, string fileName)
     {
-        // Note(erri120): hacky at best, PathHelpers.JoinParts expects sanitized inputs
-        var unsanitizedFullPath = Path.Combine(directoryPath, fileName);
-        return FromUnsanitizedFullPath(unsanitizedFullPath);
+        return AbsolutePath.FromUnsanitizedDirectoryAndFileName(directoryPath, fileName, this);
     }
 
     /// <inheritdoc/>
