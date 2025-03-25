@@ -13,14 +13,12 @@ internal sealed class DirectoriesEnumerator : FileSystemEnumerator<string>
     private readonly string _startDirectory;
     private readonly string _pattern;
     private readonly EnumerationOptions _options;
-    private readonly IOSInformation _os;
 
-    public DirectoriesEnumerator(string directory, string pattern, EnumerationOptions options, IOSInformation os) : base(directory, options)
+    public DirectoriesEnumerator(string directory, string pattern, EnumerationOptions options) : base(directory, options)
     {
         _startDirectory = directory;
         _pattern = pattern;
         _options = options;
-        _os = os;
     }
 
     protected override void OnDirectoryFinished(ReadOnlySpan<char> directory)
@@ -31,7 +29,7 @@ internal sealed class DirectoriesEnumerator : FileSystemEnumerator<string>
 
     protected override string TransformEntry(ref FileSystemEntry entry)
     {
-        _currentDirectory ??= PathHelpers.Sanitize(entry.Directory, _os, isRelative: false);
-        return PathHelpers.Sanitize(entry.FileName, _os, isRelative: true);
+        _currentDirectory ??= PathHelpers.Sanitize(entry.Directory);
+        return PathHelpers.Sanitize(entry.FileName);
     }
 }

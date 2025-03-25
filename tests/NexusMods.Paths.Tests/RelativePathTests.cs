@@ -32,7 +32,6 @@ public class RelativePathTests
         path.ToString().Should().Be(expected);
     }
 
-
     [Theory]
     [InlineData("a", "a")]
     [InlineData("a/", "a")]

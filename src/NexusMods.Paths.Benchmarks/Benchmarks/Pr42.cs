@@ -26,7 +26,7 @@ public class Pr42 : IBenchmark
     [Benchmark]
     public string Current()
     {
-        return PathHelpers.JoinParts(Path1.AsSpan(), Path2.AsSpan(), _osInformation);
+        return PathHelpers.JoinParts(Path1.AsSpan(), Path2.AsSpan());
     }
 
     [Benchmark]
@@ -43,7 +43,7 @@ public class Pr42 : IBenchmark
             ? GC.AllocateUninitializedArray<char>(spanLength)
             : stackalloc char[spanLength];
 
-        var count = PathHelpers.JoinParts(buffer, left, right, os);
+        var count = PathHelpers.JoinParts(buffer, left, right);
         if (count == 0) return string.Empty;
         return buffer.ToString();
     }

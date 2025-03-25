@@ -67,21 +67,6 @@ public class BaseFileSystemTests
         result.Should().BeEquivalentTo(contents);
     }
 
-    [Theory]
-    [InlineData("C:/", "/c")]
-    [InlineData("C:/foo/bar", "/c/foo/bar")]
-    public void Test_ConvertCrossPlatformPath(string input, string output)
-    {
-        var fs = new InMemoryFileSystem(OSInformation.FakeUnix)
-            .CreateOverlayFileSystem(
-            new Dictionary<AbsolutePath, AbsolutePath>(),
-            new Dictionary<KnownPath, AbsolutePath>(),
-            true);
-
-        var path = fs.FromUnsanitizedFullPath(input);
-        path.GetFullPath().Should().Be(output);
-    }
-
     [Fact]
     public void Test_KnownPathMappings()
     {
@@ -166,7 +151,7 @@ public class BaseFileSystemTests
             .Select(iDriveLetter =>
             {
                 var driveLetter = (char)iDriveLetter;
-                var originalPath = fs.FromUnsanitizedDirectoryAndFileName("/", driveLetter.ToString());
+                var originalPath = fs.FromUnsanitizedDirectoryAndFileName($"{char.ToUpper(driveLetter)}:/", "");
                 var newPath = rootDirectory / Guid.NewGuid().ToString("D");
                 return (originalPath, newPath);
             }).ToDictionary(x => x.originalPath, x => x.newPath);

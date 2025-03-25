@@ -6,81 +6,106 @@ namespace NexusMods.Paths.Tests;
 
 public class PathHelperTests
 {
+    [Theory]
+    [InlineData("", "")]
+    [InlineData("foo", "foo")]
+    [InlineData("foo ", "foo")]
+    [InlineData("foo/bar", "foo/bar")]
+    [InlineData("foo/bar/", "foo/bar")]
+    [InlineData("foo/bar/ ", "foo/bar")]
+    [InlineData(@"foo\bar", "foo/bar")]
+    [InlineData(@"foo\bar\", "foo/bar")]
+    [InlineData("/", "/")]
+    [InlineData("//", "/")]
+    [InlineData("/foo", "/foo")]
+    [InlineData("/foo/", "/foo")]
+    [InlineData("/foo//bar//", "/foo/bar")]
+    [InlineData(@"C:\", "C:/")]
+    [InlineData(@"C:\foo", "C:/foo")]
+    [InlineData(@"C:\foo\", "C:/foo")]
+    [InlineData(@"\\Server\\foo", "//Server/foo")]
+    [InlineData(@"\\.\C:\foo", "//./C:/foo")]
+    [InlineData(@"\\?\C:\foo", "//?/C:/foo")]
+    [InlineData(@"\\.\Volume{b75e2c83-0000-0000-0000-602f00000000}\foo", "//./Volume{b75e2c83-0000-0000-0000-602f00000000}/foo")]
+    [InlineData(@"\\?\Volume{b75e2c83-0000-0000-0000-602f00000000}\foo", "//?/Volume{b75e2c83-0000-0000-0000-602f00000000}/foo")]
+    public void Test_Sanitize(string input, string? expected)
+    {
+        var actual = PathHelpers.Sanitize(input);
+        actual.Should().Be(expected);
+
+        var isSanitized = PathHelpers.IsSanitized(actual);
+        isSanitized.Should().BeTrue(because: "input was just sanitized");
+
+        var again = PathHelpers.Sanitize(actual);
+        again.Should().Be(actual, because: "already sanitized, no changes should be made");
+    }
+
+    [Theory]
+    [MemberData(nameof(TestData_GetPathRoot))]
+    public void Test_GetPathRoot(string input, string expectedRootPart, PathRootType expectedRootType)
+    {
+        var pathRoot = PathHelpers.GetPathRoot(input);
+        pathRoot.Span.ToString().Should().Be(expectedRootPart);
+        pathRoot.RootType.Should().Be(expectedRootType);
+    }
+
+    public static TheoryData<string, string, PathRootType> TestData_GetPathRoot()
+    {
+        return new TheoryData<string, string, PathRootType>
+        {
+            { "", "", PathRootType.None },
+            { "foo", "", PathRootType.None },
+            { "foo/bar", "", PathRootType.None },
+            { "/", "/", PathRootType.Unix },
+            { "/foo", "/", PathRootType.Unix },
+            { "C:/", "C:/", PathRootType.DOS },
+            { "C:/foo", "C:/", PathRootType.DOS },
+            { "//A/" , "//A/", PathRootType.UNC },
+            { "//A/foo" , "//A/", PathRootType.UNC },
+            { "//Server/" , "//Server/", PathRootType.UNC },
+            { "//Server/foo" , "//Server/", PathRootType.UNC },
+            { "//./C:/", "//./C:/", PathRootType.DOSDeviceDrive },
+            { "//?/C:/", "//?/C:/", PathRootType.DOSDeviceDrive },
+            { "//./C:/foo", "//./C:/", PathRootType.DOSDeviceDrive },
+            { "//?/C:/foo", "//?/C:/", PathRootType.DOSDeviceDrive },
+            { "//./Volume{b75e2c83-0000-0000-0000-602f00000000}/", "//./Volume{b75e2c83-0000-0000-0000-602f00000000}/", PathRootType.DOSDeviceVolume },
+            { "//?/Volume{b75e2c83-0000-0000-0000-602f00000000}/", "//?/Volume{b75e2c83-0000-0000-0000-602f00000000}/", PathRootType.DOSDeviceVolume },
+            { "//./Volume{b75e2c83-0000-0000-0000-602f00000000}/foo", "//./Volume{b75e2c83-0000-0000-0000-602f00000000}/", PathRootType.DOSDeviceVolume },
+            { "//?/Volume{b75e2c83-0000-0000-0000-602f00000000}/foo", "//?/Volume{b75e2c83-0000-0000-0000-602f00000000}/", PathRootType.DOSDeviceVolume },
+        };
+    }
+
     private static IOSInformation CreateOSInformation(bool isUnix)
     {
         return isUnix ? OSInformation.FakeUnix : OSInformation.FakeWindows;
     }
 
     [Theory]
-    [InlineData(true, false, "", true)]
-    [InlineData(true, false, "/", true)]
-    [InlineData(true, false, "/foo", true)]
-    [InlineData(true, false, "/foo/bar", true)]
-    [InlineData(true, false, "/foo/bar.txt", true)]
-    [InlineData(true, true, "foo", true)]
-    [InlineData(true, true, "foo/bar", true)]
-    [InlineData(true, true,"foo/", false)]
-    [InlineData(true, true,"foo/bar/", false)]
-    [InlineData(true, false, "/foo/", false)]
-    [InlineData(true, false, "/            ", false)]
-    [InlineData(false, false, "", true)]
-    [InlineData(false, false, "C:/", true)]
-    [InlineData(false, false,"C:/foo", true)]
-    [InlineData(false, false, "C:/foo/bar", true)]
-    [InlineData(false, false, "C:/foo/bar.txt", true)]
-    [InlineData(false, true,"foo", true)]
-    [InlineData(false, true,"foo/bar", true)]
-    [InlineData(false, true, "foo/", false)]
-    [InlineData(false, false,"foo/bar/", false)]
-    [InlineData(false, false,"C:/foo/", false)]
-    [InlineData(false, false,"C:\\", false)]
-    [InlineData(false, false,"C:\\foo", false)]
-    [InlineData(false, false,"C:\\foo\\", false)]
-    [InlineData(false, false,"C:\\\\foo", false)]
-    [InlineData(false, true,"foo\\bar", false)]
-    public void Test_IsSanitized(bool isUnix, bool isRelative, string path, bool expected)
+    [InlineData("", true)]
+    [InlineData("/", true)]
+    [InlineData("/foo", true)]
+    [InlineData("/foo/bar", true)]
+    [InlineData("/foo/bar.txt", true)]
+    [InlineData("foo", true)]
+    [InlineData("foo/bar", true)]
+    [InlineData("foo/", false)]
+    [InlineData("foo/bar/", false)]
+    [InlineData("/foo/", false)]
+    [InlineData( "/            ", false)]
+    [InlineData( "C:/", true)]
+    [InlineData("C:/foo", true)]
+    [InlineData("C:/foo/bar", true)]
+    [InlineData("C:/foo/bar.txt", true)]
+    [InlineData("C:/foo/", false)]
+    [InlineData("C:\\", false)]
+    [InlineData("C:\\foo", false)]
+    [InlineData("C:\\foo\\", false)]
+    [InlineData("C:\\\\foo", false)]
+    [InlineData("foo\\bar", false)]
+    public void Test_IsSanitized(string input, bool expected)
     {
-        var actual = PathHelpers.IsSanitized(path, CreateOSInformation(isUnix), isRelative);
+        var actual = PathHelpers.IsSanitized(input);
         actual.Should().Be(expected);
-    }
-
-    [Theory]
-    [InlineData(true, "/foo/bar", false)]
-    [InlineData(true, "foo/bar", true)]
-    [InlineData(false, "C:/foo/bar", false)]
-    [InlineData(false, "foo/bar", true)]
-    public void Test_IsSanitized_Relative(bool isUnix, string path, bool expected)
-    {
-        var actual = PathHelpers.IsSanitized(path, CreateOSInformation(isUnix), isRelative: true);
-        actual.Should().Be(expected);
-    }
-
-    [Theory]
-    [InlineData(true, "", "")]
-    [InlineData(true, "/", "/")]
-    [InlineData(true, "/foo/", "/foo")]
-    [InlineData(true, "/foo\\bar", "/foo/bar")]
-    [InlineData(false, "", "")]
-    [InlineData(false, "C:/", "C:/")]
-    [InlineData(false, "C:\\", "C:/")]
-    [InlineData(false, "C:\\foo", "C:/foo")]
-    [InlineData(false, "C:\\foo\\", "C:/foo")]
-    [InlineData(false, "C:\\\\foo", "C:/foo")]
-    [InlineData(false, "C:\\\\\\\\\\foo\\\\\\bar\\\\\\baz\\\\\\\\", "C:/foo/bar/baz")]
-    public void Test_Sanitize(bool isUnix, string input, string expectedOutput)
-    {
-        var actualOutput = PathHelpers.Sanitize(input, CreateOSInformation(isUnix), isRelative: false);
-        actualOutput.Should().Be(expectedOutput);
-    }
-
-    [Theory]
-    [InlineData(true, true, "/foo")]
-    [InlineData(false, true, "C:/foo")]
-    [InlineData(true, false, "foo")]
-    public void Test_SanitizeException(bool isUnix, bool isRelative, string input)
-    {
-        var act = () => PathHelpers.Sanitize(input, CreateOSInformation(isUnix), isRelative);
-        act.Should().ThrowExactly<PathException>();
     }
 
     [Theory]
@@ -97,41 +122,41 @@ public class PathHelperTests
     }
 
     [Theory]
-    [InlineData(true, "", "", true)]
-    [InlineData(true,"foo", "", false)]
-    [InlineData(true,"", "foo", false)]
-    [InlineData(true,"foo", "foo", true)]
-    [InlineData(true,"foo", "FOO", true)]
-    [InlineData(true,"/foo", "/foo", true)]
-    [InlineData(true,"/foo", "/FOO", true)]
-    [InlineData(false, "C:/", "C:/", true)]
-    [InlineData(false, "C:/foo", "C:/foo", true)]
-    [InlineData(false, "C:/foo", "C:/FOO", true)]
-    public void Test_Equals(bool isUnix, string left, string right, bool expected)
+    [InlineData("", "", true)]
+    [InlineData("foo", "", false)]
+    [InlineData("", "foo", false)]
+    [InlineData("foo", "foo", true)]
+    [InlineData("foo", "FOO", true)]
+    [InlineData("/foo", "/foo", true)]
+    [InlineData("/foo", "/FOO", true)]
+    [InlineData("C:/", "C:/", true)]
+    [InlineData("C:/foo", "C:/foo", true)]
+    [InlineData("C:/foo", "C:/FOO", true)]
+    public void Test_Equals(string left, string right, bool expected)
     {
-        var actual = PathHelpers.PathEquals(left, right, CreateOSInformation(isUnix));
+        var actual = PathHelpers.PathEquals(left, right);
         actual.Should().Be(expected);
     }
 
     [Theory]
-    [InlineData(true, "", "", 0)]
-    [InlineData(true, "", "foo", -1)]
-    [InlineData(true, "foo", "", 1)]
-    [InlineData(true, "foo", "foo", 0)]
-    [InlineData(true, "foo", "FOO", 0)]
-    [InlineData(true, "/foo", "/foo", 0)]
-    [InlineData(true, "/foo", "/FOO", 0)]
-    [InlineData(true, "/FOO", "/foo", 0)]
-    [InlineData(true, "/foo", "/bar", 1)]
-    [InlineData(true, "/bar", "/foo", -1)]
-    [InlineData(false, "C:/foo", "C:/foo", 0)]
-    [InlineData(false, "C:/foo", "C:/FOO", 0)]
-    [InlineData(false, "C:/FOO", "C:/foo", 0)]
-    [InlineData(false, "C:/foo", "C:/bar", 1)]
-    [InlineData(false, "C:/bar", "C:/foo", -1)]
-    public void Test_Compare(bool isUnix, string left, string right, int expected)
+    [InlineData("", "", 0)]
+    [InlineData("", "foo", -1)]
+    [InlineData("foo", "", 1)]
+    [InlineData("foo", "foo", 0)]
+    [InlineData("foo", "FOO", 0)]
+    [InlineData("/foo", "/foo", 0)]
+    [InlineData("/foo", "/FOO", 0)]
+    [InlineData("/FOO", "/foo", 0)]
+    [InlineData("/foo", "/bar", 1)]
+    [InlineData("/bar", "/foo", -1)]
+    [InlineData("C:/foo", "C:/foo", 0)]
+    [InlineData("C:/foo", "C:/FOO", 0)]
+    [InlineData("C:/FOO", "C:/foo", 0)]
+    [InlineData("C:/foo", "C:/bar", 1)]
+    [InlineData("C:/bar", "C:/foo", -1)]
+    public void Test_Compare(string left, string right, int expected)
     {
-        var actual = PathHelpers.Compare(left, right, CreateOSInformation(isUnix));
+        var actual = PathHelpers.Compare(left, right);
         actual = actual switch
         {
             0 => 0,
@@ -169,98 +194,73 @@ public class PathHelperTests
     }
 
     [Theory]
-    [InlineData(true, "/", 1)]
-    [InlineData(true, "/foo", 1)]
-    [InlineData(true, "/foo/", 1)]
-    [InlineData(true, "/foo/bar", 1)]
-    [InlineData(true, "foo", -1)]
-    [InlineData(true, "foo/bar", -1)]
-    [InlineData(false, "C:/", 3)]
-    [InlineData(false, "C:/foo", 3)]
-    [InlineData(false, "C:/foo/", 3)]
-    [InlineData(false, "C:/foo/bar", 3)]
-    [InlineData(false, "foo", -1)]
-    [InlineData(false, "foo/bar", -1)]
-    public void Test_GetRootLength(bool isUnix, string path, int expectedRootLength)
+    [InlineData("/", 1)]
+    [InlineData("/foo", 1)]
+    [InlineData("/foo/", 1)]
+    [InlineData("/foo/bar", 1)]
+    [InlineData("foo", -1)]
+    [InlineData("foo/bar", -1)]
+    [InlineData("C:/", 3)]
+    [InlineData("C:/foo", 3)]
+    [InlineData("C:/foo/", 3)]
+    [InlineData("C:/foo/bar", 3)]
+    public void Test_GetRootLength(string path, int expectedRootLength)
     {
-        var actualRootLength = PathHelpers.GetRootLength(path, CreateOSInformation(isUnix));
+        var actualRootLength = PathHelpers.GetRootLength(path);
         actualRootLength.Should().Be(expectedRootLength);
     }
 
     [Theory]
-    [InlineData(true, "/", true)]
-    [InlineData(true, "/foo", true)]
-    [InlineData(true, "/foo/", true)]
-    [InlineData(true, "/foo/bar", true)]
-    [InlineData(true, "foo", false)]
-    [InlineData(true, "foo/bar", false)]
-    [InlineData(false, "C:/", true)]
-    [InlineData(false, "C:/foo", true)]
-    [InlineData(false, "C:/foo/", true)]
-    [InlineData(false, "C:/foo/bar", true)]
-    [InlineData(false, "foo", false)]
-    [InlineData(false, "foo/bar", false)]
-    public void Test_IsRooted(bool isUnix, string path, bool expectedResult)
+    [InlineData("/", true)]
+    [InlineData("/foo", true)]
+    [InlineData("/foo/", true)]
+    [InlineData("/foo/bar", true)]
+    [InlineData("foo", false)]
+    [InlineData("foo/bar", false)]
+    [InlineData("C:/", true)]
+    [InlineData("C:/foo", true)]
+    [InlineData("C:/foo/", true)]
+    [InlineData("C:/foo/bar", true)]
+    public void Test_IsRooted(string path, bool expectedResult)
     {
-        var actualResult = PathHelpers.IsRooted(path, CreateOSInformation(isUnix));
+        var actualResult = PathHelpers.IsRooted(path);
         actualResult.Should().Be(expectedResult);
     }
 
     [Theory]
-    [InlineData(true, "/", "/")]
-    [InlineData(true, "/foo", "/")]
-    [InlineData(true, "/foo/", "/")]
-    [InlineData(true, "/foo/bar", "/")]
-    [InlineData(true, "foo", "")]
-    [InlineData(true, "foo/bar", "")]
-    [InlineData(false, "C:/", "C:/")]
-    [InlineData(false, "C:/foo", "C:/")]
-    [InlineData(false, "C:/foo/", "C:/")]
-    [InlineData(false, "C:/foo/bar", "C:/")]
-    [InlineData(false, "foo", "")]
-    [InlineData(false, "foo/bar", "")]
-    public void Test_GetRootedPart(bool isUnix, string path, string expectedRootPart)
+    [InlineData( "/", true)]
+    [InlineData( "/foo", false)]
+    [InlineData( "/foo/", false)]
+    [InlineData( "/foo/bar", false)]
+    [InlineData( "foo", false)]
+    [InlineData( "foo/bar", false)]
+    [InlineData( "C:/", true)]
+    [InlineData( "C:/foo", false)]
+    [InlineData( "C:/foo/", false)]
+    [InlineData( "C:/foo/bar", false)]
+    public void Test_IsRootDirectory(string path, bool expected)
     {
-        var actualRootPart = PathHelpers.GetRootPart(path, CreateOSInformation(isUnix)).ToString();
-        actualRootPart.Should().Be(expectedRootPart);
-    }
-
-    [Theory]
-    [InlineData(true, "/", true)]
-    [InlineData(true, "/foo", false)]
-    [InlineData(true, "/foo/", false)]
-    [InlineData(true, "/foo/bar", false)]
-    [InlineData(true, "foo", false)]
-    [InlineData(true, "foo/bar", false)]
-    [InlineData(false, "C:/", true)]
-    [InlineData(false, "C:/foo", false)]
-    [InlineData(false, "C:/foo/", false)]
-    [InlineData(false, "C:/foo/bar", false)]
-    [InlineData(false, "foo", false)]
-    [InlineData(false, "foo/bar", false)]
-    public void Test_IsRootDirectory(bool isUnix, string path, bool expected)
-    {
-        var actual = PathHelpers.IsRootDirectory(path, CreateOSInformation(isUnix));
+        var actual = PathHelpers.IsRootDirectory(path);
         actual.Should().Be(expected);
     }
 
     [Theory]
-    [InlineData(true, "/", "foo", "/foo")]
-    [InlineData(true, "/foo", "bar", "/foo/bar")]
-    [InlineData(true, "foo", "bar", "foo/bar")]
-    [InlineData(true, "/", "foo/bar", "/foo/bar")]
-    [InlineData(true, "", "foo", "foo")]
-    [InlineData(true, "foo", "", "foo")]
-    [InlineData(false, "C:/", "foo", "C:/foo")]
-    [InlineData(false, "C:/foo", "bar", "C:/foo/bar")]
-    [InlineData(false, "C:/", "foo/bar", "C:/foo/bar")]
-    [InlineData(false, "", "", "")]
-    public void Test_JoinParts(bool isUnix, string left, string right, string expectedResult)
+    [InlineData( "/", "foo", "/foo")]
+    [InlineData( "/foo", "bar", "/foo/bar")]
+    [InlineData( "foo", "bar", "foo/bar")]
+    [InlineData( "/", "foo/bar", "/foo/bar")]
+    [InlineData( "", "foo", "foo")]
+    [InlineData( "foo", "", "foo")]
+    [InlineData( "C:/", "foo", "C:/foo")]
+    [InlineData( "C:/foo", "bar", "C:/foo/bar")]
+    [InlineData( "C:/", "foo/bar", "C:/foo/bar")]
+    [InlineData( "", "", "")]
+    public void Test_JoinParts(string left, string right, string expectedResult)
     {
-        var actualResult1 = PathHelpers.JoinParts(left, right, CreateOSInformation(isUnix));
+        var actualResult1 = PathHelpers.JoinParts(left, right);
         actualResult1.Should().Be(expectedResult);
 
-        var actualResult2 = PathHelpers.JoinParts(left.AsSpan(), right.AsSpan(), CreateOSInformation(isUnix));
+        var actualResult2 = PathHelpers.JoinParts(left.AsSpan(), right.AsSpan());
         actualResult2.Should().Be(expectedResult);
     }
 
@@ -288,18 +288,18 @@ public class PathHelperTests
     }
 
     [Theory]
-    [InlineData(true, "", "")]
-    [InlineData(true, "foo", "foo")]
-    [InlineData(true, "foo/bar", "bar")]
-    [InlineData(true, "/", "")]
-    [InlineData(true, "/foo", "foo")]
-    [InlineData(true, "/foo/bar", "bar")]
-    [InlineData(false, "C:/", "")]
-    [InlineData(false, "C:/foo", "foo")]
-    [InlineData(false, "C:/foo/bar", "bar")]
-    public void Test_GetFileName(bool isUnix, string path, string expectedFileName)
+    [InlineData( "", "")]
+    [InlineData( "foo", "foo")]
+    [InlineData( "foo/bar", "bar")]
+    [InlineData( "/", "")]
+    [InlineData( "/foo", "foo")]
+    [InlineData( "/foo/bar", "bar")]
+    [InlineData( "C:/", "")]
+    [InlineData( "C:/foo", "foo")]
+    [InlineData( "C:/foo/bar", "bar")]
+    public void Test_GetFileName(string path, string expectedFileName)
     {
-        var actualFileName = PathHelpers.GetFileName(path, CreateOSInformation(isUnix)).ToString();
+        var actualFileName = PathHelpers.GetFileName(path).ToString();
         actualFileName.Should().Be(expectedFileName);
     }
 
@@ -326,127 +326,128 @@ public class PathHelperTests
     }
 
     [Theory]
-    [InlineData(true, "", 0)]
-    [InlineData(true, "foo.txt", 0)]
-    [InlineData(true, "foo/bar.txt", 1)]
-    [InlineData(true, "/", 1)]
-    [InlineData(true, "/foo.txt", 1)]
-    [InlineData(true, "/foo/bar.txt", 2)]
-    [InlineData(false, "C:/", 1)]
-    [InlineData(false, "C:/foo.txt", 1)]
-    [InlineData(false, "C:/foo/bar.txt", 2)]
-    public void Test_GetDirectoryDepth(bool isUnix, string input, int expectedDepth)
+    [InlineData("", 0)]
+    [InlineData("foo.txt", 0)]
+    [InlineData("foo/bar.txt", 1)]
+    [InlineData("/", 1)]
+    [InlineData("/foo.txt", 1)]
+    [InlineData("/foo/bar.txt", 2)]
+    [InlineData("C:/", 1)]
+    [InlineData("C:/foo.txt", 1)]
+    [InlineData("C:/foo/bar.txt", 2)]
+    [InlineData("//Server/foo/bar.txt", 2)]
+    [InlineData("//./C:/foo/bar", 2)]
+    public void Test_GetDirectoryDepth(string input, int expectedDepth)
     {
-        var actualDepth = PathHelpers.GetDirectoryDepth(input, CreateOSInformation(isUnix));
+        var actualDepth = PathHelpers.GetDirectoryDepth(input);
         actualDepth.Should().Be(expectedDepth);
     }
 
     [Theory]
-    [InlineData(true, "/", "/")]
-    [InlineData(true, "/foo", "/")]
-    [InlineData(true, "/foo/bar", "/foo")]
-    [InlineData(true, "", "")]
-    [InlineData(true, "foo", "")]
-    [InlineData(true, "foo/bar", "foo")]
-    [InlineData(false, "C:/", "C:/")]
-    [InlineData(false, "C:/foo", "C:/")]
-    [InlineData(false, "C:/foo/bar", "C:/foo")]
-    [InlineData(false, "", "")]
-    [InlineData(false, "foo", "")]
-    [InlineData(false, "foo/bar", "foo")]
-    public void Test_GetDirectoryName(bool isUnix, string input, string expectedOutput)
+    [InlineData("/", "/")]
+    [InlineData("/foo", "/")]
+    [InlineData("/foo/bar", "/foo")]
+    [InlineData("", "")]
+    [InlineData("foo", "")]
+    [InlineData("foo/bar", "foo")]
+    [InlineData("C:/", "C:/")]
+    [InlineData("C:/foo", "C:/")]
+    [InlineData("C:/foo/bar", "C:/foo")]
+    public void Test_GetDirectoryName(string input, string expectedOutput)
     {
-        var actualOutput = PathHelpers.GetDirectoryName(input, CreateOSInformation(isUnix)).ToString();
+        var actualOutput = PathHelpers.GetDirectoryName(input).ToString();
         actualOutput.Should().Be(expectedOutput);
     }
 
     [Theory]
-    [InlineData(true, "", "", true)]
-    [InlineData(true, "foo", "", true)]
-    [InlineData(true, "", "foo", false)]
-    [InlineData(true, "foo/bar", "foo", true)]
-    [InlineData(true, "foo", "bar", false)]
-    [InlineData(true, "/", "/", true)]
-    [InlineData(true, "/foo", "/", true)]
-    [InlineData(true, "/foo/bar/baz", "/", true)]
-    [InlineData(true, "/foo/bar/baz", "/foo", true)]
-    [InlineData(true, "/foo/bar/baz", "/foo/bar", true)]
-    [InlineData(true, "/foobar", "/foo", false)]
-    [InlineData(false, "C:/", "C:/", true)]
-    [InlineData(false, "C:/foo", "C:/", true)]
-    [InlineData(false, "C:/foo/bar/baz", "C:/", true)]
-    [InlineData(false, "C:/foo/bar/baz", "C:/foo", true)]
-    [InlineData(false, "C:/foo/bar/baz", "C:/foo/bar", true)]
-    [InlineData(false, "C:/foobar", "C:/foo", false)]
-    public void Test_InFolder(bool isUnix, string child, string parent, bool expected)
+    [InlineData( "", "", true)]
+    [InlineData( "foo", "", true)]
+    [InlineData( "", "foo", false)]
+    [InlineData( "foo/bar", "foo", true)]
+    [InlineData( "foo", "bar", false)]
+    [InlineData( "/", "/", true)]
+    [InlineData( "/foo", "/", true)]
+    [InlineData( "/foo/bar/baz", "/", true)]
+    [InlineData( "/foo/bar/baz", "/foo", true)]
+    [InlineData( "/foo/bar/baz", "/foo/bar", true)]
+    [InlineData( "/foobar", "/foo", false)]
+    [InlineData( "C:/", "C:/", true)]
+    [InlineData( "C:/foo", "C:/", true)]
+    [InlineData( "C:/foo/bar/baz", "C:/", true)]
+    [InlineData( "C:/foo/bar/baz", "C:/foo", true)]
+    [InlineData( "C:/foo/bar/baz", "C:/foo/bar", true)]
+    [InlineData( "C:/foobar", "C:/foo", false)]
+    public void Test_InFolder(string child, string parent, bool expected)
     {
-        var actual = PathHelpers.InFolder(child, parent, CreateOSInformation(isUnix));
+        var actual = PathHelpers.InFolder(child, parent);
         actual.Should().Be(expected);
     }
 
     [Theory]
-    [InlineData(true, "", "", "")]
-    [InlineData(true, "foo/bar", "foo", "bar")]
-    [InlineData(true, "/foo", "/", "foo")]
-    [InlineData(true, "/foo/bar", "/foo", "bar")]
-    [InlineData(false, "C:/foo", "C:/", "foo")]
-    [InlineData(false, "C:/foo/bar", "C:/foo", "bar")]
-    public void Test_RelativeTo(bool isUnix, string child, string parent, string expectedOutput)
+    [InlineData( "", "", "")]
+    [InlineData( "foo/bar", "foo", "bar")]
+    [InlineData( "/foo", "/", "foo")]
+    [InlineData( "/foo/bar", "/foo", "bar")]
+    [InlineData( "C:/foo", "C:/", "foo")]
+    [InlineData( "C:/foo/bar", "C:/foo", "bar")]
+    public void Test_RelativeTo(string child, string parent, string expectedOutput)
     {
-        var actualOutput = PathHelpers.RelativeTo(child, parent, CreateOSInformation(isUnix)).ToString();
+        var actualOutput = PathHelpers.RelativeTo(child, parent).ToString();
         actualOutput.Should().Be(expectedOutput);
     }
 
     [Theory]
-    [InlineData(true, "", "")]
-    [InlineData(true, "/", "/")]
-    [InlineData(false, "C:/", "C:/")]
-    [InlineData(true, "foo/bar", "foo")]
-    [InlineData(true, "foo/bar/baz", "foo")]
-    public void Test_GetTopParent(bool isUnix, string path, string expectedOutput)
+    [InlineData( "", "")]
+    [InlineData( "/", "/")]
+    [InlineData( "C:/", "C:/")]
+    [InlineData( "foo/bar", "foo")]
+    [InlineData( "foo/bar/baz", "foo")]
+    public void Test_GetTopParent(string path, string expectedOutput)
     {
-        var actualOutput = PathHelpers.GetTopParent(path, CreateOSInformation(isUnix)).ToString();
+        var actualOutput = PathHelpers.GetTopParent(path).ToString();
         actualOutput.Should().Be(expectedOutput);
     }
 
     [Theory]
-    [InlineData(true, "", 0, "")]
-    [InlineData(true, "/", 0, "/")]
-    [InlineData(true, "/", 1, "")]
-    [InlineData(true, "/foo", 1, "foo")]
-    [InlineData(true, "/foo/bar", 1, "foo/bar")]
-    [InlineData(true, "/foo/bar", 2, "bar")]
-    [InlineData(true, "/foo/bar", 3, "")]
-    [InlineData(false, "C:/", 0, "C:/")]
-    [InlineData(false, "C:/", 1, "")]
-    [InlineData(false, "C:/foo", 1, "foo")]
-    [InlineData(false, "C:/foo/bar", 1, "foo/bar")]
-    [InlineData(false, "C:/foo/bar", 2, "bar")]
-    [InlineData(false, "C:/foo/bar", 3, "")]
-    public void Test_DropParents(bool isUnix, string path, int count, string expectedOutput)
+    [InlineData("", 0, "")]
+    [InlineData("/", 0, "/")]
+    [InlineData("/", 1, "")]
+    [InlineData("/foo", 1, "foo")]
+    [InlineData("/foo/bar", 1, "foo/bar")]
+    [InlineData("/foo/bar", 2, "bar")]
+    [InlineData("/foo/bar", 3, "")]
+    [InlineData("C:/", 0, "C:/")]
+    [InlineData("C:/", 1, "")]
+    [InlineData("C:/foo", 1, "foo")]
+    [InlineData("C:/foo/bar", 1, "foo/bar")]
+    [InlineData("C:/foo/bar", 2, "bar")]
+    [InlineData("C:/foo/bar", 3, "")]
+    [InlineData("//Server/foo/bar", 2, "bar")]
+    [InlineData("//./C:/foo/bar", 2, "bar")]
+    public void Test_DropParents(string path, int count, string expectedOutput)
     {
-        var actualOutput = PathHelpers.DropParents(path, count, CreateOSInformation(isUnix)).ToString();
+        var actualOutput = PathHelpers.DropParents(path, count).ToString();
         actualOutput.Should().Be(expectedOutput);
     }
 
     [Theory]
-    [InlineData(true, false, "", "")]
-    [InlineData(true, false, "foo/bar", "foo+bar")]
-    [InlineData(true, false,"/", "/")]
-    [InlineData(true, false,"/foo", "/+foo")]
-    [InlineData(true, false,"/foo/bar/baz", "/+foo+bar+baz")]
-    [InlineData(false, false,"C:/", "C:/")]
-    [InlineData(false, false,"C:/foo", "C:/+foo")]
-    [InlineData(false, false,"C:/foo/bar/baz", "C:/+foo+bar+baz")]
-    [InlineData(true, true, "", "")]
-    [InlineData(true, true, "foo/bar", "bar+foo")]
-    [InlineData(true, true,"/", "/")]
-    [InlineData(true, true,"/foo", "foo+/")]
-    [InlineData(true, true,"/foo/bar/baz", "baz+bar+foo+/")]
-    [InlineData(false, true,"C:/", "C:/")]
-    [InlineData(false, true,"C:/foo", "foo+C:/")]
-    [InlineData(false, true,"C:/foo/bar/baz", "baz+bar+foo+C:/")]
-    public void Test_WalkParts(bool isUnix, bool isReverse, string path, string expectedOutput)
+    [InlineData( false, "", "")]
+    [InlineData( false, "foo/bar", "foo+bar")]
+    [InlineData( false,"/", "/")]
+    [InlineData( false,"/foo", "/+foo")]
+    [InlineData( false,"/foo/bar/baz", "/+foo+bar+baz")]
+    [InlineData( false,"C:/", "C:/")]
+    [InlineData( false,"C:/foo", "C:/+foo")]
+    [InlineData( false,"C:/foo/bar/baz", "C:/+foo+bar+baz")]
+    [InlineData( true, "", "")]
+    [InlineData( true, "foo/bar", "bar+foo")]
+    [InlineData( true,"/", "/")]
+    [InlineData( true,"/foo", "foo+/")]
+    [InlineData( true,"/foo/bar/baz", "baz+bar+foo+/")]
+    [InlineData( true,"C:/", "C:/")]
+    [InlineData( true,"C:/foo", "foo+C:/")]
+    [InlineData( true,"C:/foo/bar/baz", "baz+bar+foo+C:/")]
+    public void Test_WalkParts(bool isReverse, string path, string expectedOutput)
     {
         var sb = new StringBuilder();
 
@@ -456,7 +457,7 @@ public class PathHelperTests
             if (sb_.Length != 0) sb_.Append('+');
             sb_.Append(part);
             return true;
-        }, CreateOSInformation(isUnix), isReverse);
+        }, isReverse);
 
         var actualOutput = sb.ToString();
         actualOutput.Should().Be(expectedOutput);
@@ -467,30 +468,30 @@ public class PathHelperTests
             if (sb.Length != 0) sb.Append('+');
             sb.Append(part);
             return true;
-        }, CreateOSInformation(isUnix), isReverse);
+        }, isReverse);
 
         actualOutput = sb.ToString();
         actualOutput.Should().Be(expectedOutput);
     }
 
     [Theory]
-    [InlineData(true, false, "/foo/bar/baz", 1, "/")]
-    [InlineData(true, false, "/foo/bar/baz", 2, "/+foo")]
-    [InlineData(true, false, "/foo/bar/baz", 3, "/+foo+bar")]
-    [InlineData(true, false, "/foo/bar/baz", 4, "/+foo+bar+baz")]
-    [InlineData(true, true, "/foo/bar/baz", 1, "baz")]
-    [InlineData(true, true, "/foo/bar/baz", 2, "baz+bar")]
-    [InlineData(true, true, "/foo/bar/baz", 3, "baz+bar+foo")]
-    [InlineData(true, true, "/foo/bar/baz", 4, "baz+bar+foo+/")]
-    [InlineData(false, false, "C:/foo/bar/baz", 1, "C:/")]
-    [InlineData(false, false, "C:/foo/bar/baz", 2, "C:/+foo")]
-    [InlineData(false, false, "C:/foo/bar/baz", 3, "C:/+foo+bar")]
-    [InlineData(false, false, "C:/foo/bar/baz", 4, "C:/+foo+bar+baz")]
-    [InlineData(false, true, "C:/foo/bar/baz", 1, "baz")]
-    [InlineData(false, true, "C:/foo/bar/baz", 2, "baz+bar")]
-    [InlineData(false, true, "C:/foo/bar/baz", 3, "baz+bar+foo")]
-    [InlineData(false, true, "C:/foo/bar/baz", 4, "baz+bar+foo+C:/")]
-    public void Test_WalkPartsPartially(bool isUnix, bool isReverse, string path, int stopAfterN, string expectedOutput)
+    [InlineData( false, "/foo/bar/baz", 1, "/")]
+    [InlineData( false, "/foo/bar/baz", 2, "/+foo")]
+    [InlineData( false, "/foo/bar/baz", 3, "/+foo+bar")]
+    [InlineData( false, "/foo/bar/baz", 4, "/+foo+bar+baz")]
+    [InlineData( true, "/foo/bar/baz", 1, "baz")]
+    [InlineData( true, "/foo/bar/baz", 2, "baz+bar")]
+    [InlineData( true, "/foo/bar/baz", 3, "baz+bar+foo")]
+    [InlineData( true, "/foo/bar/baz", 4, "baz+bar+foo+/")]
+    [InlineData( false, "C:/foo/bar/baz", 1, "C:/")]
+    [InlineData( false, "C:/foo/bar/baz", 2, "C:/+foo")]
+    [InlineData( false, "C:/foo/bar/baz", 3, "C:/+foo+bar")]
+    [InlineData( false, "C:/foo/bar/baz", 4, "C:/+foo+bar+baz")]
+    [InlineData( true, "C:/foo/bar/baz", 1, "baz")]
+    [InlineData( true, "C:/foo/bar/baz", 2, "baz+bar")]
+    [InlineData( true, "C:/foo/bar/baz", 3, "baz+bar+foo")]
+    [InlineData( true, "C:/foo/bar/baz", 4, "baz+bar+foo+C:/")]
+    public void Test_WalkPartsPartially(bool isReverse, string path, int stopAfterN, string expectedOutput)
     {
         var sb = new StringBuilder();
         var counter = 0;
@@ -501,7 +502,7 @@ public class PathHelperTests
             sb.Append(part);
             counter++;
             return counter < stopAfterN;
-        }, CreateOSInformation(isUnix), isReverse);
+        }, isReverse);
 
         var actualOutput = sb.ToString();
         actualOutput.Should().Be(expectedOutput);
@@ -509,18 +510,18 @@ public class PathHelperTests
 
     [Theory]
     [MemberData(nameof(TestData_GetParts))]
-    public void Test_GetParts(bool isUnix, bool isReverse, string path, List<string> expectedOutput)
+    public void Test_GetParts(bool isReverse, string path, List<string> expectedOutput)
     {
-        var actualOutput = PathHelpers.GetParts(path, CreateOSInformation(isUnix), isReverse);
+        var actualOutput = PathHelpers.GetParts(path, isReverse);
         actualOutput.Should().Equal(expectedOutput);
     }
 
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     public static IEnumerable<object[]> TestData_GetParts => new[]
     {
-        new object[] { true, false, "/foo/bar/baz", new List<string> { "/", "foo", "bar", "baz" } },
-        new object[] { true, true, "/foo/bar/baz", new List<string> { "baz", "bar", "foo", "/" } },
-        new object[] { false, false, "C:/foo/bar/baz", new List<string>{ "C:/", "foo", "bar", "baz" }},
-        new object[] { false, true, "C:/foo/bar/baz", new List<string>{ "baz", "bar", "foo", "C:/" }},
+        new object[] { false, "/foo/bar/baz", new List<string> { "/", "foo", "bar", "baz" } },
+        new object[] { true, "/foo/bar/baz", new List<string> { "baz", "bar", "foo", "/" } },
+        new object[] { false, "C:/foo/bar/baz", new List<string>{ "C:/", "foo", "bar", "baz" }},
+        new object[] { true, "C:/foo/bar/baz", new List<string>{ "baz", "bar", "foo", "C:/" }},
     };
 }

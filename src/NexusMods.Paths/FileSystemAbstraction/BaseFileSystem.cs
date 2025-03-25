@@ -77,39 +77,6 @@ public abstract class BaseFileSystem : IFileSystem
         return newPath;
     }
 
-    private string ConvertCrossPlatformPath(string input)
-    {
-        // NOTE(erri120): This method is required for
-        // Windows (Wine) -> Linux (native) path mappings to work correctly.
-        // This works on the assumption that the input is a fully rooted
-        // Windows-drive path, eg: "C:/foo/bar" or "D:/baz.txt" and
-        // converts that input into a fully rooted Linux path, where
-        // the first path component after the root directory is the
-        // drive letter, eg: "C:/foo/bar" -> "/c/foo/bar"
-        // This enables path mappings to map "/c" to something else, like
-        // "/opt/wine/drive_c"
-
-        // Only supported on Linux and with the setting enabled
-        if (!OS.IsLinux || !_convertCrossPlatformPaths) return PathHelpers.Sanitize(input, OS, isRelative: false);
-
-        var sanitizedPathWindows = PathHelpers.Sanitize(input, OSInformation.FakeWindows, isRelative: false);
-
-        var result = string.Create(
-            sanitizedPathWindows.Length,
-            sanitizedPathWindows,
-            (span, s) =>
-            {
-                // C:/foo/bar -> /c/foo/bar
-                var inputSpan = s.AsSpan();
-
-                span[0] = PathHelpers.DirectorySeparatorChar;
-                span[1] = char.ToLower(inputSpan.DangerousGetReferenceAt(0));
-                inputSpan.SliceFast(2).CopyTo(span.SliceFast(2));
-            });
-
-        return PathHelpers.RemoveTrailingDirectorySeparator(result).ToString();
-    }
-
     #region IFileStream Implementation
 
     /// <inheritdoc/>
@@ -224,8 +191,8 @@ public abstract class BaseFileSystem : IFileSystem
         // NOTE(erri120): I need to revisit this entire function at some point and figure out a better way to handle path mappings
         var pathMappings = new Dictionary<AbsolutePath, AbsolutePath>
         {
-            { fileSystem.FromUnsanitizedFullPath("/c"), rootDirectory },
-            { fileSystem.FromUnsanitizedFullPath("/z"), fileSystem.FromUnsanitizedFullPath("/") },
+            { fileSystem.FromUnsanitizedFullPath("C:/"), rootDirectory },
+            { fileSystem.FromUnsanitizedFullPath("Z:/"), fileSystem.FromUnsanitizedFullPath("/") },
         };
 
         var knownPaths = Enum.GetValues<KnownPath>();
@@ -263,8 +230,9 @@ public abstract class BaseFileSystem : IFileSystem
     /// <inheritdoc/>
     public AbsolutePath FromUnsanitizedFullPath(string unsanitizedFullPath)
     {
-        var convertedPath = ConvertCrossPlatformPath(unsanitizedFullPath);
-        var mappedPath = GetMappedPath(AbsolutePath.FromSanitizedFullPath(convertedPath, this));
+        var sanitized = PathHelpers.Sanitize(unsanitizedFullPath);
+        var path = AbsolutePath.FromSanitizedFullPath(sanitized, this);
+        var mappedPath = GetMappedPath(path);
         return mappedPath;
     }
 
