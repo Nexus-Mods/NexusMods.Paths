@@ -43,12 +43,12 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     public RelativePath FileName => Name;
 
     /// <inheritdoc />
-    public RelativePath Name => new(PathHelpers.GetFileName(Path, OS).ToString());
+    public RelativePath Name => new(PathHelpers.GetFileName(Path).ToString());
 
     /// <summary>
     /// Amount of directories contained within this relative path.
     /// </summary>
-    public int Depth => PathHelpers.GetDirectoryDepth(Path, OS);
+    public int Depth => PathHelpers.GetDirectoryDepth(Path);
 
     /// <summary>
     /// Traverses one directory up.
@@ -57,7 +57,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     {
         get
         {
-            var directoryName = PathHelpers.GetDirectoryName(Path, OS);
+            var directoryName = PathHelpers.GetDirectoryName(Path);
             return directoryName.IsEmpty ? Empty : new RelativePath(directoryName.ToString());
         }
     }
@@ -108,7 +108,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     {
         get
         {
-            var topParent = PathHelpers.GetTopParent(Path, OS);
+            var topParent = PathHelpers.GetTopParent(Path);
             return topParent.IsEmpty ? Empty : new RelativePath(topParent.ToString());
         }
     }
@@ -119,7 +119,8 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     /// <param name="path">The relative path to use.</param>
     internal RelativePath(string path)
     {
-        PathHelpers.DebugAssertIsSanitized(path, OS);
+        PathHelpers.DebugAssertIsSanitized(path);
+        PathHelpers.AssertIsRooted(path, shouldBeRelative: true);
         Path = path;
     }
 
@@ -140,7 +141,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     /// <param name="path"></param>
     public static RelativePath FromUnsanitizedInput(ReadOnlySpan<char> path)
     {
-        return new RelativePath(PathHelpers.Sanitize(path, OS, isRelative: true));
+        return new RelativePath(PathHelpers.Sanitize(path));
     }
 
     /// <summary>
@@ -174,7 +175,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     [Pure]
     public RelativePath Join(RelativePath other)
     {
-        return new RelativePath(PathHelpers.JoinParts(Path, other.Path, OS));
+        return new RelativePath(PathHelpers.JoinParts(Path, other.Path));
     }
     
     /// <summary>
@@ -274,7 +275,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     /// <inheritdoc />
     public bool InFolder(RelativePath other)
     {
-        return PathHelpers.InFolder(Path, other.Path, OS);
+        return PathHelpers.InFolder(Path, other.Path);
     }
 
     /// <summary>
@@ -283,7 +284,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     /// <param name="numDirectories">Number of directories to drop.</param>
     public RelativePath DropFirst(int numDirectories = 1)
     {
-        var res = PathHelpers.DropParents(Path, numDirectories, OS);
+        var res = PathHelpers.DropParents(Path, numDirectories);
         return res.IsEmpty ? Empty : new RelativePath(res.ToString());
     }
 
@@ -301,7 +302,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
         if (other.Length == 0) return this;
         if (basePath.Path == Path) return Empty;
 
-        var res = PathHelpers.RelativeTo(Path, other, OS);
+        var res = PathHelpers.RelativeTo(Path, other);
         if (!res.IsEmpty) return new RelativePath(res.ToString());
 
         ThrowHelpers.PathException($"Path '{Path}' is not relative to '{other}'");
@@ -314,7 +315,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     #region Equals & GetHashCode
 
     /// <inheritdoc />
-    public bool Equals(RelativePath other) => PathHelpers.PathEquals(Path, other.Path, OS);
+    public bool Equals(RelativePath other) => PathHelpers.PathEquals(Path, other.Path);
 
     /// <inheritdoc />
     public override bool Equals(object? obj)
@@ -348,7 +349,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     public static bool operator !=(RelativePath lhs, RelativePath rhs) => !(lhs == rhs);
 
     /// <inheritdoc />
-    public int CompareTo(RelativePath other) => PathHelpers.Compare(Path, other.Path, OS);
+    public int CompareTo(RelativePath other) => PathHelpers.Compare(Path, other.Path);
 }
 
 /// <summary>

@@ -121,12 +121,12 @@ public partial class FileSystem : BaseFileSystem
     protected override IEnumerable<AbsolutePath> InternalEnumerateFiles(AbsolutePath directory, string pattern, bool recursive)
     {
         var options = GetSearchOptions(recursive);
-        using var enumerator = new FilesEnumerator(directory.GetFullPath(), pattern, options, OS);
+        using var enumerator = new FilesEnumerator(directory.GetFullPath(), pattern, options);
         while (enumerator.MoveNext())
         {
             var item = enumerator.Current;
             if (item.IsDirectory) continue;
-            yield return AbsolutePath.FromSanitizedFullPath(PathHelpers.JoinParts(enumerator.CurrentDirectory, item.FileName, OS), this);
+            yield return AbsolutePath.FromSanitizedFullPath(PathHelpers.JoinParts(enumerator.CurrentDirectory, item.FileName), this);
         }
     }
 
@@ -134,11 +134,11 @@ public partial class FileSystem : BaseFileSystem
     protected override IEnumerable<AbsolutePath> InternalEnumerateDirectories(AbsolutePath directory, string pattern, bool recursive)
     {
         var options = GetSearchOptions(recursive);
-        var enumerator = new DirectoriesEnumerator(directory.GetFullPath(), "*", options, OS);
+        var enumerator = new DirectoriesEnumerator(directory.GetFullPath(), "*", options);
         while (enumerator.MoveNext())
         {
             var item = enumerator.Current;
-            yield return AbsolutePath.FromSanitizedFullPath(PathHelpers.JoinParts(enumerator.CurrentDirectory, item, OS), this);
+            yield return AbsolutePath.FromSanitizedFullPath(PathHelpers.JoinParts(enumerator.CurrentDirectory, item), this);
         }
     }
 
@@ -146,13 +146,13 @@ public partial class FileSystem : BaseFileSystem
     protected override IEnumerable<IFileEntry> InternalEnumerateFileEntries(AbsolutePath directory, string pattern, bool recursive)
     {
         var options = GetSearchOptions(recursive);
-        var enumerator = new FilesEnumeratorEx(directory.GetFullPath(), pattern, options, OS);
+        var enumerator = new FilesEnumeratorEx(directory.GetFullPath(), pattern, options);
 
         while (enumerator.MoveNext())
         {
             var item = enumerator.Current;
             if (item.IsDirectory) continue;
-            yield return new FileEntry(this, AbsolutePath.FromSanitizedFullPath(PathHelpers.JoinParts(enumerator.CurrentDirectory, item.FileName, OS), this));
+            yield return new FileEntry(this, AbsolutePath.FromSanitizedFullPath(PathHelpers.JoinParts(enumerator.CurrentDirectory, item.FileName), this));
         }
     }
 

@@ -54,65 +54,41 @@ public static class PathHelpers
     public const char ExtensionSeparatorChar = '.';
 
     /// <summary>
-    /// Volume separator character on Windows.
-    /// </summary>
-    /// <remarks>
-    /// This character is used to separate the drive character of a volume, from the rest
-    /// of the path. The path "C:/" has the drive character 'C', the volume separator character
-    /// ':' and finally the root directory name '/'.
-    /// </remarks>
-    public const char WindowsVolumeSeparatorChar = ':';
-
-    /// <summary>
-    /// Debug assert <see cref="IsSanitized"/>.
+    /// Debug assert sanitization.
     /// </summary>
     [Conditional("DEBUG")]
     [ExcludeFromCodeCoverage(Justification = $"{nameof(IsSanitized)} is tested separately.")]
-    public static void DebugAssertIsSanitized(ReadOnlySpan<char> path, IOSInformation os)
+    public static void DebugAssertIsSanitized(ReadOnlySpan<char> path)
     {
-        var isRelative = !IsRooted(path, os);
-        Debug.Assert(IsSanitized(path, os, isRelative), $"Path is not sanitized: '{path.ToString()}'");
+        Debug.Assert(IsSanitized(path), $"Path is not sanitized: '{path.ToString()}'");
+    }
+
+    /// <summary>
+    /// Asserts whether the path is rooted depending on <paramref name="shouldBeRelative"/>.
+    /// </summary>
+    /// <exception cref="PathException">Thrown when relative paths are rooted or absolute paths aren't rooted.</exception>
+    public static void AssertIsRooted(ReadOnlySpan<char> input, bool shouldBeRelative)
+    {
+        if (input.IsEmpty) return;
+
+        var isRooted = IsRooted(input);
+        if (isRooted && shouldBeRelative) throw new PathException($"Relative paths can't be rooted: `{input.ToString()}`");
+        if (!isRooted && !shouldBeRelative) throw new PathException($"Absolute paths must be rooted: `{input.ToString()}`");
     }
 
     /// <summary>
     /// Determines whether the path is sanitized or not. Only sanitized paths should
     /// be used with <see cref="PathHelpers"/>.
     /// </summary>
-    public static bool IsSanitized(ReadOnlySpan<char> path, IOSInformation os, bool isRelative)
-    {
-        // Empty strings are valid.
-        if (path.IsEmpty) return true;
-
-        var rootLength = GetRootLength(path, os);
-
-        // Relative paths must not be rooted
-        if (isRelative && rootLength != -1) return false;
-
-        // Absolute paths must be rooted
-        if (!isRelative && rootLength == -1) return false;
-
-        // Paths that only contain the root directory are valid.
-        if (!isRelative && rootLength == path.Length) return true;
-
-        // Paths must be trimmed
-        if (path.DangerousGetReferenceAt(path.Length - 1) == ' ') return false;
-
-        // Paths that end with the directory separator but are not root directories are invalid.
-        if (path.DangerousGetReferenceAt(path.Length - 1) == DirectorySeparatorChar) return false;
-
-        // Paths on Windows that use backwards slashes '\' instead of forward ones are invalid.
-        // ReSharper disable once RedundantNameQualifier
-        if (Reloaded.Memory.Extensions.SpanExtensions.Count(path, '\\') != 0) return false;
-
-        // Everything else is valid.
-        return true;
-    }
+    [Obsolete($"Path methods providing {nameof(IOSInformation)} are deprecated")]
+    public static bool IsSanitized(ReadOnlySpan<char> path, IOSInformation os, bool isRelative) => IsSanitized(path);
 
     /// <summary>
     /// Removes trailing directory separator characters from the input.
     /// </summary>
     public static ReadOnlySpan<char> RemoveTrailingDirectorySeparator(ReadOnlySpan<char> path)
     {
+        Debug.Assert(path.Length > 1);
         return path.DangerousGetReferenceAt(path.Length - 1) == DirectorySeparatorChar
             ? path.SliceFast(0, path.Length - 1)
             : path;
@@ -122,57 +98,8 @@ public static class PathHelpers
     /// Sanitizes the given path. Only sanitized paths should be used with
     /// <see cref="PathHelpers"/>.
     /// </summary>
-    [SkipLocalsInit]
-    public static string Sanitize(ReadOnlySpan<char> path, IOSInformation os, bool isRelative)
-    {
-        // Path has already been sanitized.
-        if (IsSanitized(path, os, isRelative)) return path.ToString();
-
-        // Paths without backslashes only need to be checked for trailing directory separators.
-        // ReSharper disable once RedundantNameQualifier
-        if (Reloaded.Memory.Extensions.SpanExtensions.Count(path, '\\') == 0)
-        {
-            var result = RemoveTrailingDirectorySeparator(path);
-            AssertRootness(result, os, isRelative);
-
-            return result.ToString();
-        }
-
-        // Paths with backslashes instead of forward slashes need to be fixed.
-        var buffer = path.Length > 512
-            ? GC.AllocateUninitializedArray<char>(path.Length)
-            : stackalloc char[path.Length];
-
-        var bufferIndex = 0;
-        var previous = '\0';
-
-        for (var pathIndex = 0; pathIndex < path.Length; pathIndex++)
-        {
-            var current = path.DangerousGetReferenceAt(pathIndex);
-            if (previous == '\\' && current == '\\') continue;
-            buffer[bufferIndex++] = current == '\\' ? '/' : current;
-            previous = current;
-        }
-
-        var slice = buffer.SliceFast(0, bufferIndex);
-
-        // Don't remove the trailing directory separator for root directories like "C:/".
-        var output = IsRootDirectory(slice, os) ? slice : RemoveTrailingDirectorySeparator(slice);
-
-        AssertRootness(output, os, isRelative);
-        return output.ToString();
-    }
-
-    /// <summary>
-    /// Verifies that relative paths aren't rooted and that absolute paths are rooted.
-    /// </summary>
-    /// <exception cref="PathException">Thrown when a relative path is rooted or an absolute path isn't rooted</exception>
-    public static void AssertRootness(ReadOnlySpan<char> path, IOSInformation os, bool isRelative)
-    {
-        var isRooted = IsRooted(path, os);
-        if (isRelative && isRooted) throw new PathException($"Relative path can't be rooted: `{path.ToString()}`");
-        if (!isRooted && !isRelative) throw new PathException($"Absolute path must be rooted: `{path.ToString()}`");
-    }
+    [Obsolete($"Path methods providing {nameof(IOSInformation)} are deprecated")]
+    public static string Sanitize(ReadOnlySpan<char> path, IOSInformation os, bool isRelative) => Sanitize(path);
 
     /// <summary>
     /// Gets the root type of a path.
@@ -180,13 +107,32 @@ public static class PathHelpers
     public static PathRootType GetRootType(ReadOnlySpan<char> path) => GetPathRoot(path).RootType;
 
     /// <summary>
-    /// Checks whether the given path is rooted.
+    /// Returns whether the given path is rooted.
+    /// </summary>
+    public static bool IsRooted(ReadOnlySpan<char> path) => GetRootType(path) != PathRootType.None;
+
+    /// <summary>
+    /// Returns whether the given path is rooted.
     /// </summary>
     public static bool IsRooted(ReadOnlySpan<char> path, out PathRootType rootType)
     {
         rootType = GetRootType(path);
         return rootType != PathRootType.None;
     }
+
+    /// <summary>
+    /// Gets the length of the root part or <c>-1</c> if the path isn't rooted.
+    /// </summary>
+    public static int GetRootLength(ReadOnlySpan<char> path)
+    {
+        var pathRoot = GetPathRoot(path);
+        return pathRoot.RootType == PathRootType.None ? -1 : pathRoot.Span.Length;
+    }
+
+    /// <summary>
+    /// Returns whether the given path is a root.
+    /// </summary>
+    public static bool IsRootDirectory(ReadOnlySpan<char> path) => GetRootLength(path) == path.Length;
 
     /// <summary>
     /// Returns the root part of a path.
@@ -202,7 +148,7 @@ public static class PathHelpers
             // check for DOS path `C:/`
             if (path.Length < PathRoot.DOSRootLength) return new PathRoot(ReadOnlySpan<char>.Empty, PathRootType.None);
 
-            var hasVolumeSeparator = path.DangerousGetReferenceAt(1) is WindowsVolumeSeparatorChar;
+            var hasVolumeSeparator = path.DangerousGetReferenceAt(1) is PathRoot.WindowsVolumeSeparatorChar;
             var hasDirectorySeparator = path.DangerousGetReferenceAt(2) is DirectorySeparatorChar;
             if (!hasVolumeSeparator || !hasDirectorySeparator) return new PathRoot(ReadOnlySpan<char>.Empty, PathRootType.None);
 
@@ -237,7 +183,7 @@ public static class PathHelpers
         }
 
         // check for DOS device drive paths `//./C:/`
-        if (path.DangerousGetReferenceAt(5) is WindowsVolumeSeparatorChar && path.DangerousGetReferenceAt(6) is DirectorySeparatorChar)
+        if (path.DangerousGetReferenceAt(5) is PathRoot.WindowsVolumeSeparatorChar && path.DangerousGetReferenceAt(6) is DirectorySeparatorChar)
         {
             var windowsDriveChar = path.DangerousGetReferenceAt(4);
             if (!IsValidWindowsDriveChar(windowsDriveChar)) throw new PathException($"Path contains invalid windows drive character: `{path.ToString()}` (`{windowsDriveChar}`)");
@@ -254,6 +200,73 @@ public static class PathHelpers
     }
 
     /// <summary>
+    /// Returns a sanitized path that is valid to be used with other methods in <see cref="PathHelpers"/>.
+    /// </summary>
+    public static string Sanitize(ReadOnlySpan<char> input)
+    {
+        if (input.IsEmpty) return string.Empty;
+        if (IsSanitized(input)) return input.ToString();
+
+        // NOTE(erri120): sanitization does the following:
+        // 1) Turns `\\` into `/`
+        // 2) Removes duplicate directory separators, eg `/foo//bar` turns into `/foo/bar`
+        // 3) Removes trailing directory separators from any path that isn't a root directory, eg `/foo/bar/` turns into `/foo/bar`
+
+        var buffer = input.Length > 512
+            ? GC.AllocateUninitializedArray<char>(input.Length)
+            : stackalloc char[input.Length];
+
+        var bufferIndex = 0;
+        var previousWasDirectorySeparator = false;
+
+        for (var inputIndex = 0; inputIndex < input.Length; inputIndex++)
+        {
+            var current = input.DangerousGetReferenceAt(inputIndex);
+            current = current is '\\' ? DirectorySeparatorChar : current;
+
+            var isDirectorySeparator = current is DirectorySeparatorChar;
+            if (isDirectorySeparator && previousWasDirectorySeparator)
+            {
+                // two consecutive directory separators are only valid in these situations:
+                // 1) UNC paths start with `\\`
+                // 2) DOS device paths start with either `\\.\` or `\\?\`
+                // as such, they are only allowed in the beginning, otherwise
+                // we'll skip them
+                if (inputIndex != 1) continue;
+
+                // NOTE(erri120): dumb case where you can provide `//`
+                if (input.Length == 2) return DirectorySeparatorString;
+            }
+
+            buffer[bufferIndex++] = current;
+            previousWasDirectorySeparator = isDirectorySeparator;
+        }
+
+        var slice = buffer.SliceFast(start: 0, length: bufferIndex).TrimEnd();
+
+        // Don't remove the trailing directory separator for root directories
+        var result = IsRootDirectory(slice) ? slice : RemoveTrailingDirectorySeparator(slice);
+        return result.ToString();
+    }
+
+    /// <summary>
+    /// Returns whether the input is sanitized.
+    /// </summary>
+    public static bool IsSanitized(ReadOnlySpan<char> input)
+    {
+        if (input.IsEmpty) return true;
+        if (SpanExtensions.Count(input, '\\') != 0) return false;
+
+        var doubleDirectorySeparatorIndex = input.LastIndexOf("//", StringComparison.Ordinal);
+        if (doubleDirectorySeparatorIndex > 0 || (doubleDirectorySeparatorIndex == 0 && input.Length == 2)) return false;
+
+        var last = input.DangerousGetReferenceAt(input.Length - 1);
+        if (last == ' ') return false;
+        if (IsRootDirectory(input)) return true;
+        return last is not DirectorySeparatorChar;
+    }
+
+    /// <summary>
     /// Replaces all directory separator characters with the
     /// native directory separator character of the passed OS.
     /// <remarks>
@@ -263,7 +276,7 @@ public static class PathHelpers
     [SkipLocalsInit]
     public static string ToNativeSeparators(ReadOnlySpan<char> path, IOSInformation os)
     {
-        DebugAssertIsSanitized(path, os);
+        DebugAssertIsSanitized(path);
         if (path.IsEmpty) return string.Empty;
 
         if (os.IsUnix()) return path.ToString();
@@ -282,10 +295,10 @@ public static class PathHelpers
     /// Equality of paths is handled case-insensitive, meaning "/foo" is equal to "/FOO".
     /// </remarks>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool PathEquals(ReadOnlySpan<char> left, ReadOnlySpan<char> right, IOSInformation os)
+    public static bool PathEquals(ReadOnlySpan<char> left, ReadOnlySpan<char> right)
     {
-        DebugAssertIsSanitized(left, os);
-        DebugAssertIsSanitized(right, os);
+        DebugAssertIsSanitized(left);
+        DebugAssertIsSanitized(right);
 
         if (left.IsEmpty && right.IsEmpty) return true;
         if (left.IsEmpty && !right.IsEmpty || right.IsEmpty && !left.IsEmpty) return false;
@@ -305,10 +318,10 @@ public static class PathHelpers
     /// <br />   - If greater than 0, <paramref name="left" /> follows <paramref name="right" />.
     /// </returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int Compare(ReadOnlySpan<char> left, ReadOnlySpan<char> right, IOSInformation os)
+    public static int Compare(ReadOnlySpan<char> left, ReadOnlySpan<char> right)
     {
-        DebugAssertIsSanitized(left, os);
-        DebugAssertIsSanitized(right, os);
+        DebugAssertIsSanitized(left);
+        DebugAssertIsSanitized(right);
         return left.CompareTo(right, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -325,80 +338,25 @@ public static class PathHelpers
         return (uint)((value | 0x20) - 'a') <= 'z' - 'a';
     }
 
-    /// <summary>
-    /// Calculates the length of the root of the path.
-    /// </summary>
-    /// <remarks>
-    /// Unix-based systems have a root length of <c>1</c>. Currently, only volume paths
-    /// are supported on Windows, which have a root length of <c>3</c>.
-    /// </remarks>
-    /// <returns>Returns the length of the root of the path or <c>-1</c> if the path is not rooted.</returns>
-    /// <seealso cref="IsRooted"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetRootLength(ReadOnlySpan<char> path, IOSInformation os)
-    {
-        const int invalidLength = -1;
-        const int unixLength = 1;
-        const int windowsLength = 3;
+    /// <inheritdoc cref="GetRootLength(System.ReadOnlySpan{char})"/>
+    [Obsolete($"Path methods providing {nameof(IOSInformation)} are deprecated")]
+    public static int GetRootLength(ReadOnlySpan<char> path, IOSInformation os) => GetRootLength(path);
 
-        if (os.IsUnix())
-        {
-            // Unix-based systems start with '/'.
-            return path.Length >= unixLength && path.DangerousGetReferenceAt(0) == DirectorySeparatorChar
-                ? unixLength
-                : invalidLength;
-        }
+    /// <inheritdoc cref="IsRooted(System.ReadOnlySpan{char})"/>
+    [Obsolete($"Path methods providing {nameof(IOSInformation)} are deprecated")]
+    public static bool IsRooted(ReadOnlySpan<char> path, IOSInformation os) => IsRooted(path);
 
-        // Currently, only volume paths are supported: "C:/" on Windows.
-        // UNC paths (\\?\C:\) and Device paths (\\?\.) are not supported.
-        if (path.Length < windowsLength ||
-            path.DangerousGetReferenceAt(1) != WindowsVolumeSeparatorChar ||
-            !IsValidWindowsDriveChar(path.DangerousGetReferenceAt(0))) return invalidLength;
+    /// <inheritdoc cref="GetPathRoot"/>
+    [Obsolete($"Path methods providing {nameof(IOSInformation)} are deprecated")]
+    public static ReadOnlySpan<char> GetRootPart(ReadOnlySpan<char> path, IOSInformation os) => GetPathRoot(path).Span;
 
-        return path.DangerousGetReferenceAt(2) == DirectorySeparatorChar ? windowsLength : invalidLength;
-    }
-
-    /// <summary>
-    /// Checks whether the path is rooted.
-    /// </summary>
-    /// <seealso cref="GetRootLength"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsRooted(ReadOnlySpan<char> path, IOSInformation os)
-    {
-        var rootLength = GetRootLength(path, os);
-        return rootLength != -1;
-    }
-
-    /// <summary>
-    /// Gets the root part of the path.
-    /// </summary>
-    /// <remarks>
-    /// On Unix-based systems, the root part for rooted paths is always '/'.
-    /// On Windows, the root part for rooted paths is the volume part: "C:/" and always ends with '/'.
-    /// </remarks>
-    /// <returns>For rooted paths, this returns the root part, for non-rooted paths, this returns <see cref="ReadOnlySpan{T}.Empty"/>.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ReadOnlySpan<char> GetRootPart(ReadOnlySpan<char> path, IOSInformation os)
-    {
-        var rootLength = GetRootLength(path, os);
-        return rootLength == -1 ? ReadOnlySpan<char>.Empty : path.SliceFast(0, rootLength);
-    }
-
-    /// <summary>
-    /// Checks whether the given path is a root directory.
-    /// </summary>
-    /// <seealso cref="IsRooted"/>
-    /// <seealso cref="GetRootPart"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsRootDirectory(ReadOnlySpan<char> path, IOSInformation os)
-    {
-        var rootLength = GetRootLength(path, os);
-        return rootLength == path.Length;
-    }
+    /// <inheritdoc cref="IsRootDirectory(System.ReadOnlySpan{char})"/>
+    [Obsolete($"Path methods providing {nameof(IOSInformation)} are deprecated")]
+    public static bool IsRootDirectory(ReadOnlySpan<char> path, IOSInformation os) => IsRootDirectory(path);
 
     /// <summary>
     /// Calculates the exact length required for a buffer to contain the result of
-    /// joining two path parts using <see cref="JoinParts(System.Span{char},System.ReadOnlySpan{char},System.ReadOnlySpan{char},NexusMods.Paths.IOSInformation?)"/>.
+    /// joining two path parts.
     /// </summary>
     /// <seealso cref="GetMaxJoinedPartLength"/>
     public static int GetExactJoinedPartLength(ReadOnlySpan<char> left, ReadOnlySpan<char> right)
@@ -412,7 +370,7 @@ public static class PathHelpers
 
     /// <summary>
     /// Gets the maximum length required for a buffer to contain the result of
-    /// joining two path parts using <see cref="JoinParts(System.Span{char},System.ReadOnlySpan{char},System.ReadOnlySpan{char},NexusMods.Paths.IOSInformation?)"/>.
+    /// joining two path parts using.
     /// </summary>
     /// <remarks>
     /// This method differs from <see cref="GetExactJoinedPartLength"/> in that it's the
@@ -436,10 +394,10 @@ public static class PathHelpers
     /// <see cref="GetMaxJoinedPartLength"/> to get the maximum length.
     /// </remarks>
     /// <returns>The amount of written characters.</returns>
-    public static int JoinParts(Span<char> buffer, ReadOnlySpan<char> left, ReadOnlySpan<char> right, IOSInformation os)
+    public static int JoinParts(Span<char> buffer, ReadOnlySpan<char> left, ReadOnlySpan<char> right)
     {
-        DebugAssertIsSanitized(left, os);
-        DebugAssertIsSanitized(right, os);
+        DebugAssertIsSanitized(left);
+        DebugAssertIsSanitized(right);
         Debug.Assert(buffer.Length >= GetExactJoinedPartLength(left, right), $"Buffer has a size of '{buffer.Length}' but requires at least '{GetExactJoinedPartLength(left, right)}'");
 
         if (left.IsEmpty)
@@ -477,20 +435,13 @@ public static class PathHelpers
     /// <summary>
     /// Joins two path parts together and returns the joined path as a string.
     /// </summary>
-    /// <remarks>
-    /// This method uses <see cref="ReadOnlySpan{T}"/>. If you have strings as parts,
-    /// use <see cref="JoinParts(string, string,NexusMods.Paths.IOSInformation?)"/> instead.
-    /// </remarks>
     /// <param name="left">The left part of the path as a <see cref="ReadOnlySpan{T}"/></param>
     /// <param name="right">The right part of the path as a <see cref="ReadOnlySpan{T}"/></param>
-    /// <param name="os"></param>
     /// <returns>The joined path.</returns>
-    /// <seealso cref="JoinParts(System.Span{char},System.ReadOnlySpan{char},System.ReadOnlySpan{char},NexusMods.Paths.IOSInformation?)"/>
-    /// <seealso cref="JoinParts(string, string,NexusMods.Paths.IOSInformation?)"/>
-    public static string JoinParts(ReadOnlySpan<char> left, ReadOnlySpan<char> right, IOSInformation os)
+    public static string JoinParts(ReadOnlySpan<char> left, ReadOnlySpan<char> right)
     {
-        DebugAssertIsSanitized(left, os);
-        DebugAssertIsSanitized(right, os);
+        DebugAssertIsSanitized(left);
+        DebugAssertIsSanitized(right);
 
         var spanLength = GetExactJoinedPartLength(left, right);
         unsafe
@@ -508,12 +459,11 @@ public static class PathHelpers
             {
                 Left = &left,
                 Right = &right,
-                Os = os
             };
 
             return string.Create(spanLength, @params, (span, tuple) =>
             {
-                var count = JoinParts(span, *tuple.Left, *tuple.Right, tuple.Os);
+                var count = JoinParts(span, *tuple.Left, *tuple.Right);
                 Debug.Assert(count == spanLength, $"Calculated span length '{spanLength}' doesn't match actual span length '{count}'");
             });
         }
@@ -523,7 +473,6 @@ public static class PathHelpers
     {
         internal ReadOnlySpan<char>* Left;
         internal ReadOnlySpan<char>* Right;
-        internal IOSInformation Os;
     }
 #pragma warning restore CS8500 // This takes the address of, gets the size of, or declares a pointer to a managed type
 
@@ -531,31 +480,26 @@ public static class PathHelpers
     /// Joins two path parts together and returns the joined path as a string.
     /// </summary>
     /// <remarks>
-    /// This method uses strings as inputs. If you have <see cref="ReadOnlySpan{T}"/>,
-    /// use <see cref="JoinParts(System.ReadOnlySpan{char},System.ReadOnlySpan{char},NexusMods.Paths.IOSInformation?)"/>
-    /// or <see cref="JoinParts(System.Span{char},System.ReadOnlySpan{char},System.ReadOnlySpan{char},NexusMods.Paths.IOSInformation?)"/>
+    /// This method uses strings as inputs.
     /// instead.
     /// </remarks>
     /// <param name="left">The left part of the path as a <see cref="string"/></param>
     /// <param name="right">The right part of the path as a <see cref="string"/></param>
-    /// <param name="os"></param>
     /// <returns>The joined path.</returns>
-    /// <seealso cref="JoinParts(System.Span{char},System.ReadOnlySpan{char},System.ReadOnlySpan{char},NexusMods.Paths.IOSInformation?)"/>
-    /// <seealso cref="JoinParts(System.ReadOnlySpan{char},System.ReadOnlySpan{char},NexusMods.Paths.IOSInformation?)"/>
-    public static string JoinParts(string left, string right, IOSInformation os)
+    public static string JoinParts(string left, string right)
     {
-        DebugAssertIsSanitized(left, os);
-        DebugAssertIsSanitized(right, os);
+        DebugAssertIsSanitized(left);
+        DebugAssertIsSanitized(right);
 
         var spanLength = GetExactJoinedPartLength(left, right);
-        return string.Create(spanLength, (left, right, os), (span, tuple) =>
+        return string.Create(spanLength, (left, right), static (span, tuple) =>
         {
             // ReSharper disable InconsistentNaming
-            var (left_, right_, os_) = tuple;
+            var (left_, right_) = tuple;
             // ReSharper restore InconsistentNaming
 
-            var count = JoinParts(span, left_, right_, os_);
-            Debug.Assert(count == spanLength, $"Calculated span length '{spanLength}' doesn't match actual span length '{count}'");
+            var count = JoinParts(span, left_, right_);
+            Debug.Assert(count == span.Length, $"Calculated span length '{span.Length}' doesn't match actual span length '{count}'");
         });
     }
 
@@ -569,13 +513,13 @@ public static class PathHelpers
     /// with a directory separator, the result will be <see cref="ReadOnlySpan{T}.Empty"/>.
     /// </remarks>
     /// <returns></returns>
-    public static ReadOnlySpan<char> GetFileName(ReadOnlySpan<char> path, IOSInformation os)
+    public static ReadOnlySpan<char> GetFileName(ReadOnlySpan<char> path)
     {
-        DebugAssertIsSanitized(path, os);
+        DebugAssertIsSanitized(path);
 
         if (path.IsEmpty) return ReadOnlySpan<char>.Empty;
-        if (path.DangerousGetReferenceAt(path.Length - 1) == DirectorySeparatorChar)
-            return ReadOnlySpan<char>.Empty;
+        var pathRoot = GetPathRoot(path);
+        if (pathRoot.Length == path.Length) return ReadOnlySpan<char>.Empty;
 
         for (var i = path.Length; --i >= 0;)
         {
@@ -595,8 +539,7 @@ public static class PathHelpers
     public static ReadOnlySpan<char> GetExtension(ReadOnlySpan<char> path)
     {
         if (path.IsEmpty) return ReadOnlySpan<char>.Empty;
-        if (path.DangerousGetReferenceAt(path.Length - 1) == ExtensionSeparatorChar)
-            return ReadOnlySpan<char>.Empty;
+        if (path.DangerousGetReferenceAt(path.Length - 1) == ExtensionSeparatorChar) return ReadOnlySpan<char>.Empty;
 
         for (var i = path.Length; --i >= 0;)
         {
@@ -627,7 +570,7 @@ public static class PathHelpers
         var oldPathWithoutExtensionLength = i > 0 ? i : oldPathSpan.Length;
         var newPathLength = oldPathWithoutExtensionLength + newExtension.Length;
 
-        return string.Create(newPathLength, (oldPathWithoutExtensionLength, oldPath, newExtension), (span, tuple) =>
+        return string.Create(newPathLength, (oldPathWithoutExtensionLength, oldPath, newExtension), static (span, tuple) =>
         {
             // ReSharper disable InconsistentNaming
             var (length, oldPath_, newExtension_) = tuple;
@@ -639,44 +582,51 @@ public static class PathHelpers
         });
     }
 
+    /// <inheritdoc cref="GetDirectoryDepth(System.ReadOnlySpan{char})"/>
+    [Obsolete($"Path methods providing {nameof(IOSInformation)} are deprecated")]
+    public static int GetDirectoryDepth(ReadOnlySpan<char> path, IOSInformation os) => GetDirectoryDepth(path);
+
     /// <summary>
     /// Calculates the depth of a path.
     /// </summary>
     /// <remarks>
     /// The depth of a path is defined by the numbers of directories it has.
-    /// This is equal to the amount of directory separator characters.
     /// </remarks>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetDirectoryDepth(ReadOnlySpan<char> path, IOSInformation os)
+    public static int GetDirectoryDepth(ReadOnlySpan<char> input)
     {
-        DebugAssertIsSanitized(path, os);
-        // ReSharper disable once RedundantNameQualifier
-        return Reloaded.Memory.Extensions.SpanExtensions.Count(path, DirectorySeparatorChar);
+        DebugAssertIsSanitized(input);
+        if (input.IsEmpty) return 0;
+
+        var pathRoot = GetPathRoot(input);
+        if (pathRoot.Length == input.Length) return 1;
+
+        var slice = pathRoot.RootType == PathRootType.None ? input : input.SliceFast(start: pathRoot.Length);
+        var count = SpanExtensions.Count(slice, DirectorySeparatorChar);
+        var root = pathRoot.RootType == PathRootType.None ? 0 : 1;
+        return count + root;
     }
+
+    /// <inheritdoc cref="GetDirectoryName(System.ReadOnlySpan{char})"/>
+    [Obsolete($"Path methods providing {nameof(IOSInformation)} are deprecated")]
+    public static ReadOnlySpan<char> GetDirectoryName(ReadOnlySpan<char> path, IOSInformation os) => GetDirectoryName(path);
 
     /// <summary>
     /// Returns the directory name of the given path, also known as the parent.
     /// </summary>
-    public static ReadOnlySpan<char> GetDirectoryName(ReadOnlySpan<char> path, IOSInformation os)
+    public static ReadOnlySpan<char> GetDirectoryName(ReadOnlySpan<char> input)
     {
-        DebugAssertIsSanitized(path, os);
-        if (path.IsEmpty) return ReadOnlySpan<char>.Empty;
+        DebugAssertIsSanitized(input);
+        if (input.IsEmpty) return ReadOnlySpan<char>.Empty;
 
-        var rootLength = GetRootLength(path, os);
-        if (path.Length == rootLength) return path;
+        var pathRoot = GetPathRoot(input);
 
-        for (var i = path.Length; --i >= 0;)
+        // NOTE(erri120): parent of the root is the root, this is to prevent infinite while loops when traversing
+        if (pathRoot.Length == input.Length) return input;
+
+        for (var i = input.Length; --i >= 0;)
         {
-            if (path.DangerousGetReferenceAt(i) != DirectorySeparatorChar) continue;
-
-            // NOTE(erri120): the root directory always ends with a directory separator character,
-            // while other paths don't, eg:
-            // C:/foo -> C:/
-            // C:/foo/bar -> C:/foo
-            // /foo -> /
-            // /foo/bar -> /foo
-            return path.SliceFast(0, i == rootLength - 1 ? rootLength : i);
+            if (input.DangerousGetReferenceAt(i) != DirectorySeparatorChar) continue;
+            return input.SliceFast(start: 0, i == pathRoot.Length - 1 ? pathRoot.Length : i);
         }
 
         return ReadOnlySpan<char>.Empty;
@@ -686,69 +636,87 @@ public static class PathHelpers
     /// Determines whether <paramref name="child"/> is in folder <paramref name="parent"/>.
     /// </summary>
     /// <remarks>
-    /// This method will return <c>false</c>, if either <paramref name="child"/> or <paramref name="parent"/>
-    /// are empty.
+    /// This method will return <c>false</c>, if either <paramref name="child"/> or <paramref name="parent"/> are empty.
     /// </remarks>
-    public static bool InFolder(ReadOnlySpan<char> child, ReadOnlySpan<char> parent, IOSInformation os)
+    public static bool InFolder(ReadOnlySpan<char> child, ReadOnlySpan<char> parent)
     {
-        DebugAssertIsSanitized(child, os);
-        DebugAssertIsSanitized(parent, os);
+        DebugAssertIsSanitized(child);
+        DebugAssertIsSanitized(parent);
 
         if (parent.IsEmpty || child.IsEmpty && parent.IsEmpty) return true;
         if (child.IsEmpty) return false;
         if (!child.StartsWith(parent, StringComparison.OrdinalIgnoreCase)) return false;
 
         if (child.Length == parent.Length) return true;
-        if (IsRootDirectory(parent, os)) return true;
+        if (IsRootDirectory(parent)) return true;
         return child.DangerousGetReferenceAt(parent.Length) == DirectorySeparatorChar;
     }
+
+    /// <inheritdoc cref="InFolder(System.ReadOnlySpan{char}, System.ReadOnlySpan{char})"/>
+    [Obsolete($"Path methods providing {nameof(IOSInformation)} are deprecated")]
+    public static bool InFolder(ReadOnlySpan<char> child, ReadOnlySpan<char> parent, IOSInformation os) => InFolder(child, parent);
 
     /// <summary>
     /// Returns the part from <paramref name="child"/> that is relative to <paramref name="parent"/>.
     /// </summary>
     /// <remarks>
     /// This method will return <see cref="ReadOnlySpan{T}.Empty"/> if <paramref name="child"/> is
-    /// not relative to <paramref name="parent"/>. This comparison is done using <see cref="InFolder"/>.
+    /// not relative to <paramref name="parent"/>.
     /// </remarks>
-    public static ReadOnlySpan<char> RelativeTo(ReadOnlySpan<char> child, ReadOnlySpan<char> parent, IOSInformation os)
+    public static ReadOnlySpan<char> RelativeTo(ReadOnlySpan<char> child, ReadOnlySpan<char> parent)
     {
-        DebugAssertIsSanitized(child, os);
-        DebugAssertIsSanitized(parent, os);
+        DebugAssertIsSanitized(child);
+        DebugAssertIsSanitized(parent);
 
         if (child.IsEmpty && parent.IsEmpty) return ReadOnlySpan<char>.Empty;
-        if (!InFolder(child, parent, os)) return ReadOnlySpan<char>.Empty;
+        if (!InFolder(child, parent)) return ReadOnlySpan<char>.Empty;
 
-        return IsRootDirectory(parent, os)
+        return IsRootDirectory(parent)
             ? child.SliceFast(parent.Length)
             : child.SliceFast(parent.Length + DirectorySeparatorString.Length);
     }
 
+    /// <inheritdoc cref="RelativeTo(System.ReadOnlySpan{char}, System.ReadOnlySpan{char})"/>
+    [Obsolete($"Path methods providing {nameof(IOSInformation)} are deprecated")]
+    public static ReadOnlySpan<char> RelativeTo(ReadOnlySpan<char> child, ReadOnlySpan<char> parent, IOSInformation os) => RelativeTo(child, parent);
+
     /// <summary>
     /// Returns the first directory in the path.
     /// </summary>
-    public static ReadOnlySpan<char> GetTopParent(ReadOnlySpan<char> path, IOSInformation os)
+    public static ReadOnlySpan<char> GetTopParent(ReadOnlySpan<char> path)
     {
-        DebugAssertIsSanitized(path, os);
+        DebugAssertIsSanitized(path);
 
-        var rootPart = GetRootPart(path, os);
-        if (!rootPart.IsEmpty) return rootPart;
+        var pathRoot = GetPathRoot(path);
+        if (pathRoot.RootType != PathRootType.None) return pathRoot.Span;
 
         var index = path.IndexOf(DirectorySeparatorChar);
-        return index == -1 ? path : path.SliceFast(0, index);
+        return index == -1 ? path : path.SliceFast(start: 0, length: index);
     }
+
+    /// <inheritdoc cref="GetTopParent(System.ReadOnlySpan{char})"/>
+    [Obsolete($"Path methods providing {nameof(IOSInformation)} are deprecated")]
+    public static ReadOnlySpan<char> GetTopParent(ReadOnlySpan<char> path, IOSInformation os) => GetTopParent(path);
 
     /// <summary>
     /// Drops the first <paramref name="count"/> parents of the given path.
     /// </summary>
-    public static ReadOnlySpan<char> DropParents(ReadOnlySpan<char> path, int count, IOSInformation os)
+    public static ReadOnlySpan<char> DropParents(ReadOnlySpan<char> path, int count)
     {
-        DebugAssertIsSanitized(path, os);
+        DebugAssertIsSanitized(path);
+        ArgumentOutOfRangeException.ThrowIfNegative(count, nameof(count));
 
         if (path.IsEmpty) return ReadOnlySpan<char>.Empty;
         if (count == 0) return path;
-        if (IsRootDirectory(path, os)) return ReadOnlySpan<char>.Empty;
 
-        var res = path;
+        var pathRoot = GetPathRoot(path);
+        // can't drop parents of root directories
+        if (pathRoot.Length == path.Length) return ReadOnlySpan<char>.Empty;
+
+        // start after the root
+        var res = pathRoot.RootType == PathRootType.None ? path : path.SliceFast(start: pathRoot.Length);
+        count = pathRoot.RootType == PathRootType.None ? count : count - 1;
+
         for (var x = 0; x < count; x++)
         {
             var index = res.IndexOf(DirectorySeparatorChar);
@@ -759,6 +727,10 @@ public static class PathHelpers
 
         return res;
     }
+
+    /// <inheritdoc cref="DropParents(System.ReadOnlySpan{char},int)"/>
+    [Obsolete($"Path methods providing {nameof(IOSInformation)} are deprecated")]
+    public static ReadOnlySpan<char> DropParents(ReadOnlySpan<char> path, int count, IOSInformation os) => DropParents(path, count);
 
     /// <summary>
     /// Delegate used with <see cref="PathHelpers.WalkParts"/>.
@@ -777,9 +749,9 @@ public static class PathHelpers
     /// Walks the parts of a path, invoking <paramref name="partDelegate"/> with each part of the path.
     /// </summary>
     /// <seealso cref="WalkParts{TState}"/>
-    public static void WalkParts(ReadOnlySpan<char> path, WalkPartDelegate partDelegate, IOSInformation os, bool reverse = false)
+    public static void WalkParts(ReadOnlySpan<char> path, WalkPartDelegate partDelegate, bool reverse = false)
     {
-        WalkParts(path, ref reverse, (ReadOnlySpan<char> part, ref bool _) => partDelegate(part), os, reverse);
+        WalkParts(path, ref reverse, (ReadOnlySpan<char> part, ref bool _) => partDelegate(part), reverse);
     }
 
     /// <summary>
@@ -792,17 +764,15 @@ public static class PathHelpers
     /// <param name="state">The state to pass to the <paramref name="partDelegate"/></param>
     /// <param name="partDelegate">The delegate to invoke with each part and state.</param>
     /// <param name="reverse">Whether to walk the path forward or backwards.</param>
-    /// <param name="os"></param>
     /// <typeparam name="TState"></typeparam>
     /// <seealso cref="WalkParts"/>
     public static void WalkParts<TState>(
         ReadOnlySpan<char> path,
         ref TState state,
         WalkPartDelegate<TState> partDelegate,
-        IOSInformation os,
         bool reverse = false)
     {
-        DebugAssertIsSanitized(path, os);
+        DebugAssertIsSanitized(path);
 
         if (path.IsEmpty)
         {
@@ -810,7 +780,7 @@ public static class PathHelpers
             return;
         }
 
-        var rootLength = GetRootLength(path, os);
+        var rootLength = GetRootLength(path);
         if (path.Length == rootLength)
         {
             partDelegate(path, ref state);
@@ -875,13 +845,12 @@ public static class PathHelpers
     /// </summary>
     /// <param name="path"></param>
     /// <param name="reverse"></param>
-    /// <param name="os"></param>
     /// <returns></returns>
     /// <seealso cref="WalkParts"/>
     /// <seealso cref="WalkParts{TState}"/>
-    public static IReadOnlyList<string> GetParts(ReadOnlySpan<char> path, IOSInformation os, bool reverse = false)
+    public static IReadOnlyList<string> GetParts(ReadOnlySpan<char> path, bool reverse = false)
     {
-        DebugAssertIsSanitized(path, os);
+        DebugAssertIsSanitized(path);
 
         var list = new List<string>();
 
@@ -889,7 +858,7 @@ public static class PathHelpers
         {
             output.Add(part.ToString());
             return true;
-        }, os, reverse);
+        }, reverse);
 
         return list;
     }

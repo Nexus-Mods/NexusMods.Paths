@@ -22,6 +22,11 @@ public readonly ref struct PathRoot
     public readonly PathRootType RootType;
 
     /// <summary>
+    /// Length of the root part.
+    /// </summary>
+    public int Length => Span.Length;
+
+    /// <summary>
     /// Constructor.
     /// </summary>
     public PathRoot(ReadOnlySpan<char> span, PathRootType rootType)
@@ -46,7 +51,7 @@ public readonly ref struct PathRoot
     internal const int DOSDevicePrefixLength = 4;
 
     /// <summary>
-    /// Minumum length of <see cref="PathRootType.DOSDeviceDrive"/> root parts: <c>//./C:/</c>
+    /// Minimum length of <see cref="PathRootType.DOSDeviceDrive"/> root parts: <c>//./C:/</c>
     /// </summary>
     internal const int DOSDeviceDriveRootLength = 7;
 
@@ -59,6 +64,16 @@ public readonly ref struct PathRoot
     /// Prefix for <see cref="PathRootType.DOSDeviceVolume"/>.
     /// </summary>
     internal const string DOSDeviceVolumePrefix = "Volume{";
+
+    /// <summary>
+    /// Volume separator character on Windows.
+    /// </summary>
+    /// <remarks>
+    /// This character is used to separate the drive character of a volume, from the rest
+    /// of the path. The path "C:/" has the drive character 'C', the volume separator character
+    /// ':' and finally the root directory name '/'.
+    /// </remarks>
+    public const char WindowsVolumeSeparatorChar = ':';
 }
 
 /// <summary>

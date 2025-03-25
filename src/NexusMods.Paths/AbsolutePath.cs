@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using NexusMods.Paths.Utilities;
@@ -72,8 +71,8 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
     {
         get
         {
-            var directory = PathHelpers.GetDirectoryName(Directory, FileSystem.OS);
-            var fileName = PathHelpers.GetFileName(Directory, FileSystem.OS);
+            var directory = PathHelpers.GetDirectoryName(Directory);
+            var fileName = PathHelpers.GetFileName(Directory);
             return new AbsolutePath(directory.ToString(), fileName.ToString(), FileSystem);
         }
     }
@@ -114,6 +113,10 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
 
     private AbsolutePath(string directory, string fileName, IFileSystem fileSystem)
     {
+        PathHelpers.DebugAssertIsSanitized(directory);
+        PathHelpers.DebugAssertIsSanitized(fileName);
+        PathHelpers.AssertIsRooted(directory, shouldBeRelative: false);
+
         Directory = directory;
         FileName = fileName;
         FileSystem = fileSystem;
@@ -125,8 +128,8 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
     /// <seealso cref="FromUnsanitizedFullPath"/>
     internal static AbsolutePath FromSanitizedFullPath(ReadOnlySpan<char> fullPath, IFileSystem fileSystem)
     {
-        var directory = PathHelpers.GetDirectoryName(fullPath, fileSystem.OS);
-        var fileName = PathHelpers.GetFileName(fullPath, fileSystem.OS);
+        var directory = PathHelpers.GetDirectoryName(fullPath);
+        var fileName = PathHelpers.GetFileName(fullPath);
         return new AbsolutePath(directory.ToString(), fileName.ToString(), fileSystem);
     }
 
@@ -149,9 +152,9 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
         string fileName,
         IFileSystem fileSystem)
     {
-        var sanitizedDirectory = PathHelpers.Sanitize(directory, fileSystem.OS, isRelative: false);
-        var sanitizedFileName = PathHelpers.Sanitize(fileName, fileSystem.OS, isRelative: true);
-        var fullPath = PathHelpers.JoinParts(sanitizedDirectory, sanitizedFileName, fileSystem.OS);
+        var sanitizedDirectory = PathHelpers.Sanitize(directory);
+        var sanitizedFileName = PathHelpers.Sanitize(fileName);
+        var fullPath = PathHelpers.JoinParts(sanitizedDirectory, sanitizedFileName);
         return FromSanitizedFullPath(fullPath, fileSystem);
     }
 
@@ -207,14 +210,14 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
     /// Returns the full path of the combined string.
     /// </summary>
     /// <returns>The full combined path.</returns>
-    public string GetFullPath() => PathHelpers.JoinParts(Directory, FileName, FileSystem.OS);
+    public string GetFullPath() => PathHelpers.JoinParts(Directory, FileName);
 
     /// <summary>
     /// Copies the full path into <paramref name="buffer"/>.
     /// </summary>
     public void GetFullPath(Span<char> buffer)
     {
-        PathHelpers.JoinParts(buffer, Directory, FileName, FileSystem.OS);
+        PathHelpers.JoinParts(buffer, Directory, FileName);
     }
 
     /// <summary>
@@ -228,8 +231,8 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
     /// </summary>
     public AbsolutePath GetRootDirectory()
     {
-        var slice = PathHelpers.GetRootPart(Directory, FileSystem.OS);
-        return new AbsolutePath(slice.ToString(), string.Empty, FileSystem);
+        var pathRoot = PathHelpers.GetPathRoot(Directory);
+        return new AbsolutePath(pathRoot.Span.ToString(), string.Empty, FileSystem);
     }
 
     /// <summary>
@@ -237,7 +240,7 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
     /// </summary>
     public AbsolutePath Combine(RelativePath path)
     {
-        var res = PathHelpers.JoinParts(GetFullPath(), path.Path, FileSystem.OS);
+        var res = PathHelpers.JoinParts(GetFullPath(), path.Path);
         return FromSanitizedFullPath(res, FileSystem);
     }
     
@@ -273,7 +276,7 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
         var parent = parentLength <= 512 ? stackalloc char[parentLength] : GC.AllocateUninitializedArray<char>(parentLength);
         other.GetFullPath(parent);
 
-        var res = PathHelpers.RelativeTo(child, parent, FileSystem.OS);
+        var res = PathHelpers.RelativeTo(child, parent);
         if (!res.IsEmpty) return new RelativePath(res.ToString());
 
         ThrowHelpers.PathException("Can't create path relative to paths that aren't in the same folder");
@@ -289,9 +292,8 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
         parent.GetFullPath(parentSpan);
 
         // NOTE(erri120):
-        // We need the full path of the "parent", but only the directory name
-        // of the "child".
-        return PathHelpers.InFolder(Directory, parentSpan, FileSystem.OS);
+        // We need the full path of the "parent", but only the directory name of the "child".
+        return PathHelpers.InFolder(Directory, parentSpan);
     }
 
     /// <inheritdoc />
@@ -310,7 +312,7 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
         // If the other path is a parent of this path, then the next character must be a directory separator.
         return fullPath[prefix.Length] == PathHelpers.DirectorySeparatorChar ||
                // unless the prefix is a root directory
-               PathHelpers.IsRootDirectory(prefix, FileSystem.OS);
+               PathHelpers.IsRootDirectory(prefix);
     }
 
     /// <inheritdoc />

@@ -90,13 +90,16 @@ public abstract class BaseFileSystem : IFileSystem
         // "/opt/wine/drive_c"
 
         // Only supported on Linux and with the setting enabled
-        if (!OS.IsLinux || !_convertCrossPlatformPaths) return PathHelpers.Sanitize(input, OS, isRelative: false);
+        var sanitizedPath = PathHelpers.Sanitize(input);
+        if (!OS.IsLinux || !_convertCrossPlatformPaths) return sanitizedPath;
 
-        var sanitizedPathWindows = PathHelpers.Sanitize(input, OSInformation.FakeWindows, isRelative: false);
+        var pathRoot = PathHelpers.GetPathRoot(sanitizedPath);
+        if (pathRoot.RootType != PathRootType.Unix && pathRoot.RootType != PathRootType.DOS)
+            throw new NotSupportedException($"Root type `{pathRoot.RootType}` is not supported: `{sanitizedPath}`");
 
         var result = string.Create(
-            sanitizedPathWindows.Length,
-            sanitizedPathWindows,
+            sanitizedPath.Length,
+            sanitizedPath,
             (span, s) =>
             {
                 // C:/foo/bar -> /c/foo/bar
