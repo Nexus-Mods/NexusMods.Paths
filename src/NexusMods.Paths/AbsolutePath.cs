@@ -115,7 +115,7 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
     {
         PathHelpers.DebugAssertIsSanitized(directory);
         PathHelpers.DebugAssertIsSanitized(fileName);
-        PathHelpers.AssertIsRooted(directory, shouldBeRelative: false);
+        PathHelpers.AssertIsRooted(directory, shouldBeRooted: true);
 
         Directory = directory;
         FileName = fileName;

@@ -64,16 +64,16 @@ public static class PathHelpers
     }
 
     /// <summary>
-    /// Asserts whether the path is rooted depending on <paramref name="shouldBeRelative"/>.
+    /// Asserts whether the path is rooted depending on <paramref name="shouldBeRooted"/>.
     /// </summary>
     /// <exception cref="PathException">Thrown when relative paths are rooted or absolute paths aren't rooted.</exception>
-    public static void AssertIsRooted(ReadOnlySpan<char> input, bool shouldBeRelative)
+    public static void AssertIsRooted(ReadOnlySpan<char> input, bool shouldBeRooted)
     {
         if (input.IsEmpty) return;
 
         var isRooted = IsRooted(input);
-        if (isRooted && shouldBeRelative) throw new PathException($"Relative paths can't be rooted: `{input.ToString()}`");
-        if (!isRooted && !shouldBeRelative) throw new PathException($"Absolute paths must be rooted: `{input.ToString()}`");
+        if (isRooted && !shouldBeRooted) throw new PathException($"Relative paths can't be rooted: `{input.ToString()}`");
+        if (!isRooted && shouldBeRooted) throw new PathException($"Absolute paths must be rooted: `{input.ToString()}`");
     }
 
     /// <summary>

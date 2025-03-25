@@ -120,7 +120,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     internal RelativePath(string path)
     {
         PathHelpers.DebugAssertIsSanitized(path);
-        PathHelpers.AssertIsRooted(path, shouldBeRelative: true);
+        PathHelpers.AssertIsRooted(path, shouldBeRooted: false);
         Path = path;
     }
 
