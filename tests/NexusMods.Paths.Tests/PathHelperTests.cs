@@ -41,6 +41,14 @@ public class PathHelperTests
     }
 
     [Theory]
+    [InlineData("������\uFFFD\uFFFE\uFFFF")]
+    public void Test_InvalidCharacters(string input)
+    {
+        var act = () => PathHelpers.IsSanitized(input);
+        act.Should().ThrowExactly<PathException>();
+    }
+
+    [Theory]
     [MemberData(nameof(TestData_GetPathRoot))]
     public void Test_GetPathRoot(string input, string expectedRootPart, PathRootType expectedRootType)
     {

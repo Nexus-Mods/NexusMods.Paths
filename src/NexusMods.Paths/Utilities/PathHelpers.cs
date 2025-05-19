@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -249,12 +250,19 @@ public static class PathHelpers
         return result.ToString();
     }
 
+    private static SearchValues<char> _invalidUnicodeCharacters = SearchValues.Create(new []{
+        '\uFFFD', // � REPLACEMENT CHARACTER used to replace an unknown, unrecognised, or unrepresentable character
+        '\uFFFE', // <noncharacter-FFFE> not a character
+        '\uFFFF', // <noncharacter-FFFF> not a character
+    });
+
     /// <summary>
     /// Returns whether the input is sanitized.
     /// </summary>
     public static bool IsSanitized(ReadOnlySpan<char> input)
     {
         if (input.IsEmpty) return true;
+        if (input.ContainsAny(_invalidUnicodeCharacters)) throw new PathException($"Input contains invalid characters: `{input}` (length={input.Length})");
         if (SpanExtensions.Count(input, '\\') != 0) return false;
 
         var doubleDirectorySeparatorIndex = input.LastIndexOf("//", StringComparison.Ordinal);
