@@ -334,6 +334,16 @@ public static class PathHelpers
     }
 
     /// <summary>
+    /// Returns the hash code of the input path.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int PathHashCode(string input)
+    {
+        DebugAssertIsSanitized(input);
+        return StringComparer.OrdinalIgnoreCase.GetHashCode(input);
+    }
+
+    /// <summary>
     /// Returns true if the given character is a valid Windows drive letter.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
