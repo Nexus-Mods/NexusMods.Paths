@@ -352,11 +352,10 @@ public readonly partial struct AbsolutePath : IEquatable<AbsolutePath>, IPath<Ab
     /// <inheritdoc />
     public override int GetHashCode()
     {
-        // A custom HashCode, based on FNV-1 with added Vectorization because the default one is very slow for our use in trees, dictionaries, etc.
-        // .NET does have a faster hashcode for strings, however it is not exposed (and is 5x slower than custom one anyways).
-        var a = Directory.GetHashCodeLowerFast();
-        var b = FileName.GetHashCodeLowerFast();
+        var a = PathHelpers.PathHashCode(Directory);
+        var b = PathHelpers.PathHashCode(FileName);
         return HashCode.Combine(a, b);
     }
+
     #endregion
 }

@@ -326,9 +326,7 @@ public readonly struct RelativePath : IPath<RelativePath>, IEquatable<RelativePa
     /// <inheritdoc />
     public override int GetHashCode()
     {
-        // A custom HashCode, based on FNV-1 with added Vectorization because the default one is very slow for our use in trees, dictionaries, etc.
-        // .NET does have a faster hashcode for strings, however it is not exposed (and is 5x slower than custom one anyways).
-        return Path.GetHashCodeLowerFast().GetHashCode();
+        return PathHelpers.PathHashCode(Path);
     }
 
     #endregion
