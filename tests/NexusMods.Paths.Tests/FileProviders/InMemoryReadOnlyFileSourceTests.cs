@@ -22,8 +22,7 @@ public class InMemoryReadOnlyFileSourceTests
             { rel, data }
         });
 
-        using var srcStream = new ChunkedStream<IChunkedStreamSource>(src.GetChunkedSource(rel, 2));
-        srcStream.Seek(1, SeekOrigin.Begin);
+        using var srcStream = src.OpenRead(rel); srcStream.Seek(1, SeekOrigin.Begin);
         var buf = new byte[3];
         { var read = 0; while (read < 3) { var n = srcStream.Read(buf, read, 3 - read); if (n == 0) break; read += n; } read.Should().Be(3); }
         buf[0].Should().Be(2); buf[1].Should().Be(3); buf[2].Should().Be(4);
@@ -41,7 +40,7 @@ public class InMemoryReadOnlyFileSourceTests
             { rel, data }
         });
 
-        using var srcStream = new ChunkedStream<IChunkedStreamSource>(src.GetChunkedSource(rel, 2));
+        using var srcStream = src.OpenRead(rel);
         srcStream.Seek(3, SeekOrigin.Begin);
         var buf = new byte[10];
         int total = 0; while (total < 10) { var n = srcStream.Read(buf, total, 10 - total); if (n == 0) break; total += n; } total.Should().Be(2);
@@ -70,4 +69,7 @@ public class InMemoryReadOnlyFileSourceTests
         write.Should().Throw<NotSupportedException>();
     }
 }
+
+
+
 

@@ -28,9 +28,5 @@ public interface IReadOnlyFileSource
     /// Opens a read-only stream for the given relative path.
     /// </summary>
     Stream OpenRead(RelativePath relativePath);
-
-    /// <summary>
-    /// Provides a chunked stream source for the requested file data.
-    /// </summary>
-    IChunkedStreamSource GetChunkedSource(RelativePath relativePath, int chunkSize = 4096);
 }
+

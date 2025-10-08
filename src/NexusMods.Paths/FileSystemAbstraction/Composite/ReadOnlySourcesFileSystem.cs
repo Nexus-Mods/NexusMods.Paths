@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Enumeration;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NexusMods.Paths.FileProviders;
 using NexusMods.Paths.Utilities;
-using System.IO.Enumeration;
 
 namespace NexusMods.Paths;
 
@@ -56,14 +54,14 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
             return _upstream.ReadBytesRandomAccess(path, bytes, offset);
 
         if (TryResolveSource(path, out var src, out var rel))
+        if (TryResolveSource(path, out var source, out var relPath))
         {
-            using var cs = new ChunkedStream<IChunkedStreamSource>(src.GetChunkedSource(rel, Math.Max(1, bytes.Length)));
-            cs.Seek(offset, SeekOrigin.Begin);
-            return cs.Read(bytes);
+            using var s = source.OpenRead(relPath);
+            s.Seek(offset, SeekOrigin.Begin);
+            return s.Read(bytes);
         }
         throw new FileNotFoundException($"File not found: {path}");
     }
-
     public override async Task<int> ReadBytesRandomAccessAsync(AbsolutePath path, Memory<byte> bytes, long offset, CancellationToken cancellationToken = default)
     {
         ClearDeletionIfUpstreamPresent(path);
@@ -462,6 +460,8 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
 
     private sealed class VirtualDirectoryEntry : IDirectoryEntry { }
 }
+
+
 
 
 
