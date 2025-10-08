@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Enumeration;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Threading;
@@ -12,15 +12,17 @@ using NexusMods.Paths.Utilities;
 namespace NexusMods.Paths;
 
 /// <summary>
-/// A file system that reads through to an upstream <see cref=\"IFileSystem\"/> and falls back to
+/// A file system that reads through to an upstream IFileSystem and falls back to
 /// one or more read-only sources mounted at given mount points. On the first write to a path that
 /// only exists in a read-only source, the file is copied into the upstream file system (copy-on-write)
-/// and subsequent operations use the upstream file.
+/// and subsequent operations use the upstream file. Deleting a file marks it deleted so read-only
+/// sources are hidden until the file is recreated.
 /// </summary>
 public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSystem
 {
     private readonly IFileSystem _upstream;
     private readonly IReadOnlyList<IReadOnlyFileSource> _sources;
+    private readonly HashSet<AbsolutePath> _deleted = new();
 
     public ReadOnlySourcesFileSystem(IFileSystem upstream, IEnumerable<IReadOnlyFileSource> sources)
     {
@@ -37,8 +39,18 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
         return new ReadOnlySourcesFileSystem(overlayUpstream, _sources);
     }
 
+    private static AbsolutePath Normalize(AbsolutePath p) => p;
+    private bool IsDeleted(AbsolutePath p) => _deleted.Contains(Normalize(p));
+    private void MarkDeleted(AbsolutePath p) { _deleted.Add(Normalize(p)); }
+    private void ClearDeleted(AbsolutePath p) { _deleted.Remove(Normalize(p)); }
+    private void ClearDeletionIfUpstreamPresent(AbsolutePath p) { if (_upstream.FileExists(p)) _deleted.Remove(Normalize(p)); }
+
     public override int ReadBytesRandomAccess(AbsolutePath path, Span<byte> bytes, long offset)
     {
+        ClearDeletionIfUpstreamPresent(path);
+        if (IsDeleted(path))
+            throw new FileNotFoundException($"File not found: {path}");
+
         if (_upstream.FileExists(path))
             return _upstream.ReadBytesRandomAccess(path, bytes, offset);
 
@@ -56,6 +68,10 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
 
     public override async Task<int> ReadBytesRandomAccessAsync(AbsolutePath path, Memory<byte> bytes, long offset, CancellationToken cancellationToken = default)
     {
+        ClearDeletionIfUpstreamPresent(path);
+        if (IsDeleted(path))
+            throw new FileNotFoundException($"File not found: {path}");
+
         if (_upstream.FileExists(path))
             return await _upstream.ReadBytesRandomAccessAsync(path, bytes, offset, cancellationToken);
 
@@ -71,6 +87,10 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
 
     protected override IFileEntry InternalGetFileEntry(AbsolutePath path)
     {
+        ClearDeletionIfUpstreamPresent(path);
+        if (IsDeleted(path))
+            return _upstream.GetFileEntry(path);
+
         if (_upstream.FileExists(path))
             return _upstream.GetFileEntry(path);
 
@@ -81,7 +101,6 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
             return new VirtualReadOnlyFileEntry(this, path, len);
         }
 
-        // Fallback to upstream behavior (will typically create placeholder or throw depending on impl)
         return _upstream.GetFileEntry(path);
     }
 
@@ -90,7 +109,6 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
         if (_upstream.DirectoryExists(path))
             return _upstream.GetDirectoryEntry(path);
 
-        // If any source has a file under this path, expose a virtual directory
         if (SourceHasAnyUnder(path))
             return new VirtualDirectoryEntry();
 
@@ -100,13 +118,16 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
     protected override IEnumerable<AbsolutePath> InternalEnumerateFiles(AbsolutePath directory, string pattern, bool recursive)
     {
         var set = new HashSet<AbsolutePath>();
+        if (_upstream.DirectoryExists(directory))
         foreach (var f in _upstream.EnumerateFiles(directory, pattern, recursive))
         {
+            if (IsDeleted(f)) continue;
             if (set.Add(f)) yield return f;
         }
 
         foreach (var p in EnumerateSourceFilesUnder(directory, recursive))
         {
+            if (IsDeleted(p)) continue;
             if (!EnumeratorHelpers.MatchesPattern(pattern, p.GetFullPath(), MatchType.Win32))
                 continue;
             if (set.Add(p)) yield return p;
@@ -116,6 +137,7 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
     protected override IEnumerable<AbsolutePath> InternalEnumerateDirectories(AbsolutePath directory, string pattern, bool recursive)
     {
         var set = new HashSet<AbsolutePath>();
+        if (_upstream.DirectoryExists(directory))
         foreach (var d in _upstream.EnumerateDirectories(directory, pattern, recursive))
         {
             if (set.Add(d)) yield return d;
@@ -132,13 +154,16 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
     protected override IEnumerable<IFileEntry> InternalEnumerateFileEntries(AbsolutePath directory, string pattern, bool recursive)
     {
         var yielded = new HashSet<AbsolutePath>();
+        if (_upstream.DirectoryExists(directory))
         foreach (var entry in _upstream.EnumerateFileEntries(directory, pattern, recursive))
         {
+            if (IsDeleted(entry.Path)) continue;
             if (yielded.Add(entry.Path)) yield return entry;
         }
 
         foreach (var p in EnumerateSourceFilesUnder(directory, recursive))
         {
+            if (IsDeleted(p)) continue;
             if (!EnumeratorHelpers.MatchesPattern(pattern, p.GetFullPath(), MatchType.Win32))
                 continue;
             if (yielded.Contains(p)) continue;
@@ -152,24 +177,83 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
 
     protected override Stream InternalOpenFile(AbsolutePath path, FileMode mode, FileAccess access, FileShare share)
     {
-        // If upstream already has it, just delegate
+        ClearDeletionIfUpstreamPresent(path);
+
+        // If marked deleted, hide sources until recreated
+        if (IsDeleted(path))
+        {
+            if (access == FileAccess.Read)
+                throw new FileNotFoundException($"File not found: {path}");
+
+            switch (mode)
+            {
+                case FileMode.Create:
+                case FileMode.OpenOrCreate:
+                    _upstream.CreateDirectory(path.Parent);
+                    ClearDeleted(path);
+                    return _upstream.OpenFile(path, FileMode.Create, access, share);
+                case FileMode.CreateNew:
+                    _upstream.CreateDirectory(path.Parent);
+                    ClearDeleted(path);
+                    return _upstream.OpenFile(path, FileMode.CreateNew, access, share);
+                case FileMode.Truncate:
+                case FileMode.Open:
+                default:
+                    throw new FileNotFoundException($"File not found: {path}");
+            }
+        }
+
+        // Upstream has precedence
         if (_upstream.FileExists(path) || !TryResolveSource(path, out var src, out var rel))
         {
             return _upstream.OpenFile(path, mode, access, share);
         }
 
-        // Path maps to a read-only source
+        // Maps to read-only source
         if (access == FileAccess.Read)
         {
-            return src.OpenRead(rel);
+            if (mode == FileMode.Open || mode == FileMode.OpenOrCreate)
+                return src.OpenRead(rel);
+            if (mode == FileMode.CreateNew)
+                throw new IOException($"File already exists: {path}");
+            if (mode == FileMode.Create || mode == FileMode.Truncate)
+                throw new ArgumentException($"Invalid mode/access combination: {mode}/{access}");
+        }
+        else // write or readwrite
+        {
+            switch (mode)
+            {
+                case FileMode.Open:
+                    EnsureCopiedToUpstream(path, src, rel);
+                    return _upstream.OpenFile(path, FileMode.Open, access, share);
+                case FileMode.OpenOrCreate:
+                    if (src.Exists(rel))
+                    {
+                        EnsureCopiedToUpstream(path, src, rel);
+                        return _upstream.OpenFile(path, FileMode.Open, access, share);
+                    }
+                    else
+                    {
+                        _upstream.CreateDirectory(path.Parent);
+                        return _upstream.OpenFile(path, FileMode.Create, access, share);
+                    }
+                case FileMode.Create:
+                    _upstream.CreateDirectory(path.Parent);
+                    return _upstream.OpenFile(path, FileMode.Create, access, share);
+                case FileMode.CreateNew:
+                    if (src.Exists(rel))
+                        throw new IOException($"File already exists: {path}");
+                    _upstream.CreateDirectory(path.Parent);
+                    return _upstream.OpenFile(path, FileMode.CreateNew, access, share);
+                case FileMode.Truncate:
+                    EnsureCopiedToUpstream(path, src, rel);
+                    return _upstream.OpenFile(path, FileMode.Truncate, access, share);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
+            }
         }
 
-        // Copy-on-write for any write access
-        EnsureCopiedToUpstream(path, src, rel);
-        // After copy, open in upstream. If the requested mode would fail because we created the file,
-        // prefer opening it.
-        var effectiveMode = mode == FileMode.CreateNew ? FileMode.Open : mode;
-        return _upstream.OpenFile(path, effectiveMode, access, share);
+        return _upstream.OpenFile(path, mode, access, share);
     }
 
     protected override void InternalCreateDirectory(AbsolutePath path)
@@ -190,12 +274,13 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
             _upstream.DeleteDirectory(path, recursive);
             return;
         }
-        // Directory only represented by read-only sources
         throw new IOException($"Cannot delete read-only directory: {path}");
     }
 
     protected override bool InternalFileExists(AbsolutePath path)
     {
+        ClearDeletionIfUpstreamPresent(path);
+        if (IsDeleted(path)) return false;
         if (_upstream.FileExists(path)) return true;
         return TryResolveSource(path, out var src, out var rel) && src.Exists(rel);
     }
@@ -205,11 +290,9 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
         if (_upstream.FileExists(path))
         {
             _upstream.DeleteFile(path);
-            return;
         }
-
-        // Exists only in read-only sources
-        throw new IOException($"Cannot delete read-only file: {path}");
+        // Mark as deleted to hide any read-only source
+        MarkDeleted(path);
     }
 
     protected override void InternalMoveFile(AbsolutePath source, AbsolutePath dest, bool overwrite)
@@ -220,7 +303,6 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
             return;
         }
 
-        // Copy-on-write semantics if moving a read-only file to a writable location is requested via a write op
         if (TryResolveSource(source, out var src, out var rel))
         {
             EnsureCopiedToUpstream(source, src, rel);
@@ -233,7 +315,16 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
 
     protected override unsafe MemoryMappedFileHandle InternalCreateMemoryMappedFile(AbsolutePath absPath, FileMode mode, MemoryMappedFileAccess access, ulong fileSize)
     {
-        // If upstream has or we need write access, ensure upstream and delegate
+        ClearDeletionIfUpstreamPresent(absPath);
+        if (IsDeleted(absPath))
+        {
+            if (access == MemoryMappedFileAccess.Read)
+                throw new FileNotFoundException($"File not found: {absPath}");
+            _upstream.CreateDirectory(absPath.Parent);
+            ClearDeleted(absPath);
+            return _upstream.CreateMemoryMappedFile(absPath, FileMode.Create, access, fileSize);
+        }
+
         if (_upstream.FileExists(absPath) || access != MemoryMappedFileAccess.Read)
         {
             if (!_upstream.FileExists(absPath) && TryResolveSource(absPath, out var s, out var r) && access != MemoryMappedFileAccess.Read)
@@ -243,7 +334,6 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
             return _upstream.CreateMemoryMappedFile(absPath, mode, access, fileSize);
         }
 
-        // Read-only mapping from source
         if (!TryResolveSource(absPath, out var src, out var rel))
             throw new FileNotFoundException($"File not found: {absPath}");
 
@@ -304,6 +394,7 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
 
     private bool TryResolveSource(AbsolutePath path, out IReadOnlyFileSource source, out RelativePath relative)
     {
+        if (IsDeleted(path)) { source = default!; relative = default; return false; }
         foreach (var s in _sources)
         {
             if (path.InFolder(s.MountPoint) || path == s.MountPoint || path.Parent == s.MountPoint)
@@ -311,7 +402,6 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
                 var rel = path.RelativeTo(s.MountPoint);
                 if (rel == RelativePath.Empty && path == s.MountPoint)
                 {
-                    // path refers to mountpoint itself; no file
                     continue;
                 }
                 if (s.Exists(rel))
