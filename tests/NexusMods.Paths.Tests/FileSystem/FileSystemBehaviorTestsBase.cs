@@ -111,7 +111,7 @@ public abstract class FileSystemBehaviorTestsBase
             var handle = ctx.Fs.CreateMemoryMappedFile(ctx.FilePath, FileMode.Open, MemoryMappedFileAccess.Read, 0);
             try
             {
-                ((nuint)handle.Length).Should().BeGreaterThan(0);
+                handle.Length.Should().BeGreaterThan(0);
                 var span = new Span<byte>(handle.Pointer, (int)handle.Length);
                 span.Length.Should().BeGreaterThan(0);
             }

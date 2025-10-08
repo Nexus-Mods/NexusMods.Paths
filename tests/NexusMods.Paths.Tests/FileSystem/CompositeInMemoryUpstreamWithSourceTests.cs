@@ -7,7 +7,7 @@ public sealed class CompositeInMemoryUpstreamWithSourceTests : FileSystemBehavio
 {
     protected override Ctx CreateContextWithInitialFile(string relativePath = "a/file.txt", string content = "payload")
     {
-        var upstream = new NexusMods.Paths.InMemoryFileSystem(OSInformation.FakeUnix);
+        var upstream = new InMemoryFileSystem(OSInformation.FakeUnix);
         var mount = upstream.FromUnsanitizedFullPath("/mnt");
         var rel = RelativePath.FromUnsanitizedInput(relativePath);
         var src = new InMemoryReadOnlyFileSource(mount, new Dictionary<RelativePath, byte[]>

@@ -4,7 +4,7 @@ public sealed class InMemoryFileSystemBehaviorTests : FileSystemBehaviorTestsBas
 {
     protected override Ctx CreateContextWithInitialFile(string relativePath = "a/file.txt", string content = "payload")
     {
-        var fs = new NexusMods.Paths.InMemoryFileSystem(OSInformation.FakeUnix);
+        var fs = new InMemoryFileSystem(OSInformation.FakeUnix);
         var root = fs.FromUnsanitizedFullPath("/mnt");
         var abs = root / RelativePath.FromUnsanitizedInput(relativePath);
         fs.CreateDirectory(abs.Parent);

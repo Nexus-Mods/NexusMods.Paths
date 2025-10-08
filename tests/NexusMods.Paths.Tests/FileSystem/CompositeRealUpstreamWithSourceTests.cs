@@ -8,7 +8,7 @@ public sealed class CompositeRealUpstreamWithSourceTests : FileSystemBehaviorTes
     protected override Ctx CreateContextWithInitialFile(string relativePath = "a/file.txt", string content = "payload")
     {
         var upstream = (NexusMods.Paths.FileSystem)NexusMods.Paths.FileSystem.Shared;
-        var tempRoot = System.IO.Path.Combine(System.IO.Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var tempRoot = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
         var root = upstream.FromUnsanitizedFullPath(tempRoot);
         var mount = root / RelativePath.FromUnsanitizedInput("mnt");
