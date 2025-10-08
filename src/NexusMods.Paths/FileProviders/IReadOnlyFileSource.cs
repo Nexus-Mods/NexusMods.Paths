@@ -30,7 +30,7 @@ public interface IReadOnlyFileSource
     Stream OpenRead(RelativePath relativePath);
 
     /// <summary>
-    /// Provides a chunked view into the requested file data.
+    /// Provides a chunked stream source for the requested file data.
     /// </summary>
-    IFileDataChunk GetFileData(RelativePath relativePath, ulong start, ulong length);
+    IChunkedStreamSource GetChunkedSource(RelativePath relativePath, int chunkSize = 4096);
 }

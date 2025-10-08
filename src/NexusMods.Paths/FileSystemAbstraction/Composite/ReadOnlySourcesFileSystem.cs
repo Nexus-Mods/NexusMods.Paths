@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NexusMods.Paths.FileProviders;
 using NexusMods.Paths.Utilities;
+using System.IO.Enumeration;
 
 namespace NexusMods.Paths;
 
@@ -56,13 +57,10 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
 
         if (TryResolveSource(path, out var src, out var rel))
         {
-            using var chunk = src.GetFileData(rel, (ulong)offset, (ulong)bytes.Length);
-            var toCopy = (int)Math.Min((ulong)bytes.Length, chunk.DataLength);
-            if (toCopy <= 0) return 0;
-            chunk.Data.Span.Slice(0, toCopy).CopyTo(bytes);
-            return toCopy;
+            using var cs = new ChunkedStream<IChunkedStreamSource>(src.GetChunkedSource(rel, Math.Max(1, bytes.Length)));
+            cs.Seek(offset, SeekOrigin.Begin);
+            return cs.Read(bytes);
         }
-
         throw new FileNotFoundException($"File not found: {path}");
     }
 
@@ -464,5 +462,7 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
 
     private sealed class VirtualDirectoryEntry : IDirectoryEntry { }
 }
+
+
 
 

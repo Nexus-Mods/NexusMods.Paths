@@ -23,7 +23,7 @@ public class ChunkedStream<T> : Stream where T : IChunkedStreamSource
 
     /// <summary>
     /// Main constructor, creates a new Chunked stream from the given source, and with an LRU cache of the given size. If preFetch is greater than 0,
-    /// the stream will attempt to read ahead of any read requests by the given amount of chunks, this can be useful when the chunk source is slow or bursty,
+    /// the stream will attempt to read ahead of any read requests by the given number of chunks, this can be useful when the chunk source is slow or bursty,
     /// and chunks are small.
     /// </summary>
     public ChunkedStream(T source, int capacity = 16, int preFetch = 0)
