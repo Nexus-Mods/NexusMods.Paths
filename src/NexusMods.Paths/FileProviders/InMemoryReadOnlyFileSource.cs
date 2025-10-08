@@ -23,8 +23,7 @@ public sealed class InMemoryReadOnlyFileSource : IReadOnlyFileSource
 
     public IEnumerable<RelativePath> EnumerateFiles() => _files.Keys;
 
-    public bool Exists(RelativePath relativePath) => _files.ContainsKey(relativePath);
-
+    
     public Stream OpenRead(RelativePath relativePath)
     {
         if (!_files.TryGetValue(relativePath, out var data))
@@ -63,3 +62,4 @@ public sealed class InMemoryReadOnlyFileSource : IReadOnlyFileSource
         }
     }
 }
+

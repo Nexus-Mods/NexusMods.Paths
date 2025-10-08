@@ -22,6 +22,7 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
     private readonly IFileSystem _upstream;
     private readonly IReadOnlyList<IReadOnlyFileSource> _sources;
     private readonly HashSet<AbsolutePath> _deleted = new();
+    private readonly Dictionary<AbsolutePath, (IReadOnlyFileSource source, RelativePath rel)> _sourceMap = new();
 
     public ReadOnlySourcesFileSystem(IFileSystem upstream, IEnumerable<IReadOnlyFileSource> sources)
     {
@@ -40,7 +41,7 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
 
     private static AbsolutePath Normalize(AbsolutePath p) => p;
     private bool IsDeleted(AbsolutePath p) => _deleted.Contains(Normalize(p));
-    private void MarkDeleted(AbsolutePath p) { _deleted.Add(Normalize(p)); }
+    private void MarkDeleted(AbsolutePath p) { var n = Normalize(p); _deleted.Add(n); _sourceMap.Remove(n); }
     private void ClearDeleted(AbsolutePath p) { _deleted.Remove(Normalize(p)); }
     private void ClearDeletionIfUpstreamPresent(AbsolutePath p) { if (_upstream.FileExists(p)) _deleted.Remove(Normalize(p)); }
 
@@ -223,7 +224,7 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
                     EnsureCopiedToUpstream(path, src, rel);
                     return _upstream.OpenFile(path, FileMode.Open, access, share);
                 case FileMode.OpenOrCreate:
-                    if (src.Exists(rel))
+                    if (TryResolveSource(path, out _, out _))
                     {
                         EnsureCopiedToUpstream(path, src, rel);
                         return _upstream.OpenFile(path, FileMode.Open, access, share);
@@ -237,7 +238,7 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
                     _upstream.CreateDirectory(path.Parent);
                     return _upstream.OpenFile(path, FileMode.Create, access, share);
                 case FileMode.CreateNew:
-                    if (src.Exists(rel))
+                    if (TryResolveSource(path, out _, out _))
                         throw new IOException($"File already exists: {path}");
                     _upstream.CreateDirectory(path.Parent);
                     return _upstream.OpenFile(path, FileMode.CreateNew, access, share);
@@ -278,14 +279,14 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
         ClearDeletionIfUpstreamPresent(path);
         if (IsDeleted(path)) return false;
         if (_upstream.FileExists(path)) return true;
-        return TryResolveSource(path, out var src, out var rel) && src.Exists(rel);
+        return TryResolveSource(path, out _, out _);
     }
 
     protected override void InternalDeleteFile(AbsolutePath path)
     {
         if (_upstream.FileExists(path))
         {
-            _upstream.DeleteFile(path);
+            _upstream.DeleteFile(path); _sourceMap.Remove(path);
         }
         // Mark as deleted to hide any read-only source
         MarkDeleted(path);
@@ -295,14 +296,14 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
     {
         if (_upstream.FileExists(source))
         {
-            _upstream.MoveFile(source, dest, overwrite);
+            _upstream.MoveFile(source, dest, overwrite); _sourceMap.Remove(source); _sourceMap.Remove(dest);
             return;
         }
 
         if (TryResolveSource(source, out var src, out var rel))
         {
             EnsureCopiedToUpstream(source, src, rel);
-            _upstream.MoveFile(source, dest, overwrite);
+            _upstream.MoveFile(source, dest, overwrite); _sourceMap.Remove(source); _sourceMap.Remove(dest);
             return;
         }
 
@@ -391,16 +392,21 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
     private bool TryResolveSource(AbsolutePath path, out IReadOnlyFileSource source, out RelativePath relative)
     {
         if (IsDeleted(path)) { source = default!; relative = default; return false; }
+        if (_sourceMap.TryGetValue(path, out var entry)) { source = entry.source; relative = entry.rel; return true; }
+        if (FindSourceMapping(path, out source, out relative)) { _sourceMap[path] = (source, relative); return true; }
+        return false;
+    }
+
+    private bool FindSourceMapping(AbsolutePath path, out IReadOnlyFileSource source, out RelativePath relative)
+    {
         foreach (var s in _sources)
         {
             if (path.InFolder(s.MountPoint) || path == s.MountPoint || path.Parent == s.MountPoint)
             {
                 var rel = path.RelativeTo(s.MountPoint);
                 if (rel == RelativePath.Empty && path == s.MountPoint)
-                {
                     continue;
-                }
-                if (s.Exists(rel))
+                if (s.EnumerateFiles().Any(r => r.Equals(rel)))
                 {
                     source = s;
                     relative = rel;
@@ -412,7 +418,6 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
         relative = default;
         return false;
     }
-
     private bool SourceHasAnyUnder(AbsolutePath directory)
     {
         foreach (var s in _sources)
@@ -426,14 +431,14 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
         }
         return false;
     }
-
     private void EnsureCopiedToUpstream(AbsolutePath abs, IReadOnlyFileSource source, RelativePath rel)
     {
-        if (_upstream.FileExists(abs)) return;
+        if (_upstream.FileExists(abs)) { _sourceMap.Remove(abs); return; }
         _upstream.CreateDirectory(abs.Parent);
         using var read = source.OpenRead(rel);
         using var write = _upstream.CreateFile(abs);
         read.CopyTo(write);
+        _sourceMap.Remove(abs);
     }
 
     private sealed class VirtualReadOnlyFileEntry : IFileEntry
@@ -460,6 +465,11 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
 
     private sealed class VirtualDirectoryEntry : IDirectoryEntry { }
 }
+
+
+
+
+
 
 
 

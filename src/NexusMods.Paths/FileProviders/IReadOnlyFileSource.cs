@@ -22,11 +22,11 @@ public interface IReadOnlyFileSource
     /// <summary>
     /// Returns true if a file exists at the given relative path.
     /// </summary>
-    bool Exists(RelativePath relativePath);
-
+    
     /// <summary>
     /// Opens a read-only stream for the given relative path.
     /// </summary>
     Stream OpenRead(RelativePath relativePath);
 }
+
 
