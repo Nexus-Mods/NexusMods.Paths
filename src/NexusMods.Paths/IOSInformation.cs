@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using JetBrains.Annotations;
 using static NexusMods.Paths.Delegates;
 
@@ -21,17 +22,20 @@ public interface IOSInformation
     /// <summary>
     /// Whether the current <see cref="Platform"/> is <see cref="OSPlatform.Windows"/>.
     /// </summary>
+    [SupportedOSPlatformGuard("windows")]
     bool IsWindows => Platform == OSPlatform.Windows;
 
     /// <summary>
     /// Whether the current <see cref="Platform"/> is <see cref="OSPlatform.Linux"/>.
     /// </summary>
+    [SupportedOSPlatformGuard("linux")]
     bool IsLinux => Platform == OSPlatform.Linux;
 
     /// <summary>
     /// Whether the current <see cref="Platform"/> is <see cref="OSPlatform.OSX"/>.
     /// </summary>
     [SuppressMessage("ReSharper", "InconsistentNaming", Justification = $"It's also named {nameof(OSPlatform.OSX)} in {nameof(OSPlatform)}")]
+    [SupportedOSPlatformGuard("osx")]
     bool IsOSX => Platform == OSPlatform.OSX;
 
     /// <summary>
@@ -167,6 +171,7 @@ public interface IOSInformation
     /// Returns <c>true</c> if the current platform is Unix-based.
     /// </summary>
     /// <returns></returns>
+    [UnsupportedOSPlatformGuard("windows")]
     bool IsUnix() => IsLinux || IsOSX;
 
     /// <summary>
