@@ -103,7 +103,7 @@ public sealed class ReadOnlySourcesFileSystemExtraTests
         await writer;
         // allow readers/enumerator to run post-write a bit
         await Task.Delay(100);
-        cts.Cancel();
+        await cts.CancelAsync();
         await Task.WhenAll(readers.Append(enumerator));
 
         exceptions.Should().BeEmpty();
