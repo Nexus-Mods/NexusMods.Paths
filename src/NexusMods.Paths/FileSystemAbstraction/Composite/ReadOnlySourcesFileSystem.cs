@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
@@ -21,8 +22,12 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
 {
     private readonly IFileSystem _upstream;
     private readonly IReadOnlyList<IReadOnlyFileSource> _sources;
-    private readonly HashSet<AbsolutePath> _deleted = new();
-    private readonly Dictionary<AbsolutePath, (IReadOnlyFileSource source, RelativePath rel)> _sourceMap = new();
+    // Thread-safe sets/maps for concurrent access in tests and callers
+    private readonly ConcurrentDictionary<AbsolutePath, byte> _deleted = new();
+    private readonly ConcurrentDictionary<AbsolutePath, (IReadOnlyFileSource source, RelativePath rel)> _sourceMap = new();
+
+    // Filesystem-wide timestamp used for read-only entries (updated on modifications)
+    private long _lastModifiedTicksUtc = DateTime.UtcNow.Ticks;
 
     public ReadOnlySourcesFileSystem(IFileSystem upstream, IEnumerable<IReadOnlyFileSource> sources)
     {
@@ -40,10 +45,13 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
     }
 
     private static AbsolutePath Normalize(AbsolutePath p) => p;
-    private bool IsDeleted(AbsolutePath p) => _deleted.Contains(Normalize(p));
-    private void MarkDeleted(AbsolutePath p) { var n = Normalize(p); _deleted.Add(n); _sourceMap.Remove(n); }
-    private void ClearDeleted(AbsolutePath p) { _deleted.Remove(Normalize(p)); }
-    private void ClearDeletionIfUpstreamPresent(AbsolutePath p) { if (_upstream.FileExists(p)) _deleted.Remove(Normalize(p)); }
+    private bool IsDeleted(AbsolutePath p) => _deleted.ContainsKey(Normalize(p));
+    private void MarkDeleted(AbsolutePath p) { var n = Normalize(p); _deleted[n] = 1; _sourceMap.TryRemove(n, out _); }
+    private void ClearDeleted(AbsolutePath p) { _deleted.TryRemove(Normalize(p), out _); }
+    private void ClearDeletionIfUpstreamPresent(AbsolutePath p) { if (_upstream.FileExists(p)) _deleted.TryRemove(Normalize(p), out _); }
+
+    private void Touch() => System.Threading.Interlocked.Exchange(ref _lastModifiedTicksUtc, DateTime.UtcNow.Ticks);
+    internal DateTime GetCurrentTimestampUtc() => new DateTime(System.Threading.Volatile.Read(ref _lastModifiedTicksUtc), DateTimeKind.Utc);
 
     public override int ReadBytesRandomAccess(AbsolutePath path, Span<byte> bytes, long offset)
     {
@@ -188,10 +196,12 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
                 case FileMode.OpenOrCreate:
                     _upstream.CreateDirectory(path.Parent);
                     ClearDeleted(path);
+                    Touch();
                     return _upstream.OpenFile(path, FileMode.Create, access, share);
                 case FileMode.CreateNew:
                     _upstream.CreateDirectory(path.Parent);
                     ClearDeleted(path);
+                    Touch();
                     return _upstream.OpenFile(path, FileMode.CreateNew, access, share);
                 case FileMode.Truncate:
                 case FileMode.Open:
@@ -203,6 +213,8 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
         // Upstream has precedence
         if (_upstream.FileExists(path) || !TryResolveSource(path, out var src, out var rel))
         {
+            // If opening for write, bump the FS timestamp
+            if (access != FileAccess.Read) Touch();
             return _upstream.OpenFile(path, mode, access, share);
         }
 
@@ -222,28 +234,34 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
             {
                 case FileMode.Open:
                     EnsureCopiedToUpstream(path, src, rel);
+                    Touch();
                     return _upstream.OpenFile(path, FileMode.Open, access, share);
                 case FileMode.OpenOrCreate:
                     if (TryResolveSource(path, out _, out _))
                     {
                         EnsureCopiedToUpstream(path, src, rel);
+                        Touch();
                         return _upstream.OpenFile(path, FileMode.Open, access, share);
                     }
                     else
                     {
                         _upstream.CreateDirectory(path.Parent);
+                        Touch();
                         return _upstream.OpenFile(path, FileMode.Create, access, share);
                     }
                 case FileMode.Create:
                     _upstream.CreateDirectory(path.Parent);
+                    Touch();
                     return _upstream.OpenFile(path, FileMode.Create, access, share);
                 case FileMode.CreateNew:
                     if (TryResolveSource(path, out _, out _))
                         throw new IOException($"File already exists: {path}");
                     _upstream.CreateDirectory(path.Parent);
+                    Touch();
                     return _upstream.OpenFile(path, FileMode.CreateNew, access, share);
                 case FileMode.Truncate:
                     EnsureCopiedToUpstream(path, src, rel);
+                    Touch();
                     return _upstream.OpenFile(path, FileMode.Truncate, access, share);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
@@ -286,24 +304,27 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
     {
         if (_upstream.FileExists(path))
         {
-            _upstream.DeleteFile(path); _sourceMap.Remove(path);
+            _upstream.DeleteFile(path); _sourceMap.TryRemove(path, out _);
         }
         // Mark as deleted to hide any read-only source
         MarkDeleted(path);
+        Touch();
     }
 
     protected override void InternalMoveFile(AbsolutePath source, AbsolutePath dest, bool overwrite)
     {
         if (_upstream.FileExists(source))
         {
-            _upstream.MoveFile(source, dest, overwrite); _sourceMap.Remove(source); _sourceMap.Remove(dest);
+            _upstream.MoveFile(source, dest, overwrite); _sourceMap.TryRemove(source, out _); _sourceMap.TryRemove(dest, out _);
+            Touch();
             return;
         }
 
         if (TryResolveSource(source, out var src, out var rel))
         {
             EnsureCopiedToUpstream(source, src, rel);
-            _upstream.MoveFile(source, dest, overwrite); _sourceMap.Remove(source); _sourceMap.Remove(dest);
+            _upstream.MoveFile(source, dest, overwrite); _sourceMap.TryRemove(source, out _); _sourceMap.TryRemove(dest, out _);
+            Touch();
             return;
         }
 
@@ -319,6 +340,7 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
                 throw new FileNotFoundException($"File not found: {absPath}");
             _upstream.CreateDirectory(absPath.Parent);
             ClearDeleted(absPath);
+            Touch();
             return _upstream.CreateMemoryMappedFile(absPath, FileMode.Create, access, fileSize);
         }
 
@@ -328,6 +350,7 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
             {
                 EnsureCopiedToUpstream(absPath, s, r);
             }
+            if (access != MemoryMappedFileAccess.Read) Touch();
             return _upstream.CreateMemoryMappedFile(absPath, mode, access, fileSize);
         }
 
@@ -433,12 +456,13 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
     }
     private void EnsureCopiedToUpstream(AbsolutePath abs, IReadOnlyFileSource source, RelativePath rel)
     {
-        if (_upstream.FileExists(abs)) { _sourceMap.Remove(abs); return; }
+        if (_upstream.FileExists(abs)) { _sourceMap.TryRemove(abs, out _); return; }
         _upstream.CreateDirectory(abs.Parent);
         using var read = source.OpenRead(rel);
         using var write = _upstream.CreateFile(abs);
         read.CopyTo(write);
-        _sourceMap.Remove(abs);
+        _sourceMap.TryRemove(abs, out _);
+        Touch();
     }
 
     private sealed class VirtualReadOnlyFileEntry : IFileEntry
@@ -446,8 +470,24 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
         public IFileSystem FileSystem { get; set; }
         public AbsolutePath Path { get; }
         public Size Size { get; }
-        public DateTime LastWriteTime { get; set; }
-        public DateTime CreationTime { get; set; }
+        public DateTime LastWriteTime
+        {
+            get
+            {
+                var roFs = FileSystem as ReadOnlySourcesFileSystem;
+                return roFs?.GetCurrentTimestampUtc() ?? DateTime.UnixEpoch;
+            }
+            set { /* ignored for read-only entries */ }
+        }
+        public DateTime CreationTime
+        {
+            get
+            {
+                var roFs = FileSystem as ReadOnlySourcesFileSystem;
+                return roFs?.GetCurrentTimestampUtc() ?? DateTime.UnixEpoch;
+            }
+            set { /* ignored for read-only entries */ }
+        }
         public bool IsReadOnly { get; set; }
 
         public VirtualReadOnlyFileEntry(IFileSystem fs, AbsolutePath path, ulong size)
@@ -455,8 +495,6 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
             FileSystem = fs;
             Path = path;
             Size = Size.From(size);
-            LastWriteTime = DateTime.UnixEpoch;
-            CreationTime = DateTime.UnixEpoch;
             IsReadOnly = true;
         }
 
