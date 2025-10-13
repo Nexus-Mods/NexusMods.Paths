@@ -7,7 +7,7 @@ namespace NexusMods.Paths.Tests.FileSystem;
 public sealed class ReadOnlySourcesFileSystemExtraTests
 {
     [Fact]
-    public async Task ReadOnlyEntries_UseFsTimestamp_And_TimestampUpdatesOnWrite()
+    public async Task ReadOnlyEntries_UseFsCreation_ForDefault_And_PerFileUpdatesOnWrite()
     {
         var upstream = new InMemoryFileSystem(OSInformation.FakeUnix);
         var mount = upstream.FromUnsanitizedFullPath("/mnt");
@@ -32,14 +32,19 @@ public sealed class ReadOnlySourcesFileSystemExtraTests
         // Ensure time can advance
         Thread.Sleep(20);
 
-        // Modify a different file (triggers copy-on-write and FS timestamp bump)
+        // Modify a different file (triggers copy-on-write and per-file timestamp update)
         await fs.WriteAllTextAsync(abs1, "changed");
 
         var entry2After = fs.GetFileEntry(abs2);
         var t1 = entry2After.LastWriteTime;
         var c1 = entry2After.CreationTime;
 
-        t1.Should().BeAfter(t0);
-        c1.Should().BeAfter(c0);
+        // File2 should remain unchanged
+        t1.Should().Be(t0);
+        c1.Should().Be(c0);
+
+        // File1 should reflect an updated LastWriteTime
+        var entry1After = fs.GetFileEntry(abs1);
+        entry1After.LastWriteTime.Should().BeAfter(t0);
     }
 }
