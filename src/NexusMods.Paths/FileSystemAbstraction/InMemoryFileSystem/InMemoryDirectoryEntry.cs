@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using JetBrains.Annotations;
 
 namespace NexusMods.Paths;
@@ -12,9 +13,9 @@ public partial class InMemoryFileSystem
         [PublicAPI]
         public InMemoryDirectoryEntry ParentDirectory { get; }
 
-        public Dictionary<RelativePath, InMemoryFileEntry> Files { get; } = new();
+        public ConcurrentDictionary<RelativePath, InMemoryFileEntry> Files { get; } = new();
 
-        public Dictionary<RelativePath, InMemoryDirectoryEntry> Directories { get; } = new();
+        public ConcurrentDictionary<RelativePath, InMemoryDirectoryEntry> Directories { get; } = new();
 
         public InMemoryDirectoryEntry(AbsolutePath path, InMemoryDirectoryEntry parentDirectory)
         {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
@@ -20,8 +21,8 @@ public partial class InMemoryFileSystem : BaseFileSystem
 {
     private readonly InMemoryDirectoryEntry _rootDirectory;
 
-    private readonly Dictionary<AbsolutePath, InMemoryFileEntry> _files = new();
-    private readonly Dictionary<AbsolutePath, InMemoryDirectoryEntry> _directories = new();
+    private readonly ConcurrentDictionary<AbsolutePath, InMemoryFileEntry> _files = new();
+    private readonly ConcurrentDictionary<AbsolutePath, InMemoryDirectoryEntry> _directories = new();
 
     /// <summary>
     /// Constructor.
@@ -82,8 +83,11 @@ public partial class InMemoryFileSystem : BaseFileSystem
         var directory = GetOrAddDirectory(path.Parent);
         var inMemoryFile = new InMemoryFileEntry(this, path, directory, contents);
 
-        _files.Add(path, inMemoryFile);
-        directory.Files.Add(inMemoryFile.Path.RelativeTo(directory.Path), inMemoryFile);
+        if (!_files.TryAdd(path, inMemoryFile))
+            throw new ArgumentException($"An item with the same key has already been added. Key: {path}");
+
+        if (!directory.Files.TryAdd(inMemoryFile.Path.RelativeTo(directory.Path), inMemoryFile))
+            throw new ArgumentException($"An item with the same key has already been added. Key: {inMemoryFile.Path.RelativeTo(directory.Path)}");
 
         inMemoryFile.CreationTime = DateTime.UtcNow;
         inMemoryFile.LastWriteTime = DateTime.UtcNow;
@@ -137,10 +141,9 @@ public partial class InMemoryFileSystem : BaseFileSystem
         {
             if (!_directories.TryGetValue(directoryPath, out var directory))
             {
-                directory = new InMemoryDirectoryEntry(directoryPath, _rootDirectory);
+                directory = _directories.GetOrAdd(directoryPath, p => new InMemoryDirectoryEntry(p, _rootDirectory));
 
-                currentParentDirectory.Directories[directory.Path.RelativeTo(currentParentDirectory.Path)] = directory;
-                _directories[directoryPath] = directory;
+                currentParentDirectory.Directories.TryAdd(directory.Path.RelativeTo(currentParentDirectory.Path), directory);
             }
 
             currentParentDirectory = directory;
@@ -330,8 +333,8 @@ public partial class InMemoryFileSystem : BaseFileSystem
             throw new FileNotFoundException($"File at {path} does not exist!");
 
         var parentDirectory = file.ParentDirectory;
-        parentDirectory.Files.Remove(path.RelativeTo(parentDirectory.Path));
-        _files.Remove(path);
+        parentDirectory.Files.TryRemove(path.RelativeTo(parentDirectory.Path), out _);
+        _files.TryRemove(path, out _);
     }
 
     /// <inheritdoc/>
@@ -345,7 +348,7 @@ public partial class InMemoryFileSystem : BaseFileSystem
             foreach (var kv in directory.Files)
             {
                 var (_, file) = kv;
-                _files.Remove(file.Path);
+                _files.TryRemove(file.Path, out _);
             }
 
             foreach (var kv in directory.Directories)
@@ -362,8 +365,8 @@ public partial class InMemoryFileSystem : BaseFileSystem
         }
 
         var parentDirectory = directory.ParentDirectory;
-        parentDirectory.Directories.Remove(path.RelativeTo(parentDirectory.Path));
-        _directories.Remove(path);
+        parentDirectory.Directories.TryRemove(path.RelativeTo(parentDirectory.Path), out _);
+        _directories.TryRemove(path, out _);
     }
 
     private void InternalDeleteDirectoryRecursive(AbsolutePath path)
@@ -375,7 +378,7 @@ public partial class InMemoryFileSystem : BaseFileSystem
         foreach (var kv in directory.Files)
         {
             var (_, file) = kv;
-            _files.Remove(file.Path);
+            _files.TryRemove(file.Path, out _);
         }
 
         foreach (var kv in directory.Directories)
@@ -386,7 +389,7 @@ public partial class InMemoryFileSystem : BaseFileSystem
 
         // Don't remove this from parent.Directories since parent is iterating over it
 
-        _directories.Remove(path);
+        _directories.TryRemove(path, out _);
     }
 
 
