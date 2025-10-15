@@ -293,6 +293,15 @@ public interface IFileSystem
     Task WriteAllLinesAsync(AbsolutePath path, [InstantHandle(RequireAwait = true)] IEnumerable<string> lines, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// If this FileSystem has mappings and if this path is in one of the mapped paths,
+    /// this will return the unmapped path. Otherwise, it will return the same path. This
+    /// method is useful for situations where an enumeration of a folder expects paths to be
+    /// unmapped. This method will be relatively slow if mappings exist, it'll be O(n) on the
+    /// number of mappings.
+    /// </summary>
+    AbsolutePath Unmap(AbsolutePath path);
+    
+    /// <summary>
     /// Changes the Unix FileSystem permissions on this file.
     /// </summary>
     /// <param name="absolutePath">Path of the file where the <see cref="UnixFileMode"/> should be changed.</param>

@@ -7,6 +7,74 @@ namespace NexusMods.Paths.Tests.FileSystem;
 public class BaseFileSystemTests
 {
     [Theory, AutoFileSystem]
+    public void Test_Unmap_DirectMapping(InMemoryFileSystem fs)
+    {
+        // Use directory-to-directory mapping to exercise Unmap behavior
+        var originalDir = fs.FromUnsanitizedFullPath(OSInformation.Shared.IsWindows
+            ? $"C:/{Guid.NewGuid():D}/"
+            : $"/{Guid.NewGuid():D}/");
+        var mappedDir = fs.FromUnsanitizedFullPath(OSInformation.Shared.IsWindows
+            ? $"C:/{Guid.NewGuid():D}/"
+            : $"/{Guid.NewGuid():D}/");
+
+        var overlay = fs.CreateOverlayFileSystem(new Dictionary<AbsolutePath, AbsolutePath>
+        {
+            { originalDir, mappedDir }
+        }, new Dictionary<KnownPath, AbsolutePath>());
+
+        // Verify mapping and unmapping are inverse for directory mapping
+        var overlayBase = (BaseFileSystem)overlay;
+        overlayBase.GetMappedPath(originalDir).Should().Be(mappedDir);
+
+        // For a child path under the mapped directory
+        var fileName = RelativePath.CreateUnsafe($"{Guid.NewGuid():D}");
+        var originalFile = originalDir / fileName;
+        var mappedFile = mappedDir / fileName;
+        overlayBase.GetMappedPath(originalFile).Should().Be(mappedFile);
+        overlay.Unmap(mappedFile).Should().Be(originalFile);
+    }
+
+    [Theory, AutoFileSystem]
+    public void Test_Unmap_WithDirectory(InMemoryFileSystem fs,
+        AbsolutePath originalDirectoryPath, AbsolutePath newDirectoryPath, string fileName)
+    {
+        var originalFilePath = originalDirectoryPath / fileName;
+        var newFilePath = newDirectoryPath / fileName;
+
+        var overlay = fs.CreateOverlayFileSystem(
+            new Dictionary<AbsolutePath, AbsolutePath>
+            {
+                { originalDirectoryPath, newDirectoryPath }
+            },
+            new Dictionary<KnownPath, AbsolutePath>());
+
+        var overlayBase = (BaseFileSystem)overlay;
+        overlayBase.GetMappedPath(originalFilePath).Should().Be(newFilePath);
+        overlay.Unmap(newFilePath).Should().Be(originalFilePath);
+    }
+
+    [Fact]
+    public void Test_Unmap_SpecialCases()
+    {
+        var fs = new InMemoryFileSystem(OSInformation.FakeUnix);
+
+        var overlay = (BaseFileSystem)fs.CreateOverlayFileSystem(
+            new Dictionary<AbsolutePath, AbsolutePath>
+            {
+                { fs.FromUnsanitizedFullPath("/c"), fs.FromUnsanitizedFullPath("/foo") },
+                { fs.FromUnsanitizedFullPath("/z"), fs.FromUnsanitizedFullPath("/") },
+            },
+            new Dictionary<KnownPath, AbsolutePath>());
+
+        // Map checks (sanity)
+        overlay.GetMappedPath(fs.FromUnsanitizedFullPath("/c/a")).Should().Be(fs.FromUnsanitizedFullPath("/foo/a"));
+        overlay.GetMappedPath(fs.FromUnsanitizedFullPath("/z/a")).Should().Be(fs.FromUnsanitizedFullPath("/a"));
+
+        // Unmap checks (inverse)
+        ((IFileSystem)overlay).Unmap(fs.FromUnsanitizedFullPath("/foo/a")).Should().Be(fs.FromUnsanitizedFullPath("/c/a"));
+        ((IFileSystem)overlay).Unmap(fs.FromUnsanitizedFullPath("/a")).Should().Be(fs.FromUnsanitizedFullPath("/z/a"));
+    }
+    [Theory, AutoFileSystem]
     public void Test_PathMapping(InMemoryFileSystem fs, AbsolutePath originalPath, AbsolutePath mappedPath)
     {
         var overlayFileSystem = (BaseFileSystem)fs.CreateOverlayFileSystem(new Dictionary<AbsolutePath, AbsolutePath>

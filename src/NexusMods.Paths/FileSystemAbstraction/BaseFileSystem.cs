@@ -375,6 +375,23 @@ public abstract class BaseFileSystem : IFileSystem
         }
     }
 
+    /// <inheritdoc />
+    public virtual AbsolutePath Unmap(AbsolutePath path)
+    {
+        if (!_hasPathMappings) return path;
+
+        foreach (var (originalPath, mappedPath) in _pathMappings)
+        {
+            if (path.InFolder(mappedPath))
+            {
+                var relativePath = path.RelativeTo(mappedPath);
+                return originalPath / relativePath;
+            }
+        }
+        
+        return path;
+    }
+
     /// <inheritdoc/>
     public virtual void SetUnixFileMode(AbsolutePath absolutePath, UnixFileMode flags)
     {
