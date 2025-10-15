@@ -31,6 +31,15 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
     // Per-file last write timestamps for in-memory/virtual entries
     private readonly ConcurrentDictionary<AbsolutePath, long> _lastWriteTicksUtc = new();
 
+    public ReadOnlySourcesFileSystem(IFileSystem upstream, IEnumerable<IReadOnlyFileSource> sources,
+        Dictionary<AbsolutePath, AbsolutePath> pathMappings,
+        Dictionary<KnownPath, AbsolutePath> knownPathMappings) : 
+        base(OSInformation.Shared, pathMappings, knownPathMappings, false)
+    {
+        _upstream = upstream;
+        _sources = sources.ToArray();
+    }
+    
     public ReadOnlySourcesFileSystem(IFileSystem upstream, IEnumerable<IReadOnlyFileSource> sources)
     {
         _upstream = upstream;
@@ -42,8 +51,7 @@ public sealed class ReadOnlySourcesFileSystem : BaseFileSystem, IReadOnlyFileSys
         Dictionary<KnownPath, AbsolutePath> knownPathMappings,
         bool convertCrossPlatformPaths = false)
     {
-        var overlayUpstream = _upstream.CreateOverlayFileSystem(pathMappings, knownPathMappings, convertCrossPlatformPaths);
-        return new ReadOnlySourcesFileSystem(overlayUpstream, _sources);
+        return new ReadOnlySourcesFileSystem(_upstream, _sources, pathMappings, knownPathMappings);
     }
 
     private static AbsolutePath Normalize(AbsolutePath p) => p;
