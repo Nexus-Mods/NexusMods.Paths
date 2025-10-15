@@ -302,6 +302,12 @@ public interface IFileSystem
     AbsolutePath Unmap(AbsolutePath path);
     
     /// <summary>
+    /// If this FileSystem has mappings and if this path is in one of the mapped paths,
+    /// it will return the mapped path. Otherwise, it will return the same path.
+    /// </summary>
+    AbsolutePath Map(AbsolutePath path);
+    
+    /// <summary>
     /// Changes the Unix FileSystem permissions on this file.
     /// </summary>
     /// <param name="absolutePath">Path of the file where the <see cref="UnixFileMode"/> should be changed.</param>

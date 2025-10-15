@@ -376,7 +376,7 @@ public abstract class BaseFileSystem : IFileSystem
     }
 
     /// <inheritdoc />
-    public virtual AbsolutePath Unmap(AbsolutePath path)
+    public AbsolutePath Unmap(AbsolutePath path)
     {
         if (!_hasPathMappings) return path;
 
@@ -391,6 +391,10 @@ public abstract class BaseFileSystem : IFileSystem
         
         return path;
     }
+
+    /// <inheritdoc />
+    public AbsolutePath Map(AbsolutePath path) => GetMappedPath(path);
+
 
     /// <inheritdoc/>
     public virtual void SetUnixFileMode(AbsolutePath absolutePath, UnixFileMode flags)
